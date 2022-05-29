@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "mod-remapping-api",
+  "version": "${version}",
+  "name": "Mod Remapping API",
+  "description": "Remaps non fabric mods at runtime with hooks available to expand it.",
+  "authors": [
+    "CatCore/arthurbambou"
+  ],
+  "contributors": [
+    "paulevsGitch"
+  ],
+  "contact": {
+    "homepage": "https://modrinth.com/mod/mod-remapping-api",
+    "sources": "https://github.com/arthurbambou/Mod-Remapping-API",
+    "issues": "https://github.com/arthurbambou/Mod-Remapping-API/issues"
+  },
+  "license": "CC0-1.0",
+  "icon": "assets/mod-remapping-api/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "preLaunch": [
+      "fr.catcore.modremapperapi.ModRemappingAPI"
+    ],
+    "mod-remapper-api:modremapper": [
+      "fr.catcore.modremapperapi.utils.DefaultModRemapper"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">0.14.3"
+  }
+}
