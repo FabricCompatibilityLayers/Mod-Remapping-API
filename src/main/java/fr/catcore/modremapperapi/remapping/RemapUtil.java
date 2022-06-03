@@ -6,6 +6,7 @@ import fr.catcore.modremapperapi.api.RemapLibrary;
 import fr.catcore.modremapperapi.utils.CollectionUtils;
 import fr.catcore.modremapperapi.utils.Constants;
 import fr.catcore.modremapperapi.utils.FileUtils;
+import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.impl.launch.FabricLauncher;
 import net.fabricmc.loader.impl.launch.FabricLauncherBase;
@@ -135,7 +136,11 @@ public class RemapUtil {
         MOD_MAPPINGS.forEach(mappings::add);
 
         List<String> lines = new ArrayList<>();
-        lines.add(toString("v1", "official", "intermediary", "named"));
+        if (ModRemappingAPI.BABRIC) {
+            lines.add(toString("v1", "intermediary", "glue", "server", "client"));
+        } else {
+            lines.add(toString("v1", "official", "intermediary", "named"));
+        }
         mappings.forEach(mappingBuilder -> lines.addAll(mappingBuilder.build()));
 
         FileUtils.writeTextFile(lines, Constants.REMAPPED_MAPPINGS_FILE);
@@ -185,7 +190,11 @@ public class RemapUtil {
 
         List<String> lines = new ArrayList<>();
 
-        lines.add(toString("v1", "official", "intermediary", "named"));
+        if (ModRemappingAPI.BABRIC) {
+            lines.add(toString("v1", "intermediary", "glue", "server", "client"));
+        } else {
+            lines.add(toString("v1", "official", "intermediary", "named"));
+        }
 
         MappingList mappingList = new MappingList();
 
@@ -271,7 +280,11 @@ public class RemapUtil {
      */
     private static IMappingProvider createProvider(TinyTree tree) {
         FabricLauncher launcher = FabricLauncherBase.getLauncher();
-        return TinyRemapperMappingsHelper.create(tree, "official", launcher.getTargetNamespace());
+        String targetNamespace = "official";
+        if (ModRemappingAPI.BABRIC) {
+            targetNamespace = FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT ? "client": "server";
+        }
+        return TinyRemapperMappingsHelper.create(tree, targetNamespace, launcher.getTargetNamespace());
     }
 
     /**

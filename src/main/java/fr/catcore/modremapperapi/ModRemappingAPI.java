@@ -16,6 +16,9 @@ public class ModRemappingAPI implements PreLaunchEntrypoint {
 
     public static boolean remapModClasses = true;
 
+    public static final boolean BABRIC = FabricLoader.getInstance().getModContainer("fabricloader")
+            .get().getMetadata().getVersion().getFriendlyString().contains("babric");
+
     @Override
     public void onPreLaunch() {
         FabricLoader.getInstance().getConfigDir().toFile().mkdirs();

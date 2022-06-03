@@ -1,5 +1,7 @@
 package fr.catcore.modremapperapi.remapping;
 
+import fr.catcore.modremapperapi.ModRemappingAPI;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,7 +54,11 @@ public class MappingBuilder {
 
     public List<String> build() {
         List<String> list = new ArrayList<>();
-        list.add(toString("CLASS", this.obfucated, this.intermediary, this.intermediary));
+        if (ModRemappingAPI.BABRIC) {
+            list.add(toString("CLASS", this.intermediary, this.intermediary, this.obfucated, this.obfucated));
+        } else {
+            list.add(toString("CLASS", this.obfucated, this.intermediary, this.intermediary));
+        }
 
         entries.forEach(entry -> list.add(entry.toString(this.obfucated)));
 
@@ -73,7 +79,11 @@ public class MappingBuilder {
         }
 
         public String toString(String className) {
-            return MappingBuilder.toString(this.type.name(), className, this.description, this.obfuscated, this.intermediary, this.intermediary);
+            if (ModRemappingAPI.BABRIC) {
+                return MappingBuilder.toString(this.type.name(), className, this.description, this.intermediary, this.intermediary, this.obfuscated, this.obfuscated);
+            } else {
+                return MappingBuilder.toString(this.type.name(), className, this.description, this.obfuscated, this.intermediary, this.intermediary);
+            }
         }
     }
 
