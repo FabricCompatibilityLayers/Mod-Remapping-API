@@ -68,6 +68,8 @@ public class RemapUtil {
                         }
 
                         FileUtils.excludeFromZipFile(libPath, library.toExclude);
+                    } else if (!libPath.exists() && library.path != null) {
+                        FileUtils.copyFile(library.path, libPath.toPath());
                     }
                 }
             }

@@ -4,6 +4,7 @@ import net.fabricmc.loader.impl.launch.FabricLauncherBase;
 
 import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -87,5 +88,34 @@ public class FileUtils {
         // Complete the ZIP file
         zout.close();
         tempFile.delete();
+    }
+
+    public static void copyFile(Path original, Path copy) throws IOException {
+        copy.toFile().delete();
+
+        ZipInputStream zin = new ZipInputStream(Files.newInputStream(original));
+        ZipOutputStream zout = new ZipOutputStream(Files.newOutputStream(copy));
+
+        ZipEntry entry = zin.getNextEntry();
+        byte[] buf = new byte[1024];
+
+        while (entry != null) {
+            String zipEntryName = entry.getName();
+
+            zout.putNextEntry(new ZipEntry(zipEntryName));
+            // Transfer bytes from the ZIP file to the output file
+            int len;
+            while ((len = zin.read(buf)) > 0) {
+                zout.write(buf, 0, len);
+            }
+
+            entry = zin.getNextEntry();
+        }
+
+        // Close the streams
+        zin.close();
+        // Compress the files
+        // Complete the ZIP file
+        zout.close();
     }
 }
