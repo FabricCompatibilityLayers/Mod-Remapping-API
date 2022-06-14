@@ -45,7 +45,7 @@ public class RemapUtil {
                 for (RemapLibrary library : remapper.getRemapLibraries()) {
                     File libPath = new File(Constants.LIB_FOLDER, library.fileName);
 
-                    if (!libPath.exists()) {
+                    if (!libPath.exists() && !library.url.isEmpty()) {
                         try (BufferedInputStream inputStream = new BufferedInputStream(new URL(library.url).openStream())) {
                             try (BufferedOutputStream outputStream = new BufferedOutputStream(Files.newOutputStream(libPath.toPath()))) {
                                 byte[] buffer = new byte[2048];
