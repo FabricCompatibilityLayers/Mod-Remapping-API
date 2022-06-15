@@ -1,6 +1,7 @@
 package fr.catcore.modremapperapi.api;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
 public class RemapLibrary {
@@ -20,6 +21,13 @@ public class RemapLibrary {
         this.url = "";
         this.path = path;
         this.toExclude = toExclude;
+        this.fileName = fileName;
+    }
+
+    public RemapLibrary(Path path, String fileName) {
+        this.url = "";
+        this.path = path;
+        this.toExclude = new ArrayList<>();
         this.fileName = fileName;
     }
 }
