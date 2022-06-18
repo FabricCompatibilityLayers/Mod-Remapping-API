@@ -4,6 +4,7 @@ import fr.catcore.modremapperapi.ModRemappingAPI;
 import fr.catcore.modremapperapi.api.ModRemapper;
 import fr.catcore.modremapperapi.remapping.RemapUtil;
 import net.fabricmc.loader.api.FabricLoader;
+import org.spongepowered.include.com.google.common.collect.ImmutableList;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -13,11 +14,12 @@ import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
 
 public class ModDiscoverer {
     private static final Map<String, List<String>> EXCLUDED = new HashMap<>();
@@ -36,13 +38,14 @@ public class ModDiscoverer {
                 File mcSubFolder = new File(FabricLoader.getInstance().getGameDir().toFile(), jarFolder);
                 File cacheFolder = new File(Constants.VERSIONED_FOLDER, jarFolder);
 
-                mcSubFolder.mkdirs();
-                cacheFolder.mkdirs();
+                if (!(mcSubFolder.mkdirs() && cacheFolder.mkdirs())) {
+                    continue;
+                }
 
                 try {
                     Files.walkFileTree(cacheFolder.toPath(), new FileVisitor<Path>() {
                         @Override
-                        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
                             return FileVisitResult.CONTINUE;
                         }
 
@@ -53,7 +56,7 @@ public class ModDiscoverer {
                         }
 
                         @Override
-                        public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+                        public FileVisitResult visitFileFailed(Path file, IOException exc) {
                             return FileVisitResult.CONTINUE;
                         }
 
@@ -91,7 +94,10 @@ public class ModDiscoverer {
     private static List<ModEntry> discoverModsInFolder(File folder, File destination) {
         List<ModEntry> mods = new ArrayList<>();
 
-        for (File file : folder.listFiles()) {
+        File[] folderFiles = folder.listFiles();
+        if (!(folder.isDirectory() && folderFiles != null)) return ImmutableList.of();
+
+        for (File file : folderFiles) {
             String name = file.getName();
             if (file.isDirectory() || (file.isFile() && (name.endsWith(".jar") || name.endsWith(".zip")))) {
                 File remappedFile = new File(destination, name);
@@ -101,9 +107,11 @@ public class ModDiscoverer {
                 boolean hasClass = false;
                 boolean fabric = false;
 
-                if (file.isDirectory()) {
+                File[] fileFiles = file.listFiles();
+
+                if (file.isDirectory() && fileFiles != null) {
                     remappedFile = new File(destination, name + ".zip");
-                    for (File subFile : file.listFiles()) {
+                    for (File subFile : fileFiles) {
                         String subName = subFile.getName();
                         if (subFile.isFile()) {
                             if (subName.endsWith(".class")) {
@@ -112,7 +120,7 @@ public class ModDiscoverer {
                         }
                     }
 
-                    if (modName.isEmpty() && hasClass) {
+                    if (/* modName.isEmpty() && */ hasClass) {
                         modName.add(new DefaultModEntry(
                                 name.replace(".zip", "").replace(".jar", ""),
                                 remappedFile,
@@ -124,7 +132,9 @@ public class ModDiscoverer {
                         for (String excluded :
                                 EXCLUDED.get(modName.get(0).modName)) {
                             File excludedFile = new File(file, excluded);
-                            excludedFile.delete();
+                            if (excludedFile.delete()) {
+                                Constants.MAIN_LOGGER.debug("File deleted: " + excludedFile.getName());
+                            }
                         }
                     }
                 } else {
@@ -144,7 +154,7 @@ public class ModDiscoverer {
                             String s2 = ss[ss.length - 1];
                             if (!zipentry.isDirectory()) {
                                 if (s2.equals("fabric.mod.json")) {
-                                    modName.clear();
+//                                  modName.clear();
                                     fabric = true;
                                     break;
                                 } else if (s2.endsWith(".class")) {
@@ -153,7 +163,7 @@ public class ModDiscoverer {
                             }
                         }
 
-                        if (modName.isEmpty() && hasClass && !fabric) {
+                        if (/* modName.isEmpty() && */ hasClass && !fabric) {
                             modName.add(new DefaultModEntry(
                                     name.replace(".zip", "").replace(".jar", ""),
                                     remappedFile,
@@ -172,7 +182,7 @@ public class ModDiscoverer {
                 }
 
                 if (!modName.isEmpty()) {
-                    List<String> files = RemapUtil.makeModMappings(file.toPath());
+//                  List<String> files = RemapUtil.makeModMappings(file.toPath());
 
                     while (!modName.isEmpty()) {
                         ModEntry modname = modName.remove(0);
