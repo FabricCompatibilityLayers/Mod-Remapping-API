@@ -182,7 +182,7 @@ public class ModDiscoverer {
                 }
 
                 if (!modName.isEmpty()) {
-//                  List<String> files = RemapUtil.makeModMappings(file.toPath());
+                    RemapUtil.makeModMappings(file.toPath());
 
                     while (!modName.isEmpty()) {
                         ModEntry modname = modName.remove(0);
