@@ -38,9 +38,8 @@ public class ModDiscoverer {
                 File mcSubFolder = new File(FabricLoader.getInstance().getGameDir().toFile(), jarFolder);
                 File cacheFolder = new File(Constants.VERSIONED_FOLDER, jarFolder);
 
-                if (!(mcSubFolder.mkdirs() && cacheFolder.mkdirs())) {
-                    continue;
-                }
+                if (!mcSubFolder.exists()) mcSubFolder.mkdirs();
+                if (!cacheFolder.exists()) cacheFolder.mkdirs();
 
                 try {
                     Files.walkFileTree(cacheFolder.toPath(), new FileVisitor<Path>() {
