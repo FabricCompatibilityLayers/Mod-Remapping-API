@@ -28,4 +28,8 @@ public interface ModRemapper {
     void getMappingList(RemapUtil.MappingList list);
 
     Optional<TinyRemapper.ApplyVisitorProvider> getPostRemappingVisitor();
+
+    default Optional<String> getDefaultPackage() {
+        return Optional.empty();
+    }
 }

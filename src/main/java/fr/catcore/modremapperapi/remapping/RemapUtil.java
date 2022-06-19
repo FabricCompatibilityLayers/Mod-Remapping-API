@@ -32,9 +32,21 @@ public class RemapUtil {
 
     private static final Map<String, String> MOD_MAPPINGS = new HashMap<>();
 
+    private static String defaultPackage = "";
+
     public static void init() {
         downloadRemappingLibs();
         generateMappings();
+
+        for (ModRemapper remapper : ModRemappingAPI.MOD_REMAPPERS) {
+            Optional<String> pkg = remapper.getDefaultPackage();
+
+            if (pkg.isPresent()) {
+                defaultPackage = pkg.get();
+                break;
+            }
+        }
+
         LOADER_TREE = makeTree(Constants.EXTRA_MAPPINGS_FILE);
         MINECRAFT_TREE = FabricLauncherBase.getLauncher().getMappingConfiguration().getMappings();
     }
@@ -79,14 +91,7 @@ public class RemapUtil {
     }
 
     public static void remapMods(Map<Path, Path> pathMap) {
-        TinyRemapper remapper;
-
-        if (ModRemappingAPI.remapModClasses) {
-            remapper = makeRemapper(MINECRAFT_TREE, LOADER_TREE, MODS_TREE);
-        } else {
-            remapper = makeRemapper(MINECRAFT_TREE, LOADER_TREE);
-        }
-
+        TinyRemapper remapper = makeRemapper(MINECRAFT_TREE, LOADER_TREE, MODS_TREE);
         remapFiles(remapper, pathMap);
     }
 
@@ -124,7 +129,7 @@ public class RemapUtil {
             if (file.endsWith(".class")) classes.add(file.replace(".class", ""));
         }
 
-        classes.forEach(cl -> MOD_MAPPINGS.put(cl, (cl.contains("/") ? "" : "net/minecraft/") + cl));
+        classes.forEach(cl -> MOD_MAPPINGS.put(cl, (cl.contains("/") ? "" : defaultPackage) + cl));
 
         return files;
     }
