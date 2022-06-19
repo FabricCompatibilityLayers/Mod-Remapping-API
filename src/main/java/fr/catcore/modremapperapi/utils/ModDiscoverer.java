@@ -85,17 +85,13 @@ public class ModDiscoverer {
         }
 
         RemapUtil.remapMods(modPaths);
-
-//        FakeModManager.getMods().forEach(modEntry -> {
-//            if (modEntry.original != null) FabricLauncherBase.getLauncher().addToClassPath(modEntry.file.toPath());
-//        });
     }
 
     private static List<ModEntry> discoverModsInFolder(File folder, File destination) {
         List<ModEntry> mods = new ArrayList<>();
 
         File[] folderFiles = folder.listFiles();
-        if (!(folder.isDirectory() && folderFiles != null)) return ImmutableList.of();
+        if (!folder.isDirectory() || folderFiles == null) return ImmutableList.of();
 
         for (File file : folderFiles) {
             String name = file.getName();
