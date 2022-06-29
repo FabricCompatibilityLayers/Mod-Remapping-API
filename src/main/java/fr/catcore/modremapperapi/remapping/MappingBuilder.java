@@ -60,7 +60,7 @@ public class MappingBuilder {
             list.add(toString("CLASS", this.obfucated, this.intermediary, this.intermediary));
         }
 
-        entries.forEach(entry -> list.add(entry.toString(this.obfucated)));
+        entries.forEach(entry -> list.add(entry.toString(ModRemappingAPI.BABRIC ? this.intermediary : this.obfucated)));
 
         return list;
     }
