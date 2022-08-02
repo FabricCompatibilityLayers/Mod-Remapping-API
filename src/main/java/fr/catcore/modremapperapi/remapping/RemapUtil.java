@@ -8,6 +8,7 @@ import fr.catcore.modremapperapi.utils.Constants;
 import fr.catcore.modremapperapi.utils.FileUtils;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.api.MappingResolver;
 import net.fabricmc.loader.impl.launch.FabricLauncher;
 import net.fabricmc.loader.impl.launch.FabricLauncherBase;
 import net.fabricmc.loader.impl.util.mappings.TinyRemapperMappingsHelper;
@@ -143,11 +144,13 @@ public class RemapUtil {
         MOD_MAPPINGS.forEach(mappings::add);
 
         List<String> lines = new ArrayList<>();
+
         if (ModRemappingAPI.BABRIC) {
             lines.add(toString("v1", "intermediary", "glue", "server", "client"));
         } else {
             lines.add(toString("v1", "official", "intermediary", "named"));
         }
+
         mappings.forEach(mappingBuilder -> lines.addAll(mappingBuilder.build()));
 
         FileUtils.writeTextFile(lines, Constants.REMAPPED_MAPPINGS_FILE);
@@ -291,11 +294,7 @@ public class RemapUtil {
      */
     private static IMappingProvider createProvider(TinyTree tree) {
         FabricLauncher launcher = FabricLauncherBase.getLauncher();
-        String targetNamespace = "official";
-        if (ModRemappingAPI.BABRIC) {
-            targetNamespace = FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT ? "client": "server";
-        }
-        return TinyRemapperMappingsHelper.create(tree, targetNamespace, launcher.getTargetNamespace());
+        return TinyRemapperMappingsHelper.create(tree, getNativeNamespace(), launcher.getTargetNamespace());
     }
 
     /**
@@ -328,6 +327,81 @@ public class RemapUtil {
             remapper.finish();
             throw new RuntimeException("Failed to remap jar", e);
         }
+    }
+
+    public static String getNativeNamespace() {
+        String targetNamespace = "official";
+
+        if (ModRemappingAPI.BABRIC) {
+            targetNamespace = FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT ? "client": "server";
+        }
+
+        return targetNamespace;
+    }
+
+    public static String getRemappedFieldName(Class<?> owner, String fieldName) {
+        final MappingResolver resolver = FabricLoader.getInstance().getMappingResolver();
+
+        for (ClassDef def : FabricLauncherBase.getLauncher().getMappingConfiguration().getMappings().getClasses()) {
+            if (def.getName(resolver.getCurrentRuntimeNamespace())
+                    .replace(".", "/").equals(owner.getName().replace(".", "/"))) {
+                for (FieldDef fieldDef : def.getFields()) {
+                    if (Objects.equals(fieldDef.getName(getNativeNamespace()), fieldName)) {
+                        return fieldDef.getName(resolver.getCurrentRuntimeNamespace());
+                    }
+                }
+            }
+        }
+
+        if (owner.getSuperclass() != null) {
+            fieldName = getRemappedFieldName(owner.getSuperclass(), fieldName);
+        }
+
+        return fieldName;
+    }
+
+    public static String getRemappedMethodName(Class<?> owner, String methodName, Class<?>[] parameterTypes) {
+        final MappingResolver resolver = FabricLoader.getInstance().getMappingResolver();
+
+        String argDesc = classTypeToDescriptor(parameterTypes);
+
+        for (ClassDef def : FabricLauncherBase.getLauncher().getMappingConfiguration().getMappings().getClasses()) {
+            if (def.getName(resolver.getCurrentRuntimeNamespace())
+                    .replace(".", "/").equals(owner.getName().replace(".", "/"))) {
+                for (MethodDef methodDef : def.getMethods()) {
+                    if (Objects.equals(methodDef.getName(getNativeNamespace()), methodName)) {
+                        String methodDescriptor = methodDef.getDescriptor(resolver.getCurrentRuntimeNamespace());
+
+                        if (methodDescriptor.startsWith(argDesc)) {
+                            return methodDef.getName(resolver.getCurrentRuntimeNamespace());
+                        }
+                    }
+                }
+            }
+        }
+
+        if (owner.getSuperclass() != null) {
+            methodName = getRemappedMethodName(owner.getSuperclass(), methodName, parameterTypes);
+        }
+
+        return methodName;
+    }
+
+    private static String classTypeToDescriptor(Class<?>[] classTypes) {
+        StringBuilder desc = new StringBuilder("(");
+
+        for (Class<?> clas : classTypes) {
+            desc.append(Type.getDescriptor(clas));
+        }
+
+        return desc + ")";
+    }
+
+    /**
+     * A shortcut to the Fabric Environment getter.
+     */
+    public static EnvType getEnvironment() {
+        return FabricLoader.getInstance().getEnvironmentType();
     }
 
     /**
