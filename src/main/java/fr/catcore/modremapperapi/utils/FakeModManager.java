@@ -23,34 +23,15 @@ public class FakeModManager {
     public static void init() {
         if (!loaded && !loading) {
             loading = true;
-//            try {
-//                createBuiltin = ModCandidate.class.getDeclaredMethod("createBuiltin", GameProvider.BuiltinMod.class);
-//                createBuiltin.setAccessible(true);
-
-                ModDiscoverer.init();
-                loading = false;
-                loaded = true;
-//            } catch (NoSuchMethodException e) {
-//                throw new RuntimeException(e);
-//            }
+            ModDiscoverer.init();
+            loading = false;
+            loaded = true;
         }
     }
 
     protected static void addModEntry(ModEntry modEntry) {
-//        try {
-//            ModCandidate candidate = (ModCandidate) createBuiltin.invoke(null, new GameProvider.BuiltinMod(Collections.emptyList(), new MLModMetadata(modEntry.modId, modEntry.modName)));
-//            ModContainer container = new ModContainerImpl(candidate);
-//
-//            FabricLoader loader = FabricLoader.getInstance();
-//
-//            getModList(loader).add(container);
-//            getModMap(loader).put(modEntry.modId, container);
-
-            MODS.add(modEntry);
-            Constants.MAIN_LOGGER.info("Added " + modEntry.getType() + " mod " + modEntry.modName + " to mod list.");
-//        } catch (IllegalAccessException | InvocationTargetException e) {
-//            throw new RuntimeException(e);
-//        }
+        MODS.add(modEntry);
+        Constants.MAIN_LOGGER.info("Added " + modEntry.getType() + " mod " + modEntry.modName + " to mod list.");
     }
 
     public static List<ModEntry> getMods() {
