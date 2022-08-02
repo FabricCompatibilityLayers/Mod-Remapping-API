@@ -4,6 +4,8 @@ import fr.catcore.modremapperapi.ModRemappingAPI;
 import fr.catcore.modremapperapi.api.ModRemapper;
 import fr.catcore.modremapperapi.remapping.RemapUtil;
 import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.impl.launch.FabricLauncher;
+import net.fabricmc.loader.impl.launch.FabricLauncherBase;
 import org.spongepowered.include.com.google.common.collect.ImmutableList;
 
 import java.io.File;
@@ -84,6 +86,10 @@ public class ModDiscoverer {
         }
 
         RemapUtil.remapMods(modPaths);
+
+        for (Path modPath : modPaths.values()) {
+            FabricLauncherBase.getLauncher().addToClassPath(modPath);
+        }
     }
 
     private static List<ModEntry> discoverModsInFolder(File folder, File destination) {
