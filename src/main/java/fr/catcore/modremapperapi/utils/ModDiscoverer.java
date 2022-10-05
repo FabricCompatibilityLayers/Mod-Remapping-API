@@ -88,6 +88,7 @@ public class ModDiscoverer {
         RemapUtil.remapMods(modPaths);
 
         for (Path modPath : modPaths.values()) {
+            Constants.MAIN_LOGGER.debug("Adding path to classpath: " + modPath.toString());
             FabricLauncherBase.getLauncher().addToClassPath(modPath);
         }
     }

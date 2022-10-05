@@ -10,7 +10,7 @@ import java.util.Set;
 public class ModRemappingAPIMixinPlugin implements IMixinConfigPlugin {
     @Override
     public void onLoad(String mixinPackage) {
-
+        ModRemappingAPI.init(true);
     }
 
     @Override
@@ -20,7 +20,6 @@ public class ModRemappingAPIMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        ModRemappingAPI.init(true);
         return false;
     }
 

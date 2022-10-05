@@ -21,16 +21,22 @@ public class ModRemappingAPI {
             .get().getMetadata().getVersion().getFriendlyString().contains("babric");
 
     private static boolean init = false;
+    private static boolean initializing = false;
 
     public static void init(boolean fromMixin) {
         if (fromMixin && !canLoadMixin()) return;
 
-        if (!init) {
+        if (!init && !initializing) {
+            initializing = true;
+
             FabricLoader.getInstance().getConfigDir().toFile().mkdirs();
             remapModClasses = new File(FabricLoader.getInstance().getConfigDir().toFile(), "modremapper").exists();
 
             MOD_REMAPPERS.addAll(FabricLoader.getInstance().getEntrypoints(entrypointName, ModRemapper.class));
             FakeModManager.init();
+
+            initializing = false;
+            init = true;
         }
     }
 

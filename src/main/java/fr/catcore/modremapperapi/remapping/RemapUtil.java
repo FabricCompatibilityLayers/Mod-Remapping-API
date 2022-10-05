@@ -92,8 +92,11 @@ public class RemapUtil {
     }
 
     public static void remapMods(Map<Path, Path> pathMap) {
+        Constants.MAIN_LOGGER.debug("Starting jar remapping!");
         TinyRemapper remapper = makeRemapper(MINECRAFT_TREE, LOADER_TREE, MODS_TREE);
+        Constants.MAIN_LOGGER.debug("Remapper created!");
         remapFiles(remapper, pathMap);
+        Constants.MAIN_LOGGER.debug("Jar remapping done!");
     }
 
     public static List<String> makeModMappings(Path modPath) {
@@ -306,20 +309,27 @@ public class RemapUtil {
         try {
             Map<Path, InputTag> tagMap = new HashMap<>();
 
+            Constants.MAIN_LOGGER.debug("Creating InputTags!");
             for (Path input : paths.keySet()) {
                 InputTag tag = remapper.createInputTag();
                 tagMap.put(input, tag);
                 remapper.readInputs(tag, input);
             }
 
-
+            Constants.MAIN_LOGGER.debug("Initializing remapping!");
             for (Map.Entry<Path, Path> entry : paths.entrySet()) {
+                Constants.MAIN_LOGGER.debug("Starting remapping " + entry.getKey().toString() + " to " + entry.getValue().toString());
                 OutputConsumerPath outputConsumer = new OutputConsumerPath.Builder(entry.getValue()).build();
 
+                Constants.MAIN_LOGGER.debug("Add input as non class file!");
                 outputConsumer.addNonClassFiles(entry.getKey(), NonClassCopyMode.UNCHANGED, remapper);
 
+                Constants.MAIN_LOGGER.debug("Apply remapper!");
                 remapper.apply(outputConsumer, tagMap.get(entry.getKey()));
+
+                Constants.MAIN_LOGGER.debug("Done 1!");
                 outputConsumer.close();
+                Constants.MAIN_LOGGER.debug("Done 2!");
             }
 
             remapper.finish();
