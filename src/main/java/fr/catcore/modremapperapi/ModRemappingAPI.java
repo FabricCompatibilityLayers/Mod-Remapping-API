@@ -13,7 +13,6 @@ public class ModRemappingAPI {
 
     public static final List<ModRemapper> MOD_REMAPPERS = new ArrayList<>();
     private static final String entrypointName = "mod-remapper-api:modremapper";
-    private static final String noMixins = "mod-remapper-api:nomixins";
 
     public static boolean remapModClasses = true;
 
@@ -23,9 +22,7 @@ public class ModRemappingAPI {
     private static boolean init = false;
     private static boolean initializing = false;
 
-    public static void init(boolean fromMixin) {
-        if (fromMixin && !canLoadMixin()) return;
-
+    public static void init() {
         if (!init && !initializing) {
             initializing = true;
 
@@ -38,17 +35,5 @@ public class ModRemappingAPI {
             initializing = false;
             init = true;
         }
-    }
-
-    private static boolean canLoadMixin() {
-        AtomicBoolean value = new AtomicBoolean(true);
-
-        FabricLoader.getInstance().getAllMods().forEach(modContainer -> {
-            if (value.get() && modContainer.getMetadata().containsCustomValue(noMixins)) {
-                value.set(false);
-            }
-        });
-
-        return value.get();
     }
 }
