@@ -1,12 +1,10 @@
 package fr.catcore.modremapperapi;
 
-import net.fabricmc.loader.api.entrypoint.PreLaunchEntrypoint;
-
 import static fr.catcore.modremapperapi.ModRemappingAPI.init;
 
-public class ModRemappingApiInit implements PreLaunchEntrypoint {
+public class ModRemappingApiInit implements Runnable {
     @Override
-    public void onPreLaunch() {
+    public void run() {
         init(false);
     }
 }
