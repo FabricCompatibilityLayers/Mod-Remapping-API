@@ -1,9 +1,9 @@
 package fr.catcore.modremapperapi.utils;
 
+import fr.catcore.modremapperapi.api.ApplyVisitorProvider;
 import fr.catcore.modremapperapi.api.ModRemapper;
 import fr.catcore.modremapperapi.api.RemapLibrary;
 import fr.catcore.modremapperapi.remapping.RemapUtil;
-import net.fabricmc.tinyremapper.TinyRemapper;
 
 import java.util.HashMap;
 import java.util.List;
@@ -30,7 +30,7 @@ public class DefaultModRemapper implements ModRemapper {
     public void getMappingList(RemapUtil.MappingList list) {}
 
     @Override
-    public Optional<TinyRemapper.ApplyVisitorProvider> getPostRemappingVisitor() {
+    public Optional<ApplyVisitorProvider> getPostRemappingVisitor() {
         return Optional.empty();
     }
 }

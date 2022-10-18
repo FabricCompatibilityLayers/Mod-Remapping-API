@@ -271,9 +271,13 @@ public class RemapUtil {
             builder.withMappings(createProvider(tree));
         }
 
+        MRAPostApplyVisitor applyVisitor = new MRAPostApplyVisitor();
+
         for (ModRemapper modRemapper : ModRemappingAPI.MOD_REMAPPERS) {
-            modRemapper.getPostRemappingVisitor().ifPresent(builder::extraPostApplyVisitor);
+            modRemapper.getPostRemappingVisitor().ifPresent(applyVisitor::addProvider);
         }
+
+        builder.extraPostApplyVisitor(applyVisitor);
 
         TinyRemapper remapper = builder.build();
         remapper.readClassPath((Path) FabricLoader.getInstance().getObjectShare().get("fabric-loader:inputGameJar"));

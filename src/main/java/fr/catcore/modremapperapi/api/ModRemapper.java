@@ -3,7 +3,6 @@ package fr.catcore.modremapperapi.api;
 import fr.catcore.modremapperapi.remapping.RemapUtil;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.tinyremapper.TinyRemapper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +26,7 @@ public interface ModRemapper {
 
     void getMappingList(RemapUtil.MappingList list);
 
-    Optional<TinyRemapper.ApplyVisitorProvider> getPostRemappingVisitor();
+    Optional<ApplyVisitorProvider> getPostRemappingVisitor();
 
     default Optional<String> getDefaultPackage() {
         return Optional.empty();
