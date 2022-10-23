@@ -273,9 +273,13 @@ public class RemapUtil {
 
         MRAPostApplyVisitor applyVisitor = new MRAPostApplyVisitor();
 
+        VisitorInfos infos = new VisitorInfos();
+
         for (ModRemapper modRemapper : ModRemappingAPI.MOD_REMAPPERS) {
-            modRemapper.getPostRemappingVisitor().ifPresent(applyVisitor::addProvider);
+            modRemapper.registerVisitors(infos);
         }
+
+        applyVisitor.setInfos(infos);
 
         builder.extraPostApplyVisitor(applyVisitor);
 

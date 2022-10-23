@@ -1,6 +1,7 @@
 package fr.catcore.modremapperapi.api;
 
 import fr.catcore.modremapperapi.remapping.RemapUtil;
+import fr.catcore.modremapperapi.remapping.VisitorInfos;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
 
@@ -26,7 +27,7 @@ public interface ModRemapper {
 
     void getMappingList(RemapUtil.MappingList list);
 
-    Optional<ApplyVisitorProvider> getPostRemappingVisitor();
+    void registerVisitors(VisitorInfos infos);
 
     default Optional<String> getDefaultPackage() {
         return Optional.empty();
