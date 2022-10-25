@@ -275,6 +275,15 @@ public class RemapUtil {
 
         VisitorInfos infos = new VisitorInfos();
 
+        try {
+            Class.forName("fr.catcore.modremapperapi.remapping.MRAMethodVisitor");
+            Class.forName("fr.catcore.modremapperapi.remapping.VisitorInfos$Type");
+            Class.forName("fr.catcore.modremapperapi.remapping.VisitorInfos$MethodValue");
+            Class.forName("fr.catcore.modremapperapi.remapping.VisitorInfos$MethodNamed");
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
         for (ModRemapper modRemapper : ModRemappingAPI.MOD_REMAPPERS) {
             modRemapper.registerVisitors(infos);
         }
