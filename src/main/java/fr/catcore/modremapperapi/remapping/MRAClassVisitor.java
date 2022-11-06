@@ -5,7 +5,6 @@ import org.objectweb.asm.*;
 
 public class MRAClassVisitor extends ClassVisitor {
     private final VisitorInfos infos;
-    private final Logger logger = Logger.get("MRAClassVisitor");
     private final String className;
     protected MRAClassVisitor(ClassVisitor classVisitor, VisitorInfos infos, String className) {
         super(Opcodes.ASM9, classVisitor);

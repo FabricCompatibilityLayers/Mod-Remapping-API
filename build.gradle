@@ -40,8 +40,8 @@ dependencies {
 
 	modImplementation(include("net.legacyfabric.legacy-fabric-api:legacy-fabric-logger-api-v1:1.0.4+common+ae4aa0d092"))
 
-	modImplementation "com.github.Chocohead:Fabric-ASM:${project.fabric_asm_version}"
-	include "com.github.Chocohead:Fabric-ASM:${project.fabric_asm_version}"
+	modImplementation "com.github.arthurbambou:Fabric-ASM:${project.fabric_asm_version}"
+	include "com.github.arthurbambou:Fabric-ASM:${project.fabric_asm_version}"
 
 	if (lwjgl2) {
 		if (currentOs.contains("mac")) {
