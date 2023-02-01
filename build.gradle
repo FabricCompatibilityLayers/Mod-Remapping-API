@@ -1,5 +1,6 @@
 plugins {
-	id 'fabric-loom' version "1.0-SNAPSHOT" // To use chocoloom, change the version to a commit hash
+	id 'fabric-loom' version "1.1-SNAPSHOT"
+	id 'legacy-looming' version "1.1-SNAPSHOT" // Version must be the same as fabric-loom's
 	id 'maven-publish'
 }
 
@@ -12,72 +13,23 @@ group = project.maven_group
 
 repositories {
 	maven {
-		name = "legacy-fabric"
-		url = "https://maven.legacyfabric.net"
-	}
-	// Fixed LWJGL on Linux
-	maven {
-		name = 'Babric'
-		url = 'https://maven.glass-launcher.net/babric'
-	}
-	maven {
 		name = "Jitpack"
 		url 'https://jitpack.io/'
 	}
 }
 
 loom {
-	setIntermediaryUrl('https://maven.legacyfabric.net/net/legacyfabric/intermediary/%1$s/intermediary-%1$s-v2.jar');
+	setIntermediaryUrl('https://repo.legacyfabric.net/repository/legacyfabric/net/legacyfabric/intermediary/%1$s/intermediary-%1$s-v2.jar');
 }
-
-def lwjgl2 = !project.minecraft_version.startsWith("1.13")
-def currentOs = System.getProperty("os.name").toLowerCase(Locale.ENGLISH)
 
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	mappings "net.legacyfabric:yarn:${project.yarn_mappings}:v2"
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
-	modImplementation(include("net.legacyfabric.legacy-fabric-api:legacy-fabric-logger-api-v1:1.0.4+common+ae4aa0d092"))
+	modImplementation(include(legacyFabricApi.module("legacy-fabric-logger-api-v1", "1.9.0+1.8.9")))
 
-	modImplementation "com.github.arthurbambou:Fabric-ASM:${project.fabric_asm_version}"
-	include "com.github.arthurbambou:Fabric-ASM:${project.fabric_asm_version}"
-
-	if (lwjgl2) {
-		if (currentOs.contains("mac")) {
-			implementation 'org.lwjgl.lwjgl:lwjgl_util:2.9.4-nightly-20150209'
-			implementation 'org.lwjgl.lwjgl:lwjgl:2.9.4-nightly-20150209'
-			implementation 'org.lwjgl.lwjgl:lwjgl-platform:2.9.4-nightly-20150209'
-		} else if (currentOs.contains("linux")) {
-			implementation 'org.lwjgl.lwjgl:lwjgl_util:2.9.4-babric.1'
-			implementation 'org.lwjgl.lwjgl:lwjgl:2.9.4-babric.1'
-			implementation 'org.lwjgl.lwjgl:lwjgl-platform:2.9.4-babric.1'
-		}
-	}
-}
-
-if (lwjgl2) {
-	if (currentOs.contains("mac")) {
-		configurations.all {
-			resolutionStrategy {
-				dependencySubstitution {
-					substitute module('org.lwjgl.lwjgl:lwjgl_util:2.9.2-nightly-201408222') with module('org.lwjgl.lwjgl:lwjgl_util:2.9.4-nightly-20150209')
-					substitute module('org.lwjgl.lwjgl:lwjgl:2.9.2-nightly-201408222') with module('org.lwjgl.lwjgl:lwjgl:2.9.4-nightly-20150209')
-				}
-				force 'org.lwjgl.lwjgl:lwjgl-platform:2.9.4-nightly-20150209'
-			}
-		}
-	} else if (currentOs.contains("linux")) {
-		configurations.all {
-			resolutionStrategy {
-				dependencySubstitution {
-					substitute(module('org.lwjgl.lwjgl:lwjgl_util:2.9.4-nightly-20150209')) using module('org.lwjgl.lwjgl:lwjgl_util:2.9.4-babric.1')
-					substitute module('org.lwjgl.lwjgl:lwjgl:2.9.4-nightly-20150209') using module('org.lwjgl.lwjgl:lwjgl:2.9.4-babric.1')
-				}
-				force 'org.lwjgl.lwjgl:lwjgl-platform:2.9.4-babric.1'
-			}
-		}
-	}
+	modImplementation(include("com.github.arthurbambou:Fabric-ASM:${project.fabric_asm_version}"))
 }
 
 processResources {
