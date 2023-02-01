@@ -15,7 +15,7 @@ import java.util.function.Consumer;
  */
 public class MixinUtils {
     public static void applyASMMagic(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
-        AnnotationNode changeSuperClass = Annotations.getInvisible(targetClass, ChangeSuperClass.class);
+        AnnotationNode changeSuperClass = Annotations.getVisible(targetClass, ChangeSuperClass.class);
 
         if (changeSuperClass != null) {
             String oldOwner = targetClass.superName;
@@ -30,7 +30,7 @@ public class MixinUtils {
         for (ListIterator<MethodNode> it = targetClass.methods.listIterator(); it.hasNext(); ) {
             MethodNode method = it.next();
 
-            if (Annotations.getInvisible(method, SuperConstructor.class) != null) {
+            if (Annotations.getVisible(method, SuperConstructor.class) != null) {
                 it.remove();
                 transformCalls(targetClass, call -> {
                     if (call.name.equals(method.name) && call.desc.equals(method.desc)) {
@@ -42,7 +42,7 @@ public class MixinUtils {
                 continue;
             }
 
-            if (Annotations.getInvisible(method, ShadowConstructor.class) != null) {
+            if (Annotations.getVisible(method, ShadowConstructor.class) != null) {
                 it.remove();
                 transformCalls(targetClass, call -> {
                     if (call.name.equals(method.name) && call.desc.equals(method.desc)) {
@@ -53,12 +53,12 @@ public class MixinUtils {
                 continue;
             }
 
-            if (Annotations.getInvisible(method, Public.class) != null) {
+            if (Annotations.getVisible(method, Public.class) != null) {
                 method.access |= Opcodes.ACC_PUBLIC;
                 method.access &= ~(Opcodes.ACC_PRIVATE | Opcodes.ACC_PROTECTED);
             }
 
-            if (Annotations.getInvisible(method, NewConstructor.class) != null) {
+            if (Annotations.getVisible(method, NewConstructor.class) != null) {
                 method.name = "<init>";
             }
         }
@@ -66,7 +66,7 @@ public class MixinUtils {
         for (ListIterator<FieldNode> it = targetClass.fields.listIterator(); it.hasNext(); ) {
             FieldNode field = it.next();
 
-            if (Annotations.getInvisible(field, Public.class) != null) {
+            if (Annotations.getVisible(field, Public.class) != null) {
                 field.access |= Opcodes.ACC_PUBLIC;
                 field.access &= ~(Opcodes.ACC_PRIVATE | Opcodes.ACC_PROTECTED);
             }
