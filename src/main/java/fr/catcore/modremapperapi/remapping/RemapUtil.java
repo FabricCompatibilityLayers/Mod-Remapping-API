@@ -11,6 +11,9 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.MappingResolver;
 import net.fabricmc.loader.impl.launch.FabricLauncher;
 import net.fabricmc.loader.impl.launch.FabricLauncherBase;
+import net.fabricmc.loader.impl.util.SystemProperties;
+import net.fabricmc.loader.impl.util.log.Log;
+import net.fabricmc.loader.impl.util.log.LogCategory;
 import net.fabricmc.loader.impl.util.mappings.TinyRemapperMappingsHelper;
 import net.fabricmc.mapping.reader.v2.TinyMetadata;
 import net.fabricmc.mapping.tree.*;
@@ -20,9 +23,12 @@ import org.spongepowered.include.com.google.common.base.Strings;
 
 import java.io.*;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -293,13 +299,27 @@ public class RemapUtil {
         builder.extraPostApplyVisitor(applyVisitor);
 
         TinyRemapper remapper = builder.build();
-        remapper.readClassPath((Path) FabricLoader.getInstance().getObjectShare().get("fabric-loader:inputGameJar"));
+
+        if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
+            try {
+                remapper.readClassPathAsync(getRemapClasspath().toArray(new Path[0]));
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to populate default remap classpath", e);
+            }
+        } else {
+            remapper.readClassPathAsync((Path) FabricLoader.getInstance().getObjectShare().get("fabric-loader:inputGameJar"));
+
+            for (Path path : FabricLauncherBase.getLauncher().getClassPath()) {
+                Log.debug(LogCategory.GAME_REMAP, "Appending '%s' to remapper classpath", path);
+                remapper.readClassPathAsync(path);
+            }
+        }
 
         for (ModRemapper modRemapper : ModRemappingAPI.MOD_REMAPPERS) {
             for (RemapLibrary library : modRemapper.getRemapLibraries()) {
                 File libPath = new File(Constants.LIB_FOLDER, library.fileName);
                 if (libPath.exists()) {
-                    remapper.readClassPath(libPath.toPath());
+                    remapper.readClassPathAsync(libPath.toPath());
                 } else {
                     System.out.println("Library " + libPath.toPath() + " does not exist.");
                 }
@@ -323,6 +343,8 @@ public class RemapUtil {
      * @param remapper {@link TinyRemapper} to remap with.
      */
     private static void remapFiles(TinyRemapper remapper, Map<Path, Path> paths) {
+        List<OutputConsumerPath> outputConsumerPaths = new ArrayList<>();
+
         try {
             Map<Path, InputTag> tagMap = new HashMap<>();
 
@@ -330,7 +352,7 @@ public class RemapUtil {
             for (Path input : paths.keySet()) {
                 InputTag tag = remapper.createInputTag();
                 tagMap.put(input, tag);
-                remapper.readInputs(tag, input);
+                remapper.readInputsAsync(tag, input);
             }
 
             Constants.MAIN_LOGGER.debug("Initializing remapping!");
@@ -339,20 +361,34 @@ public class RemapUtil {
                 OutputConsumerPath outputConsumer = new OutputConsumerPath.Builder(entry.getValue()).build();
 
                 Constants.MAIN_LOGGER.debug("Add input as non class file!");
-                outputConsumer.addNonClassFiles(entry.getKey(), NonClassCopyMode.UNCHANGED, remapper);
+                outputConsumer.addNonClassFiles(entry.getKey(), NonClassCopyMode.FIX_META_INF, remapper);
+
+                outputConsumerPaths.add(outputConsumer);
 
                 Constants.MAIN_LOGGER.debug("Apply remapper!");
                 remapper.apply(outputConsumer, tagMap.get(entry.getKey()));
 
                 Constants.MAIN_LOGGER.debug("Done 1!");
-                outputConsumer.close();
-                Constants.MAIN_LOGGER.debug("Done 2!");
             }
-
-            remapper.finish();
         } catch (Exception e) {
             remapper.finish();
+            outputConsumerPaths.forEach(o -> {
+                try {
+                    o.close();
+                } catch (IOException e2) {
+                    e2.printStackTrace();
+                }
+            });
             throw new RuntimeException("Failed to remap jar", e);
+        } finally {
+            remapper.finish();
+            outputConsumerPaths.forEach(o -> {
+                try {
+                    o.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
         }
     }
 
@@ -587,5 +623,19 @@ public class RemapUtil {
                 return CollectionUtils.transformList(mappings.getClasses(), this::wrap);
             }
         };
+    }
+
+    private static List<Path> getRemapClasspath() throws IOException {
+        String remapClasspathFile = System.getProperty(SystemProperties.REMAP_CLASSPATH_FILE);
+
+        if (remapClasspathFile == null) {
+            throw new RuntimeException("No remapClasspathFile provided");
+        }
+
+        String content = new String(Files.readAllBytes(Paths.get(remapClasspathFile)), StandardCharsets.UTF_8);
+
+        return Arrays.stream(content.split(File.pathSeparator))
+                .map(Paths::get)
+                .collect(Collectors.toList());
     }
 }
