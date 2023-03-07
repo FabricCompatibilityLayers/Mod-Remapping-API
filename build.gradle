@@ -1,6 +1,6 @@
 plugins {
-	id 'fabric-loom' version "1.1-SNAPSHOT"
-	id 'legacy-looming' version "1.1-SNAPSHOT" // Version must be the same as fabric-loom's
+	id 'java'
+	id 'xyz.wagyourtail.unimined' version "0.4.2-SNAPSHOT"
 	id 'maven-publish'
 }
 
@@ -12,20 +12,28 @@ version = project.mod_version
 group = project.maven_group
 
 repositories {
+	mavenCentral()
 	maven {
 		name = "Jitpack"
 		url 'https://jitpack.io/'
 	}
 }
 
-loom {
-	setIntermediaryUrl('https://repo.legacyfabric.net/repository/legacyfabric/net/legacyfabric/intermediary/%1$s/intermediary-%1$s-v2.jar');
+unimined {
+	useGlobalCache = false
+}
+
+minecraft {
+	legacyFabric()
 }
 
 dependencies {
-	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	mappings "net.legacyfabric:yarn:${project.yarn_mappings}:v2"
-	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	minecraft "net.minecraft:minecraft:${project.minecraft_version}"
+
+	mappings "net.fabricmc:intermediary:${project.minecraft_version}:v2"
+	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+
+	legacyFabric "net.fabricmc:fabric-loader:${project.loader_version}"
 
 	modImplementation(include(legacyFabricApi.module("legacy-fabric-logger-api-v1", "1.9.0+1.8.9")))
 
