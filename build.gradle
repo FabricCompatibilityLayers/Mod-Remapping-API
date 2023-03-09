@@ -33,7 +33,7 @@ dependencies {
 	mappings "net.fabricmc:intermediary:${project.minecraft_version}:v2"
 	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
 
-	legacyFabric "net.fabricmc:fabric-loader:${project.loader_version}"
+	fabric "net.fabricmc:fabric-loader:${project.loader_version}"
 
 	modImplementation(include(legacyFabricApi.module("legacy-fabric-logger-api-v1", "1.9.0+1.8.9")))
 
