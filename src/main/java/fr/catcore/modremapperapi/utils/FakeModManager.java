@@ -6,10 +6,7 @@ import org.spongepowered.include.com.google.common.collect.Maps;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class FakeModManager {
 
@@ -53,7 +50,7 @@ public class FakeModManager {
             return (Map<String, ModContainer>) field.get(loader);
         } catch (IllegalAccessException | NoSuchFieldException e) {
             e.printStackTrace();
-            return Maps.newHashMap();
+            return new HashMap<>();
         }
     }
 
