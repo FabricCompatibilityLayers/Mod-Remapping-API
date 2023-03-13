@@ -5,11 +5,15 @@ import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.MixinEnvironment;
 import org.spongepowered.asm.mixin.transformer.ext.IExtensionRegistry;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 // Original author is gudenau.
 public class TransformerMixin implements IMixinTransformer {
     private IMixinTransformer parent = null;
+
+    private List<String> loaded = new ArrayList<>();
 
     public TransformerMixin() {}
 
@@ -30,9 +34,13 @@ public class TransformerMixin implements IMixinTransformer {
 
     @Override
     public byte[] transformClassBytes(String name, String transformedName, byte[] basicClass) {
-        byte[] bytes = this.parent.transformClassBytes(name, transformedName, basicClass);
-        if (name.startsWith("fr.catcore.modremapperapi")) return bytes;
-        return ClassTransformer.transform(name, transformedName, bytes);
+        if (!loaded.contains(name)) {
+            loaded.add(name);
+            byte[] bytes = this.parent.transformClassBytes(name, transformedName, basicClass);
+            return ClassTransformer.transform(name, transformedName, bytes);
+        }
+
+        return basicClass;
     }
 
     @Override
