@@ -32,4 +32,6 @@ public interface ModRemapper {
     default Optional<String> getDefaultPackage() {
         return Optional.empty();
     }
+
+    default void afterRemap() {}
 }

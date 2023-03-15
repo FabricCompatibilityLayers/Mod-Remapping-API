@@ -32,6 +32,8 @@ public class ModRemappingAPI {
             MOD_REMAPPERS.addAll(FabricLoader.getInstance().getEntrypoints(entrypointName, ModRemapper.class));
             FakeModManager.init();
 
+            for (ModRemapper remapper : MOD_REMAPPERS) remapper.afterRemap();
+
             initializing = false;
             init = true;
         }

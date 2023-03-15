@@ -1,6 +1,6 @@
 plugins {
 	id 'java'
-	id 'xyz.wagyourtail.unimined' version "0.4.2-SNAPSHOT"
+	id 'xyz.wagyourtail.unimined' version "0.4.3-SNAPSHOT"
 	id 'maven-publish'
 }
 
