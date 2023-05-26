@@ -14,11 +14,13 @@ import net.fabricmc.loader.impl.launch.FabricLauncherBase;
 import net.fabricmc.loader.impl.util.SystemProperties;
 import net.fabricmc.loader.impl.util.log.Log;
 import net.fabricmc.loader.impl.util.log.LogCategory;
+import net.fabricmc.loader.impl.util.mappings.MixinIntermediaryDevRemapper;
 import net.fabricmc.loader.impl.util.mappings.TinyRemapperMappingsHelper;
 import net.fabricmc.mapping.reader.v2.TinyMetadata;
 import net.fabricmc.mapping.tree.*;
 import net.fabricmc.tinyremapper.*;
 import org.objectweb.asm.*;
+import org.spongepowered.asm.mixin.MixinEnvironment;
 import org.spongepowered.include.com.google.common.base.Strings;
 
 import java.io.*;
@@ -278,6 +280,7 @@ public class RemapUtil {
         }
 
         MRAPostApplyVisitor applyVisitor = new MRAPostApplyVisitor();
+        MixinPostApplyVisitor mixinPostApplyVisitor = new MixinPostApplyVisitor();
 
         VisitorInfos infos = new VisitorInfos();
 
@@ -286,6 +289,8 @@ public class RemapUtil {
             Class.forName("fr.catcore.modremapperapi.remapping.VisitorInfos$Type");
             Class.forName("fr.catcore.modremapperapi.remapping.VisitorInfos$MethodValue");
             Class.forName("fr.catcore.modremapperapi.remapping.VisitorInfos$MethodNamed");
+            Class.forName("fr.catcore.modremapperapi.remapping.MixinAnnotationVisitor");
+            Class.forName("fr.catcore.modremapperapi.remapping.MixinExtraVisitor");
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
@@ -297,6 +302,7 @@ public class RemapUtil {
         applyVisitor.setInfos(infos);
 
         builder.extraPostApplyVisitor(applyVisitor);
+        builder.extraPostApplyVisitor(mixinPostApplyVisitor);
 
         TinyRemapper remapper = builder.build();
 
