@@ -5,11 +5,12 @@
   "name": "Mod Remapping API",
   "description": "Remaps non fabric mods at runtime with hooks available to expand it.",
   "authors": [
-    "CatCore/arthurbambou"
+    "CatCore"
   ],
   "contributors": [
     "paulevsGitch",
-    "LlamaLad7"
+    "LlamaLad7",
+    "Zeichenreihe"
   ],
   "contact": {
     "homepage": "https://modrinth.com/mod/mod-remapping-api",
