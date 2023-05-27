@@ -41,6 +41,8 @@ public class RemapUtil {
 
     private static final Map<String, String> MOD_MAPPINGS = new HashMap<>();
 
+    protected static final Map<String, List<String>> MIXINED = new HashMap<>();
+
     private static String defaultPackage = "";
 
     public static void init() {
@@ -350,6 +352,9 @@ public class RemapUtil {
     private static void remapFiles(TinyRemapper remapper, Map<Path, Path> paths) {
         List<OutputConsumerPath> outputConsumerPaths = new ArrayList<>();
 
+        List<OutputConsumerPath.ResourceRemapper> resourceRemappers = new ArrayList<>(NonClassCopyMode.FIX_META_INF.remappers);
+        resourceRemappers.add(new RefmapRemapper());
+
         try {
             Map<Path, InputTag> tagMap = new HashMap<>();
 
@@ -366,7 +371,7 @@ public class RemapUtil {
                 OutputConsumerPath outputConsumer = new OutputConsumerPath.Builder(entry.getValue()).build();
 
                 Constants.MAIN_LOGGER.debug("Add input as non class file!");
-                outputConsumer.addNonClassFiles(entry.getKey(), NonClassCopyMode.FIX_META_INF, remapper);
+                outputConsumer.addNonClassFiles(entry.getKey(), remapper, resourceRemappers);
 
                 outputConsumerPaths.add(outputConsumer);
 

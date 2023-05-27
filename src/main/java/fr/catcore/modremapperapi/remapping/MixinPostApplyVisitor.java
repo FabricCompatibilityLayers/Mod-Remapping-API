@@ -74,12 +74,15 @@ public class MixinPostApplyVisitor implements TinyRemapper.ApplyVisitorProvider{
                 }) {
                     if (list == null) continue;
                     list.forEach(nd -> {
-                        if ("Lorg/spongepowered/asm/mixin/Shadow;".equals(nd.desc)) {
+                        if ("Lorg/spongepowered/asm/mixin/Shadow;".equals(nd.desc)
+                                || "Lorg/spongepowered/asm/mixin/Overwrite;".equals(nd.desc)) {
                             methods.add(fl.name);
                         }
                     });
                 }
             });
+        } else {
+            return next;
         }
 
         return new MixinExtraVisitor(next, classDefs, supers, fields, methods);

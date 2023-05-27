@@ -8,8 +8,9 @@ import org.objectweb.asm.*;
 import java.util.List;
 
 public class MixinExtraVisitor extends ClassVisitor {
-    private final List<ClassDef> classDefs;
-    private final List<String> supers, fields, methods;
+    protected final List<ClassDef> classDefs;
+    protected final List<String> supers, fields, methods;
+    protected String className = "";
 
     public MixinExtraVisitor(ClassVisitor next, List<ClassDef> classDefs,
                              List<String> supers, List<String> fields, List<String> methods) {
@@ -18,6 +19,13 @@ public class MixinExtraVisitor extends ClassVisitor {
         this.supers = supers;
         this.fields = fields;
         this.methods = methods;
+    }
+
+    @Override
+    public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
+        RemapUtil.MIXINED.put(name.replace(".", "/"), this.supers);
+        this.className = name.replace(".", "/");
+        super.visit(version, access, name, signature, superName, interfaces);
     }
 
     @Override
@@ -63,6 +71,6 @@ public class MixinExtraVisitor extends ClassVisitor {
             }
         }
 
-        return super.visitMethod(access, name, descriptor, signature, exceptions);
+        return new MixinMethodVisitor(super.visitMethod(access, name, descriptor, signature, exceptions), this);
     }
 }
