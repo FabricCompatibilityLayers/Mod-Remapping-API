@@ -1,13 +1,9 @@
 plugins {
-	id 'java'
-	id 'xyz.wagyourtail.unimined' version "0.4.10-SNAPSHOT"
+	id 'fabric-loom' version '1.2-SNAPSHOT'
+	id 'legacy-looming' version "1.2-SNAPSHOT" // Version must be the same as fabric-loom's
 	id 'maven-publish'
 }
 
-sourceCompatibility = JavaVersion.VERSION_1_8
-targetCompatibility = JavaVersion.VERSION_1_8
-
-archivesBaseName = project.archives_base_name
 version = project.mod_version
 group = project.maven_group
 
@@ -30,14 +26,17 @@ minecraft {
 dependencies {
 	minecraft "net.minecraft:minecraft:${project.minecraft_version}"
 
-	mappings "net.fabricmc:intermediary:${project.minecraft_version}:v2"
-	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+	mappings legacy.yarn(project.minecraft_version, project.yarn_build)
 
-	fabric "net.fabricmc:fabric-loader:${project.loader_version}"
+	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
-	modImplementation(include(legacyFabricApi.module("legacy-fabric-logger-api-v1", "1.9.0+1.8.9")))
+	modImplementation(include(legacy.apiModule("legacy-fabric-logger-api-v1", project.fabric_version)))
 
 	modImplementation(include("com.github.arthurbambou:Fabric-ASM:${project.fabric_asm_version}"))
+}
+
+base {
+	archivesName = project.archives_base_name
 }
 
 processResources {
@@ -61,11 +60,14 @@ java {
 	// if it is present.
 	// If you remove this line, sources will not be generated.
 	withSourcesJar()
+
+	sourceCompatibility = JavaVersion.VERSION_1_8
+	targetCompatibility = JavaVersion.VERSION_1_8
 }
 
 jar {
 	from("LICENSE") {
-		rename { "${it}_${project.archivesBaseName}" }
+		rename { "${it}_${base.archivesName.get()}" }
 	}
 }
 
