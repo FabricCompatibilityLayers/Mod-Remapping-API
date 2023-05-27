@@ -36,8 +36,11 @@ public class MixinExtraVisitor extends ClassVisitor {
                 if (this.supers.contains(cl.getName("official"))
                         || this.supers.contains(cl.getName("intermediary"))) {
                     for (FieldDef fl : cl.getFields()) {
-                        if (fl.getName("official").equals(name) && fl.getDescriptor("intermediary").equals(descriptor)) {
+                        if (fl.getName("official").equals(name)
+                                && (fl.getDescriptor("intermediary").equals(descriptor)
+                                || fl.getDescriptor("official").equals(descriptor))) {
                             name = fl.getName("intermediary");
+                            descriptor = fl.getDescriptor("intermediary");
                             bol = true;
                             break;
                         }
@@ -59,8 +62,11 @@ public class MixinExtraVisitor extends ClassVisitor {
                 if (this.supers.contains(cl.getName("official"))
                         || this.supers.contains(cl.getName("intermediary"))) {
                     for (MethodDef fl : cl.getMethods()) {
-                        if (fl.getName("official").equals(name) && fl.getDescriptor("intermediary").equals(descriptor)) {
+                        if (fl.getName("official").equals(name)
+                                && (fl.getDescriptor("intermediary").equals(descriptor)
+                                || fl.getDescriptor("official").equals(descriptor))) {
                             name = fl.getName("intermediary");
+                            descriptor = fl.getDescriptor("intermediary");
                             bol = true;
                             break;
                         }
