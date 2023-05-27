@@ -280,7 +280,7 @@ public class RemapUtil {
         }
 
         MRAPostApplyVisitor applyVisitor = new MRAPostApplyVisitor();
-        MixinPostApplyVisitor mixinPostApplyVisitor = new MixinPostApplyVisitor();
+        MixinPostApplyVisitor mixinPostApplyVisitor = new MixinPostApplyVisitor(trees);
 
         VisitorInfos infos = new VisitorInfos();
 
@@ -289,7 +289,6 @@ public class RemapUtil {
             Class.forName("fr.catcore.modremapperapi.remapping.VisitorInfos$Type");
             Class.forName("fr.catcore.modremapperapi.remapping.VisitorInfos$MethodValue");
             Class.forName("fr.catcore.modremapperapi.remapping.VisitorInfos$MethodNamed");
-            Class.forName("fr.catcore.modremapperapi.remapping.MixinAnnotationVisitor");
             Class.forName("fr.catcore.modremapperapi.remapping.MixinExtraVisitor");
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
