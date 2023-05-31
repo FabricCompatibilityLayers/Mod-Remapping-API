@@ -171,17 +171,16 @@ public class RefmapRemapper implements OutputConsumerPath.ResourceRemapper {
             }
 
             final String originalName = name;
-            String newDesc = trRemapper.mapDesc(desc);
 
             for (String own : supers) {
                 name = trRemapper.mapFieldName(own, name, desc);
 
                 if (!originalName.equals(name)) {
-                    return name + newDesc;
+                    return name;
                 }
             }
 
-            return originalName + newDesc;
+            return originalName;
         }
 
         // just a normal field

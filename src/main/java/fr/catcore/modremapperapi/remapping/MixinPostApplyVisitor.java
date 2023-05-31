@@ -49,6 +49,8 @@ public class MixinPostApplyVisitor implements TinyRemapper.ApplyVisitorProvider{
                                     supers.add((String) val);
                                 }
                             }
+                        } else {
+                            System.out.println(an.values.get(i) + " : " + value.toString());
                         }
                     }
                 }
