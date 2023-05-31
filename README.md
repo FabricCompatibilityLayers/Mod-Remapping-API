@@ -9,7 +9,7 @@ This mod doesn't depend on a specific minecraft version and should work on any v
 
 ### Mods depending on this API:
 - Fabricated Forge >=2.0
-- Babricated Forge
+- Apron
 
 ## Credits
 ### Most of the original code of the mod remapper
