@@ -1,7 +1,5 @@
 package fr.catcore.modremapperapi.utils;
 
-import net.fabricmc.loader.impl.metadata.LoaderModMetadata;
-
 import java.io.File;
 
 public abstract class ModEntry {
@@ -17,8 +15,6 @@ public abstract class ModEntry {
         this.file = file;
         this.original = original;
     }
-
-    abstract LoaderModMetadata createModMetadata();
 
     abstract String getType();
 }

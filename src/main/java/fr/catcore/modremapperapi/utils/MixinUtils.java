@@ -63,9 +63,7 @@ public class MixinUtils {
             }
         }
 
-        for (ListIterator<FieldNode> it = targetClass.fields.listIterator(); it.hasNext(); ) {
-            FieldNode field = it.next();
-
+        for (FieldNode field : targetClass.fields) {
             if (Annotations.getVisible(field, Public.class) != null) {
                 field.access |= Opcodes.ACC_PUBLIC;
                 field.access &= ~(Opcodes.ACC_PRIVATE | Opcodes.ACC_PROTECTED);

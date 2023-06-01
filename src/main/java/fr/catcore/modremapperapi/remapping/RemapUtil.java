@@ -3,25 +3,16 @@ package fr.catcore.modremapperapi.remapping;
 import fr.catcore.modremapperapi.ModRemappingAPI;
 import fr.catcore.modremapperapi.api.ModRemapper;
 import fr.catcore.modremapperapi.api.RemapLibrary;
-import fr.catcore.modremapperapi.utils.CollectionUtils;
 import fr.catcore.modremapperapi.utils.Constants;
 import fr.catcore.modremapperapi.utils.FileUtils;
+import fr.catcore.modremapperapi.utils.MappingsUtils;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.loader.api.MappingResolver;
-import net.fabricmc.loader.impl.launch.FabricLauncher;
 import net.fabricmc.loader.impl.launch.FabricLauncherBase;
-import net.fabricmc.loader.impl.util.SystemProperties;
-import net.fabricmc.loader.impl.util.log.Log;
-import net.fabricmc.loader.impl.util.log.LogCategory;
-import net.fabricmc.loader.impl.util.mappings.MixinIntermediaryDevRemapper;
-import net.fabricmc.loader.impl.util.mappings.TinyRemapperMappingsHelper;
-import net.fabricmc.mapping.reader.v2.TinyMetadata;
-import net.fabricmc.mapping.tree.*;
+import net.fabricmc.mappingio.tree.MappingTree;
+import net.fabricmc.mappingio.tree.MemoryMappingTree;
 import net.fabricmc.tinyremapper.*;
 import org.objectweb.asm.*;
-import org.spongepowered.asm.mixin.MixinEnvironment;
-import org.spongepowered.include.com.google.common.base.Strings;
 
 import java.io.*;
 import java.net.URL;
@@ -34,10 +25,13 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import static fr.catcore.modremapperapi.utils.MappingsUtils.getNativeNamespace;
+import static fr.catcore.modremapperapi.utils.MappingsUtils.getTargetNamespace;
+
 public class RemapUtil {
-    private static TinyTree LOADER_TREE;
-    private static TinyTree MINECRAFT_TREE;
-    private static TinyTree MODS_TREE;
+    private static MappingTree LOADER_TREE;
+    private static MappingTree MINECRAFT_TREE;
+    private static MappingTree MODS_TREE;
 
     private static final Map<String, String> MOD_MAPPINGS = new HashMap<>();
 
@@ -59,7 +53,7 @@ public class RemapUtil {
         }
 
         LOADER_TREE = makeTree(Constants.EXTRA_MAPPINGS_FILE);
-        MINECRAFT_TREE = FabricLauncherBase.getLauncher().getMappingConfiguration().getMappings();
+        MINECRAFT_TREE = MappingsUtils.getMinecraftMappings();
     }
 
     private static void downloadRemappingLibs() {
@@ -249,13 +243,12 @@ public class RemapUtil {
      *
      * @param file mappings {@link File} in tiny format.
      */
-    private static TinyTree makeTree(File file) {
-        TinyTree tree = null;
+    private static MappingTree makeTree(File file) {
+        MemoryMappingTree tree = new MemoryMappingTree();
         try {
             FileReader reader = new FileReader(file);
             BufferedReader bufferedReader = new BufferedReader(reader);
-            tree = TinyMappingFactory.loadWithDetection(bufferedReader);
-            tree = wrapTree(tree);
+            MappingsUtils.loadMappings(bufferedReader, tree);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -265,7 +258,7 @@ public class RemapUtil {
     /**
      * Will create remapper with specified trees.
      */
-    private static TinyRemapper makeRemapper(TinyTree... trees) {
+    private static TinyRemapper makeRemapper(MappingTree... trees) {
         TinyRemapper.Builder builder = TinyRemapper
                 .newRemapper()
                 .renameInvalidLocals(true)
@@ -277,8 +270,8 @@ public class RemapUtil {
             builder.fixPackageAccess(true);
         }
 
-        for (TinyTree tree : trees) {
-            builder.withMappings(createProvider(tree));
+        for (MappingTree tree : trees) {
+            builder.withMappings(MappingsUtils.createProvider(tree));
         }
 
         MRAPostApplyVisitor applyVisitor = new MRAPostApplyVisitor();
@@ -317,7 +310,7 @@ public class RemapUtil {
             remapper.readClassPathAsync((Path) FabricLoader.getInstance().getObjectShare().get("fabric-loader:inputGameJar"));
 
             for (Path path : FabricLauncherBase.getLauncher().getClassPath()) {
-                Log.debug(LogCategory.GAME_REMAP, "Appending '%s' to remapper classpath", path);
+                Constants.MAIN_LOGGER.debug("Appending '%s' to remapper classpath", path);
                 remapper.readClassPathAsync(path);
             }
         }
@@ -328,20 +321,12 @@ public class RemapUtil {
                 if (libPath.exists()) {
                     remapper.readClassPathAsync(libPath.toPath());
                 } else {
-                    System.out.println("Library " + libPath.toPath() + " does not exist.");
+                    Constants.MAIN_LOGGER.error("Library " + libPath.toPath() + " does not exist.");
                 }
             }
         }
 
         return remapper;
-    }
-
-    /**
-     * Will create a mapping provider for specified tree.
-     */
-    private static IMappingProvider createProvider(TinyTree tree) {
-        FabricLauncher launcher = FabricLauncherBase.getLauncher();
-        return TinyRemapperMappingsHelper.create(tree, getNativeNamespace(), launcher.getTargetNamespace());
     }
 
     /**
@@ -402,26 +387,14 @@ public class RemapUtil {
         }
     }
 
-    public static String getNativeNamespace() {
-        String targetNamespace = "official";
-
-        if (ModRemappingAPI.BABRIC) {
-            targetNamespace = FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT ? "client": "server";
-        }
-
-        return targetNamespace;
-    }
-
     public static String getRemappedFieldName(Class<?> owner, String fieldName) {
-        final MappingResolver resolver = FabricLoader.getInstance().getMappingResolver();
+        int target = MINECRAFT_TREE.getNamespaceId(getTargetNamespace());
+        MappingTree.ClassMapping classMapping = MINECRAFT_TREE.getClass(owner.getName().replace(".", "/"), target);
 
-        for (ClassDef def : FabricLauncherBase.getLauncher().getMappingConfiguration().getMappings().getClasses()) {
-            if (def.getName(resolver.getCurrentRuntimeNamespace())
-                    .replace(".", "/").equals(owner.getName().replace(".", "/"))) {
-                for (FieldDef fieldDef : def.getFields()) {
-                    if (Objects.equals(fieldDef.getName(getNativeNamespace()), fieldName)) {
-                        return fieldDef.getName(resolver.getCurrentRuntimeNamespace());
-                    }
+        if (classMapping != null) {
+            for (MappingTree.FieldMapping fieldDef : classMapping.getFields()) {
+                if (Objects.equals(fieldDef.getName(getNativeNamespace()), fieldName)) {
+                    return fieldDef.getName(getTargetNamespace());
                 }
             }
         }
@@ -434,20 +407,18 @@ public class RemapUtil {
     }
 
     public static String getRemappedMethodName(Class<?> owner, String methodName, Class<?>[] parameterTypes) {
-        final MappingResolver resolver = FabricLoader.getInstance().getMappingResolver();
-
         String argDesc = classTypeToDescriptor(parameterTypes);
 
-        for (ClassDef def : FabricLauncherBase.getLauncher().getMappingConfiguration().getMappings().getClasses()) {
-            if (def.getName(resolver.getCurrentRuntimeNamespace())
-                    .replace(".", "/").equals(owner.getName().replace(".", "/"))) {
-                for (MethodDef methodDef : def.getMethods()) {
-                    if (Objects.equals(methodDef.getName(getNativeNamespace()), methodName)) {
-                        String methodDescriptor = methodDef.getDescriptor(resolver.getCurrentRuntimeNamespace());
+        int target = MINECRAFT_TREE.getNamespaceId(getTargetNamespace());
+        MappingTree.ClassMapping classMapping = MINECRAFT_TREE.getClass(owner.getName().replace(".", "/"), target);
 
-                        if (methodDescriptor.startsWith(argDesc)) {
-                            return methodDef.getName(resolver.getCurrentRuntimeNamespace());
-                        }
+        if (classMapping != null) {
+            for (MappingTree.MethodMapping methodDef : classMapping.getMethods()) {
+                if (Objects.equals(methodDef.getName(getNativeNamespace()), methodName)) {
+                    String methodDescriptor = methodDef.getDesc(getTargetNamespace());
+
+                    if (methodDescriptor.startsWith(argDesc)) {
+                        return methodDef.getName(getTargetNamespace());
                     }
                 }
             }
@@ -477,166 +448,8 @@ public class RemapUtil {
         return FabricLoader.getInstance().getEnvironmentType();
     }
 
-    /**
-     * Function from Fabric Loader (was with private access). Will wrap mapping tree into another one.
-     */
-    private static TinyTree wrapTree(TinyTree mappings) {
-        return new TinyTree() {
-            final String primaryNamespace = getMetadata().getNamespaces().get(0); //If the namespaces are empty we shouldn't exist
-
-            private Optional<String> remap(String name, String namespace) {
-                return Optional.ofNullable(getDefaultNamespaceClassMap().get(name)).map(mapping -> mapping.getRawName(namespace)).map(Strings::emptyToNull);
-            }
-
-            String remapDesc(String desc, String namespace) {
-                Type type = Type.getType(desc);
-
-                switch (type.getSort()) {
-                    case Type.ARRAY: {
-
-                        return desc.substring(0, type.getDimensions()) + remapDesc(type.getElementType().getDescriptor(), namespace);
-                    }
-
-                    case Type.OBJECT:
-                        return remap(type.getInternalName(), namespace).map(name -> 'L' + name + ';').orElse(desc);
-
-                    case Type.METHOD: {
-                        if ("()V".equals(desc)) return desc;
-
-                        StringBuilder stringBuilder = new StringBuilder("(");
-                        for (Type argumentType : type.getArgumentTypes()) {
-                            stringBuilder.append(remapDesc(argumentType.getDescriptor(), namespace));
-                        }
-
-                        Type returnType = type.getReturnType();
-                        if (returnType == Type.VOID_TYPE) {
-                            stringBuilder.append(")V");
-                        } else {
-                            stringBuilder.append(')').append(remapDesc(returnType.getDescriptor(), namespace));
-                        }
-
-                        return stringBuilder.toString();
-                    }
-
-                    default:
-                        return desc;
-                }
-            }
-
-            private ClassDef wrap(ClassDef mapping) {
-                return new ClassDef() {
-                    private final boolean common = getMetadata().getNamespaces().stream().skip(1).map(this::getRawName).allMatch(Strings::isNullOrEmpty);
-
-                    @Override
-                    public String getRawName(String namespace) {
-                        try {
-                            return mapping.getRawName(common ? primaryNamespace : namespace);
-                        } catch (ArrayIndexOutOfBoundsException e) {
-                            return ""; //No name for the namespace
-                        }
-                    }
-
-                    @Override
-                    public String getName(String namespace) {
-                        return mapping.getName(namespace);
-                    }
-
-                    @Override
-                    public String getComment() {
-                        return mapping.getComment();
-                    }
-
-                    @Override
-                    public Collection<MethodDef> getMethods() {
-                        return CollectionUtils.transformList(mapping.getMethods(), method -> new MethodDef() {
-                            @Override
-                            public String getRawName(String namespace) {
-                                try {
-                                    return method.getRawName(namespace);
-                                } catch (ArrayIndexOutOfBoundsException e) {
-                                    return ""; //No name for the namespace
-                                }
-                            }
-
-                            @Override
-                            public String getName(String namespace) {
-                                return method.getName(namespace);
-                            }
-
-                            @Override
-                            public String getComment() {
-                                return method.getComment();
-                            }
-
-                            @Override
-                            public String getDescriptor(String namespace) {
-                                String desc = method.getDescriptor(primaryNamespace);
-                                return primaryNamespace.equals(namespace) ? desc : remapDesc(desc, namespace);
-                            }
-
-                            @Override
-                            public Collection<ParameterDef> getParameters() {
-                                return method.getParameters();
-                            }
-
-                            @Override
-                            public Collection<LocalVariableDef> getLocalVariables() {
-                                return method.getLocalVariables();
-                            }
-                        });
-                    }
-
-                    @Override
-                    public Collection<FieldDef> getFields() {
-                        return CollectionUtils.transformList(mapping.getFields(), field -> new FieldDef() {
-                            @Override
-                            public String getRawName(String namespace) {
-                                try {
-                                    return field.getRawName(namespace);
-                                } catch (ArrayIndexOutOfBoundsException e) {
-                                    return ""; //No name for the namespace
-                                }
-                            }
-
-                            @Override
-                            public String getName(String namespace) {
-                                return field.getName(namespace);
-                            }
-
-                            @Override
-                            public String getComment() {
-                                return field.getComment();
-                            }
-
-                            @Override
-                            public String getDescriptor(String namespace) {
-                                String desc = field.getDescriptor(primaryNamespace);
-                                return primaryNamespace.equals(namespace) ? desc : remapDesc(desc, namespace);
-                            }
-                        });
-                    }
-                };
-            }
-
-            @Override
-            public TinyMetadata getMetadata() {
-                return mappings.getMetadata();
-            }
-
-            @Override
-            public Map<String, ClassDef> getDefaultNamespaceClassMap() {
-                return CollectionUtils.transformMapValues(mappings.getDefaultNamespaceClassMap(), this::wrap);
-            }
-
-            @Override
-            public Collection<ClassDef> getClasses() {
-                return CollectionUtils.transformList(mappings.getClasses(), this::wrap);
-            }
-        };
-    }
-
     private static List<Path> getRemapClasspath() throws IOException {
-        String remapClasspathFile = System.getProperty(SystemProperties.REMAP_CLASSPATH_FILE);
+        String remapClasspathFile = System.getProperty("fabric.remapClasspathFile");
 
         if (remapClasspathFile == null) {
             throw new RuntimeException("No remapClasspathFile provided");
@@ -647,5 +460,10 @@ public class RemapUtil {
         return Arrays.stream(content.split(File.pathSeparator))
                 .map(Paths::get)
                 .collect(Collectors.toList());
+    }
+
+    @Deprecated
+    public static String getNativeNamespace() {
+        return MappingsUtils.getNativeNamespace();
     }
 }

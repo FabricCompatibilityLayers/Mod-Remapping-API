@@ -1,7 +1,6 @@
 package fr.catcore.modremapperapi.remapping;
 
-import net.fabricmc.mapping.tree.ClassDef;
-import net.fabricmc.mapping.tree.TinyTree;
+import net.fabricmc.mappingio.tree.MappingTree;
 import net.fabricmc.tinyremapper.TinyRemapper;
 import net.fabricmc.tinyremapper.api.TrClass;
 import org.objectweb.asm.ClassReader;
@@ -14,9 +13,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MixinPostApplyVisitor implements TinyRemapper.ApplyVisitorProvider{
-    private final List<ClassDef> classDefs = new ArrayList<>();
-    public MixinPostApplyVisitor(TinyTree[] trees) {
-        for (TinyTree tree : trees) {
+    private final List<MappingTree.ClassMapping> classDefs = new ArrayList<>();
+    public MixinPostApplyVisitor(MappingTree[] trees) {
+        for (MappingTree tree : trees) {
             classDefs.addAll(tree.getClasses());
         }
     }
