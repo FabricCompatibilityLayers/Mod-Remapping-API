@@ -7,7 +7,6 @@ import net.fabricmc.loader.api.FabricLoader;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ModRemappingAPI {
 

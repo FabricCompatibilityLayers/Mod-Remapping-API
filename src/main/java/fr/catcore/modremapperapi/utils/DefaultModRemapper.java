@@ -8,7 +8,6 @@ import fr.catcore.modremapperapi.remapping.VisitorInfos;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 public class DefaultModRemapper implements ModRemapper {
     @Override
