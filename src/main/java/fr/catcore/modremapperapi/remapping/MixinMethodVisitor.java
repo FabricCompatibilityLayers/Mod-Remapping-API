@@ -13,17 +13,19 @@ public class MixinMethodVisitor extends MethodVisitor {
 
     @Override
     public void visitFieldInsn(int opcode, String owner, String name, String descriptor) {
-        if (this.extraVisitor.fields.contains(name) && owner.replace(".", "/").equals(this.extraVisitor.className)) {
+        if (this.extraVisitor.fields.containsKey(name) && owner.replace(".", "/").equals(this.extraVisitor.className)) {
+            boolean shadowed = name.startsWith("shadow$");
+            if (shadowed) {
+                name = name.replace("shadow$", "");
+            }
+
             for (MappingTree.ClassMapping cl : this.extraVisitor.classDefs) {
                 boolean bol = false;
                 if (this.extraVisitor.supers.contains(cl.getName("official"))
                         || this.extraVisitor.supers.contains(cl.getName("intermediary"))) {
                     for (MappingTree.FieldMapping fl : cl.getFields()) {
-                        if (fl.getName("official").equals(name)
-                                && (fl.getDesc("intermediary").equals(descriptor)
-                                || fl.getDesc("official").equals(descriptor))) {
-                            name = fl.getName("intermediary");
-                            descriptor = fl.getDesc("intermediary");
+                        if (fl.getName("official").equals(name)) {
+                            name = (shadowed ? "shadow$" : "") + fl.getName("intermediary");
                             bol = true;
                             break;
                         }
@@ -39,7 +41,12 @@ public class MixinMethodVisitor extends MethodVisitor {
 
     @Override
     public void visitMethodInsn(int opcode, String owner, String name, String descriptor, boolean isInterface) {
-        if (this.extraVisitor.methods.contains(name) && owner.replace(".", "/").equals(this.extraVisitor.className)) {
+        if (this.extraVisitor.methods.containsKey(name) && owner.replace(".", "/").equals(this.extraVisitor.className)) {
+            boolean shadowed = name.startsWith("shadow$");
+            if (shadowed) {
+                name = name.replace("shadow$", "");
+            }
+
             for (MappingTree.ClassMapping cl : this.extraVisitor.classDefs) {
                 boolean bol = false;
                 if (this.extraVisitor.supers.contains(cl.getName("official"))
@@ -48,7 +55,7 @@ public class MixinMethodVisitor extends MethodVisitor {
                         if (fl.getName("official").equals(name)
                                 && (fl.getDesc("intermediary").equals(descriptor)
                                 || fl.getDesc("official").equals(descriptor))) {
-                            name = fl.getName("intermediary");
+                            name = (shadowed ? "shadow$" : "") + fl.getName("intermediary");
                             descriptor = fl.getDesc("intermediary");
                             bol = true;
                             break;

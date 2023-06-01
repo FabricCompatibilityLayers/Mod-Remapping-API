@@ -1,5 +1,6 @@
 package fr.catcore.modremapperapi.remapping;
 
+import fr.catcore.modremapperapi.utils.Constants;
 import net.fabricmc.mappingio.tree.MappingTree;
 import net.fabricmc.tinyremapper.TinyRemapper;
 import net.fabricmc.tinyremapper.api.TrClass;
@@ -10,7 +11,9 @@ import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.ClassNode;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MixinPostApplyVisitor implements TinyRemapper.ApplyVisitorProvider{
     private final List<MappingTree.ClassMapping> classDefs = new ArrayList<>();
@@ -26,8 +29,8 @@ public class MixinPostApplyVisitor implements TinyRemapper.ApplyVisitorProvider{
         cls.accept(node, ClassReader.SKIP_FRAMES);
 
         List<String> supers = new ArrayList<>();
-        List<String> fields = new ArrayList<>();
-        List<String> methods = new ArrayList<>();
+        Map<String, List<String>> fields = new HashMap<>();
+        Map<String, List<String>> methods = new HashMap<>();
 
         for (List<AnnotationNode> nodeList : new List[]{
                 node.visibleAnnotations, node.invisibleAnnotations
@@ -49,7 +52,7 @@ public class MixinPostApplyVisitor implements TinyRemapper.ApplyVisitorProvider{
                                 }
                             }
                         } else {
-                            System.out.println(an.values.get(i) + " : " + value.toString());
+                            Constants.MAIN_LOGGER.info(an.values.get(i) + " : " + value.toString());
                         }
                     }
                 }
@@ -64,7 +67,15 @@ public class MixinPostApplyVisitor implements TinyRemapper.ApplyVisitorProvider{
                     if (list == null) continue;
                     list.forEach(nd -> {
                         if ("Lorg/spongepowered/asm/mixin/Shadow;".equals(nd.desc)) {
-                            fields.add(fl.name);
+                            fields.compute(fl.name, (s, strings) -> {
+                                if (strings == null) {
+                                    strings = new ArrayList<>();
+                                }
+
+                                strings.add(fl.desc);
+
+                                return strings;
+                            });
                         }
                     });
                 }
@@ -77,11 +88,34 @@ public class MixinPostApplyVisitor implements TinyRemapper.ApplyVisitorProvider{
                     list.forEach(nd -> {
                         if ("Lorg/spongepowered/asm/mixin/Shadow;".equals(nd.desc)
                                 || "Lorg/spongepowered/asm/mixin/Overwrite;".equals(nd.desc)) {
-                            methods.add(fl.name);
+                            methods.compute(fl.name, (s, strings) -> {
+                                if (strings == null) {
+                                    strings = new ArrayList<>();
+                                }
+
+                                strings.add(fl.desc);
+
+                                return strings;
+                            });
                         }
                     });
                 }
             });
+
+            StringBuilder str = new StringBuilder("=====================================\nFound Mixin class %s, looking for Shadow annotations.\nDetected super classes:");
+            supers.forEach(s -> str.append("\n- ").append(s));
+            str.append("\nFields to remap:");
+            fields.forEach((s, strings) -> {
+                str.append("\n- ").append(s);
+                strings.forEach(ss -> str.append("\n  - ").append(ss));
+            });
+            str.append("\nMethods to remap:");
+            methods.forEach((s, strings) -> {
+                str.append("\n- ").append(s);
+                strings.forEach(ss -> str.append("\n  - ").append(ss));
+            });
+            str.append("\n=====================================");
+            Constants.MAIN_LOGGER.info(str.toString(), node.name);
         } else {
             return next;
         }
