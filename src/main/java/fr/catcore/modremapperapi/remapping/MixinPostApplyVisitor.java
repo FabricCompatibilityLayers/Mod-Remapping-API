@@ -102,7 +102,7 @@ public class MixinPostApplyVisitor implements TinyRemapper.ApplyVisitorProvider{
                 }
             });
 
-            StringBuilder str = new StringBuilder("=====================================\nFound Mixin class %s, looking for Shadow annotations.\nDetected super classes:");
+            StringBuilder str = new StringBuilder("\n=====================================\nFound Mixin class %s, looking for Shadow annotations.\nDetected super classes:");
             supers.forEach(s -> str.append("\n- ").append(s));
             str.append("\nFields to remap:");
             fields.forEach((s, strings) -> {
@@ -115,7 +115,7 @@ public class MixinPostApplyVisitor implements TinyRemapper.ApplyVisitorProvider{
                 strings.forEach(ss -> str.append("\n  - ").append(ss));
             });
             str.append("\n=====================================");
-            Constants.MAIN_LOGGER.info(str.toString(), node.name);
+            Constants.MAIN_LOGGER.debug(str.toString(), node.name);
         } else {
             return next;
         }

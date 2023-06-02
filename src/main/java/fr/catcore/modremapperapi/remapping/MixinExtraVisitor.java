@@ -43,7 +43,7 @@ public class MixinExtraVisitor extends ClassVisitor {
                         || this.supers.contains(cl.getName("intermediary"))) {
                     for (MappingTree.FieldMapping fl : cl.getFields()) {
                         if (fl.getName("official").equals(name)) {
-                            Constants.MAIN_LOGGER.info(
+                            Constants.MAIN_LOGGER.debug(
                                     "Remapping Shadowed field %s->%s in mixin %s",
                                     name,
                                     fl.getName("intermediary"),
@@ -79,7 +79,7 @@ public class MixinExtraVisitor extends ClassVisitor {
                         if (fl.getName("official").equals(name)
                                 && (fl.getDesc("intermediary").equals(descriptor)
                                 || fl.getDesc("official").equals(descriptor))) {
-                            Constants.MAIN_LOGGER.info(
+                            Constants.MAIN_LOGGER.debug(
                                     "Remapping Shadowed method %s%s->%s%s in mixin %s",
                                     name,
                                     descriptor,
