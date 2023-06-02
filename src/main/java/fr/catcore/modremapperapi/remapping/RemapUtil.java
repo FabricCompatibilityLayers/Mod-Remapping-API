@@ -355,13 +355,13 @@ public class RemapUtil {
                 Constants.MAIN_LOGGER.debug("Starting remapping " + entry.getKey().toString() + " to " + entry.getValue().toString());
                 OutputConsumerPath outputConsumer = new OutputConsumerPath.Builder(entry.getValue()).build();
 
-                Constants.MAIN_LOGGER.debug("Add input as non class file!");
-                outputConsumer.addNonClassFiles(entry.getKey(), remapper, resourceRemappers);
-
                 outputConsumerPaths.add(outputConsumer);
 
                 Constants.MAIN_LOGGER.debug("Apply remapper!");
                 remapper.apply(outputConsumer, tagMap.get(entry.getKey()));
+
+                Constants.MAIN_LOGGER.debug("Add input as non class file!");
+                outputConsumer.addNonClassFiles(entry.getKey(), remapper, resourceRemappers);
 
                 Constants.MAIN_LOGGER.debug("Done 1!");
             }
