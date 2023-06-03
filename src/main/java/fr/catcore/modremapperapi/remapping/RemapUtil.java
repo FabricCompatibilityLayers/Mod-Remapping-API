@@ -12,6 +12,7 @@ import net.fabricmc.loader.impl.launch.FabricLauncherBase;
 import net.fabricmc.mappingio.tree.MappingTree;
 import net.fabricmc.mappingio.tree.MemoryMappingTree;
 import net.fabricmc.tinyremapper.*;
+import net.fabricmc.tinyremapper.extension.mixin.MixinExtension;
 import org.objectweb.asm.*;
 
 import java.io.*;
@@ -284,7 +285,6 @@ public class RemapUtil {
             Class.forName("fr.catcore.modremapperapi.remapping.VisitorInfos$Type");
             Class.forName("fr.catcore.modremapperapi.remapping.VisitorInfos$MethodValue");
             Class.forName("fr.catcore.modremapperapi.remapping.VisitorInfos$MethodNamed");
-            Class.forName("fr.catcore.modremapperapi.remapping.MixinExtraVisitor");
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
@@ -297,6 +297,8 @@ public class RemapUtil {
 
         builder.extraPostApplyVisitor(applyVisitor);
         builder.extraPostApplyVisitor(mixinPostApplyVisitor);
+
+        builder.extension(new MixinExtension(EnumSet.of(MixinExtension.AnnotationTarget.HARD)));
 
         TinyRemapper remapper = builder.build();
 

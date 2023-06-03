@@ -11,9 +11,10 @@ import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.ClassNode;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+
+import static fr.catcore.modremapperapi.utils.MappingsUtils.getNativeNamespace;
+import static fr.catcore.modremapperapi.utils.MappingsUtils.getTargetNamespace;
 
 public class MixinPostApplyVisitor implements TinyRemapper.ApplyVisitorProvider{
     private final List<MappingTree.ClassMapping> classDefs = new ArrayList<>();
@@ -29,8 +30,6 @@ public class MixinPostApplyVisitor implements TinyRemapper.ApplyVisitorProvider{
         cls.accept(node, ClassReader.SKIP_FRAMES);
 
         List<String> supers = new ArrayList<>();
-        Map<String, List<String>> fields = new HashMap<>();
-        Map<String, List<String>> methods = new HashMap<>();
 
         for (List<AnnotationNode> nodeList : new List[]{
                 node.visibleAnnotations, node.invisibleAnnotations
@@ -45,11 +44,15 @@ public class MixinPostApplyVisitor implements TinyRemapper.ApplyVisitorProvider{
 
                         if (value instanceof List) {
                             for (Object val : (List) value) {
+                                String theVal;
+
                                 if (val instanceof Type) {
-                                    supers.add(((Type) val).getInternalName());
+                                    theVal = ((Type) val).getInternalName();
                                 } else {
-                                    supers.add((String) val);
+                                    theVal = (String) val;
                                 }
+
+                                supers.add(theVal);
                             }
                         } else {
                             Constants.MAIN_LOGGER.info(an.values.get(i) + " : " + value.toString());
@@ -59,67 +62,8 @@ public class MixinPostApplyVisitor implements TinyRemapper.ApplyVisitorProvider{
             });
         }
 
-        if (!supers.isEmpty()) {
-            node.fields.forEach(fl -> {
-                for (List<AnnotationNode> list : new List[]{
-                        fl.visibleAnnotations, fl.invisibleAnnotations
-                }) {
-                    if (list == null) continue;
-                    list.forEach(nd -> {
-                        if ("Lorg/spongepowered/asm/mixin/Shadow;".equals(nd.desc)) {
-                            fields.compute(fl.name, (s, strings) -> {
-                                if (strings == null) {
-                                    strings = new ArrayList<>();
-                                }
+        RemapUtil.MIXINED.put(cls.getName().replace(".", "/"), supers);
 
-                                strings.add(fl.desc);
-
-                                return strings;
-                            });
-                        }
-                    });
-                }
-            });
-            node.methods.forEach(fl -> {
-                for (List<AnnotationNode> list : new List[]{
-                        fl.visibleAnnotations, fl.invisibleAnnotations
-                }) {
-                    if (list == null) continue;
-                    list.forEach(nd -> {
-                        if ("Lorg/spongepowered/asm/mixin/Shadow;".equals(nd.desc)
-                                || "Lorg/spongepowered/asm/mixin/Overwrite;".equals(nd.desc)) {
-                            methods.compute(fl.name, (s, strings) -> {
-                                if (strings == null) {
-                                    strings = new ArrayList<>();
-                                }
-
-                                strings.add(fl.desc);
-
-                                return strings;
-                            });
-                        }
-                    });
-                }
-            });
-
-            StringBuilder str = new StringBuilder("\n=====================================\nFound Mixin class %s, looking for Shadow annotations.\nDetected super classes:");
-            supers.forEach(s -> str.append("\n- ").append(s));
-            str.append("\nFields to remap:");
-            fields.forEach((s, strings) -> {
-                str.append("\n- ").append(s);
-                strings.forEach(ss -> str.append("\n  - ").append(ss));
-            });
-            str.append("\nMethods to remap:");
-            methods.forEach((s, strings) -> {
-                str.append("\n- ").append(s);
-                strings.forEach(ss -> str.append("\n  - ").append(ss));
-            });
-            str.append("\n=====================================");
-            Constants.MAIN_LOGGER.debug(str.toString(), node.name);
-        } else {
-            return next;
-        }
-
-        return new MixinExtraVisitor(next, classDefs, supers, fields, methods);
+        return next;
     }
 }
