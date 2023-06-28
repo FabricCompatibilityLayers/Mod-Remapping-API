@@ -100,6 +100,7 @@ publishing {
 }
 
 modrinth {
+	token = System.getenv("MODRINTH_TOKEN")
 	projectId = "mod-remapping-api"
 	changelog = """
 Add ReplaceConstructor and SuperMethod annotations.
