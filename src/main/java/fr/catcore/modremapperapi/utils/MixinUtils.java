@@ -14,7 +14,7 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 /**
- * @author LlamaLad7
+ * @author LlamaLad7, Cat Core
  */
 public class MixinUtils {
     public static void applyASMMagic(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
