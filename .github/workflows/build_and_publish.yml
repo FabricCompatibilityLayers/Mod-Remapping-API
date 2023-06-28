@@ -1,0 +1,19 @@
+  on: [push, pull_request, workflow_dispatch]
+  jobs:
+    build:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@3
+        - name: Validate Gradle Wrapper
+          uses: gradle/wrapper-validation-action@v1
+        - name: Set up JDK 17
+          uses: actions/setup-java@v3
+          with:
+            java-version: 17
+            distribution: temurin
+        - name: Build with Gradle
+          run: ./gradlew build
+        - if: github.repository == "thecatcore/Mod-Remapping-API" && github.ref_type == "tag"
+          run: ./gradlew build modrinth
+          env:
+            MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
