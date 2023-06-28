@@ -7,7 +7,10 @@ import org.objectweb.asm.tree.*;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 import org.spongepowered.asm.util.Annotations;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ListIterator;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 /**
@@ -26,6 +29,8 @@ public class MixinUtils {
                 }
             });
         }
+
+        List<String> ctrToReplace = new ArrayList<>();
 
         for (ListIterator<MethodNode> it = targetClass.methods.listIterator(); it.hasNext(); ) {
             MethodNode method = it.next();
@@ -53,13 +58,59 @@ public class MixinUtils {
                 continue;
             }
 
+            AnnotationNode superMethod = Annotations.getVisible(method, SuperMethod.class);
+
+            if (superMethod != null) {
+                it.remove();
+                String targetName = Annotations.getValue(superMethod);
+
+                transformCalls(targetClass, call -> {
+                    if (call.name.equals(method.name) && call.desc.equals(method.desc)) {
+                        call.setOpcode(Opcodes.INVOKESPECIAL);
+                        call.name = targetName;
+                        call.owner = targetClass.superName;
+                    }
+                });
+
+                continue;
+            }
+
             if (Annotations.getVisible(method, Public.class) != null) {
                 method.access |= Opcodes.ACC_PUBLIC;
                 method.access &= ~(Opcodes.ACC_PRIVATE | Opcodes.ACC_PROTECTED);
             }
 
             if (Annotations.getVisible(method, NewConstructor.class) != null) {
+                transformCalls(targetClass, call -> {
+                    if (call.name.equals(method.name) && call.desc.equals(method.desc)) {
+                        call.setOpcode(Opcodes.INVOKESPECIAL);
+                        call.name = "<init>";
+                    }
+                });
                 method.name = "<init>";
+            }
+
+            if (Annotations.getVisible(method, ReplaceConstructor.class) != null) {
+                ctrToReplace.add(method.desc);
+                transformCalls(targetClass, call -> {
+                    if (call.name.equals(method.name) && call.desc.equals(method.desc)) {
+                        call.setOpcode(Opcodes.INVOKESPECIAL);
+                        call.name = "<init>";
+                    }
+                });
+                method.name = "<init>";
+            }
+        }
+
+        if (!ctrToReplace.isEmpty()) {
+            for (ListIterator<MethodNode> it = targetClass.methods.listIterator(); it.hasNext(); ) {
+                MethodNode method = it.next();
+
+                if (Annotations.getVisible(method, ReplaceConstructor.class) == null) {
+                    if (Objects.equals(method.name, "<init>") && ctrToReplace.contains(method.desc)) {
+                        it.remove();
+                    }
+                }
             }
         }
 

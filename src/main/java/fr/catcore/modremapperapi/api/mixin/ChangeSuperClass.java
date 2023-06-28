@@ -5,10 +5,14 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-// Change the super class of the annotated class.
+/**
+ * Change the super class of the annotated class.
+ */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ChangeSuperClass {
-    // The super class to use.
+    /**
+     * The super class to use.
+     */
     public Class<?> value();
 }

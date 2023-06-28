@@ -5,7 +5,10 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-// Turn annotated method into a <init> method.
+/**
+ * Turn annotated method into a constructor method.
+ * Replace all references to it then remove the annotated method.
+ */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ShadowConstructor {

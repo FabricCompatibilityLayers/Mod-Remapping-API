@@ -6,10 +6,14 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Turn annotated method into a constructor method from super class.
+ * Turn annotated method into a method from super class.
  * Replace all references to it then remove the annotated method.
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface SuperConstructor {
+public @interface SuperMethod {
+    /**
+     * The target method name.
+     */
+    public String value();
 }

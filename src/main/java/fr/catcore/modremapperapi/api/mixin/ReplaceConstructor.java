@@ -6,10 +6,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Turn annotated method into a constructor method from super class.
- * Replace all references to it then remove the annotated method.
+ * Overwrite for constructor methods.
+ * @see org.spongepowered.asm.mixin.Overwrite
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface SuperConstructor {
+public @interface ReplaceConstructor {
 }
