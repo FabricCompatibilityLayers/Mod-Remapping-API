@@ -13,7 +13,7 @@
             distribution: temurin
         - name: Build with Gradle
           run: ./gradlew build
-        - if: github.repository == "thecatcore/Mod-Remapping-API" && github.ref_type == "tag"
+        - if: github.repository == 'thecatcore/Mod-Remapping-API' && github.ref_type == 'tag'
           run: ./gradlew build modrinth
           env:
             MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
