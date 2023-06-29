@@ -31,6 +31,8 @@ dependencies {
 	shadow('net.fabricmc:mapping-io:0.4.0') {
 		transitive = false
 	}
+
+	modImplementation(include("com.github.LlamaLad7.MixinExtras:mixinextras-fabric:${project.mixin_extras_version}"))
 }
 
 base {
@@ -106,5 +108,4 @@ modrinth {
 Add ReplaceConstructor and SuperMethod annotations.
 """
 	uploadFile = remapJar
-	gameVersions = ["1.14.4"]
 }
