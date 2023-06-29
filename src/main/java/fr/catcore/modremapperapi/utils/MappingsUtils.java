@@ -126,6 +126,8 @@ public class MappingsUtils {
                 final String className = classDef.getName(fromId);
                 String dstName = classDef.getName(toId);
 
+                if (ModRemappingAPI.BABRIC && className == null) continue;
+
                 if (dstName == null) {
                     dstName = className;
                 }
@@ -133,11 +135,19 @@ public class MappingsUtils {
                 acceptor.acceptClass(className, dstName);
 
                 for (MappingTree.FieldMapping field : classDef.getFields()) {
-                    acceptor.acceptField(memberOf(className, field.getName(fromId), field.getDesc(fromId)), field.getName(toId));
+                    String fieldName = field.getName(fromId);
+
+                    if (ModRemappingAPI.BABRIC && fieldName == null) continue;
+
+                    acceptor.acceptField(memberOf(className, fieldName, field.getDesc(fromId)), field.getName(toId));
                 }
 
                 for (MappingTree.MethodMapping method : classDef.getMethods()) {
-                    IMappingProvider.Member methodIdentifier = memberOf(className, method.getName(fromId), method.getDesc(fromId));
+                    String methodName = method.getName(fromId);
+
+                    if (ModRemappingAPI.BABRIC && methodName == null) continue;
+
+                    IMappingProvider.Member methodIdentifier = memberOf(className, methodName, method.getDesc(fromId));
                     acceptor.acceptMethod(methodIdentifier, method.getName(toId));
                 }
             }

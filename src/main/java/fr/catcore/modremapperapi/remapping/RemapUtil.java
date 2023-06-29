@@ -395,7 +395,8 @@ public class RemapUtil {
 
         if (classMapping != null) {
             for (MappingTree.FieldMapping fieldDef : classMapping.getFields()) {
-                if (Objects.equals(fieldDef.getName(getNativeNamespace()), fieldName)) {
+                String fieldSubName = fieldDef.getName(getNativeNamespace());
+                if (!(ModRemappingAPI.BABRIC && fieldSubName == null) && Objects.equals(fieldSubName, fieldName)) {
                     return fieldDef.getName(getTargetNamespace());
                 }
             }
@@ -416,7 +417,8 @@ public class RemapUtil {
 
         if (classMapping != null) {
             for (MappingTree.MethodMapping methodDef : classMapping.getMethods()) {
-                if (Objects.equals(methodDef.getName(getNativeNamespace()), methodName)) {
+                String methodSubName = methodDef.getName(getNativeNamespace());
+                if (!(ModRemappingAPI.BABRIC && methodSubName == null) && Objects.equals(methodSubName, methodName)) {
                     String methodDescriptor = methodDef.getDesc(getTargetNamespace());
 
                     if (methodDescriptor.startsWith(argDesc)) {
