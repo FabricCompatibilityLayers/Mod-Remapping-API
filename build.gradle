@@ -28,11 +28,11 @@ dependencies {
 
 	modImplementation(include("com.github.arthurbambou:Fabric-ASM:${project.fabric_asm_version}"))
 
-	shadow('net.fabricmc:mapping-io:0.4.0') {
+	shadow('net.fabricmc:mapping-io:0.4.2') {
 		transitive = false
 	}
 
-	runtimeOnly('net.fabricmc:mapping-io:0.4.0')
+	runtimeOnly('net.fabricmc:mapping-io:0.4.2')
 
 	modImplementation(include("com.github.LlamaLad7.MixinExtras:mixinextras-fabric:${project.mixin_extras_version}"))
 }
@@ -106,8 +106,6 @@ publishing {
 modrinth {
 	token = System.getenv("MODRINTH_TOKEN")
 	projectId = "mod-remapping-api"
-	changelog = """
-Add ReplaceConstructor and SuperMethod annotations.
-"""
+	changelog = """Fix mod remapping on babric"""
 	uploadFile = remapJar
 }

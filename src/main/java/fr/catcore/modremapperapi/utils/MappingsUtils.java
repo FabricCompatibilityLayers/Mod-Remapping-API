@@ -123,10 +123,13 @@ public class MappingsUtils {
             final int toId = mappings.getNamespaceId(getTargetNamespace());
 
             for (MappingTree.ClassMapping classDef : mappings.getClasses()) {
-                final String className = classDef.getName(fromId);
+                String className = classDef.getName(fromId);
                 String dstName = classDef.getName(toId);
 
-                if (ModRemappingAPI.BABRIC && className == null) continue;
+                if (ModRemappingAPI.BABRIC && className == null) {
+                    if (dstName == null) continue;
+                    className = dstName;
+                }
 
                 if (dstName == null) {
                     dstName = className;
@@ -136,19 +139,41 @@ public class MappingsUtils {
 
                 for (MappingTree.FieldMapping field : classDef.getFields()) {
                     String fieldName = field.getName(fromId);
+                    String dstFieldName = field.getName(toId);
+                    String fieldDesc = field.getDesc(fromId);
+                    String dstFieldDesc = field.getDesc(toId);
 
-                    if (ModRemappingAPI.BABRIC && fieldName == null) continue;
+                    if (ModRemappingAPI.BABRIC && fieldName == null) {
+                        if (dstFieldName == null) continue;
+                        fieldName = dstFieldName;
+                    }
 
-                    acceptor.acceptField(memberOf(className, fieldName, field.getDesc(fromId)), field.getName(toId));
+                    if (ModRemappingAPI.BABRIC && fieldDesc == null) {
+                        if (dstFieldDesc == null) continue;
+                        fieldDesc = dstFieldDesc;
+                    }
+
+                    acceptor.acceptField(memberOf(className, fieldName, fieldDesc), dstFieldName);
                 }
 
                 for (MappingTree.MethodMapping method : classDef.getMethods()) {
                     String methodName = method.getName(fromId);
+                    String dstMethodName = method.getName(toId);
+                    String methodDesc = method.getDesc(fromId);
+                    String dstMethodDesc = method.getDesc(toId);
 
-                    if (ModRemappingAPI.BABRIC && methodName == null) continue;
+                    if (ModRemappingAPI.BABRIC && methodName == null) {
+                        if (dstMethodName == null) continue;
+                        methodName = dstMethodName;
+                    }
 
-                    IMappingProvider.Member methodIdentifier = memberOf(className, methodName, method.getDesc(fromId));
-                    acceptor.acceptMethod(methodIdentifier, method.getName(toId));
+                    if (ModRemappingAPI.BABRIC && methodDesc == null) {
+                        if (dstMethodDesc == null) continue;
+                        methodDesc = dstMethodDesc;
+                    }
+
+                    IMappingProvider.Member methodIdentifier = memberOf(className, methodName, methodDesc);
+                    acceptor.acceptMethod(methodIdentifier, dstMethodName);
                 }
             }
         };
