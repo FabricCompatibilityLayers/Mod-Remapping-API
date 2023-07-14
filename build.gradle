@@ -28,11 +28,13 @@ dependencies {
 
 	modImplementation(include("com.github.arthurbambou:Fabric-ASM:${project.fabric_asm_version}"))
 
-	shadow('net.fabricmc:mapping-io:0.4.2') {
+	shadow(runtimeOnly('net.fabricmc:mapping-io:0.4.2')) {
 		transitive = false
 	}
 
-	runtimeOnly('net.fabricmc:mapping-io:0.4.2')
+	shadow(runtimeOnly('com.google.code.gson:gson:2.2.4')) {
+		transitive = false
+	}
 
 	modImplementation(include("com.github.LlamaLad7.MixinExtras:mixinextras-fabric:${project.mixin_extras_version}"))
 }
@@ -72,6 +74,7 @@ shadowJar {
 	exclude("META-INF")
 
 	relocate 'net.fabricmc.mappingio', 'fr.catcore.modremapperapi.impl.lib.mappingio'
+	relocate 'com.google.gson', 'fr.catcore.modremapperapi.impl.lib.gson'
 }
 
 jar {
