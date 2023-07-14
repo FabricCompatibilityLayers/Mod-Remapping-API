@@ -117,7 +117,8 @@ publishing {
 modrinth {
 	token = System.getenv("MODRINTH_TOKEN")
 	projectId = "mod-remapping-api"
-	changelog = """Fix mod remapping on babric"""
+	changelog = """Switch ClassTransformer to use spASM for compatibility.
+Stop using Fabric-ASM completely."""
 	uploadFile = remapJar
 
 	dependencies {
