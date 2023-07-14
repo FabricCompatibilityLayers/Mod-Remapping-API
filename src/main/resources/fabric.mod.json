@@ -15,23 +15,24 @@
   ],
   "contact": {
     "homepage": "https://modrinth.com/mod/mod-remapping-api",
-    "sources": "https://github.com/arthurbambou/Mod-Remapping-API",
-    "issues": "https://github.com/arthurbambou/Mod-Remapping-API/issues"
+    "sources": "https://github.com/thecatcore/Mod-Remapping-API",
+    "issues": "https://github.com/thecatcore/Mod-Remapping-API/issues"
   },
   "license": "CC0-1.0",
   "icon": "assets/mod-remapping-api/icon.png",
   "environment": "*",
   "entrypoints": {
-    "mm:early_risers": [
-      "fr.catcore.modremapperapi.ModRemappingApiInit"
-    ],
     "mod-remapper-api:modremapper": [
       "fr.catcore.modremapperapi.utils.DefaultModRemapper"
+    ],
+    "spasm:raw_transformer": [
+      "fr.catcore.modremapperapi.ClassTransformer"
     ]
   },
   "depends": {
-    "fabricloader": ">0.14.3",
-    "minecraft": "*"
+    "fabricloader": ">=0.14.21",
+    "spasm": ">=0.1",
+    "com_github_llamalad7_mixinextras": ">=0.2.0-beta.8"
   },
   "mixins": [
     "mixins.mod-remapping-api.json"
