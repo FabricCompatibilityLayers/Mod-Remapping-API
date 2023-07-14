@@ -1,4 +1,4 @@
 {
   "minVersion": "0.8",
-  "plugin": "fr.catcore.modremapperapi.TransformerPlugin"
+  "plugin": "fr.catcore.modremapperapi.RemapperPlugin"
 }

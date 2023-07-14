@@ -19,6 +19,11 @@ repositories {
 			includeGroup "maven.modrinth"
 		}
 	}
+
+	maven {
+		name = "Jitpack"
+		url = "https://jitpack.io/"
+	}
 }
 
 dependencies {
@@ -29,7 +34,7 @@ dependencies {
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
 	modImplementation(include(legacy.apiModule("legacy-fabric-logger-api-v1", project.fabric_version)))
-	modImplementation(include("maven.modrinth:spasm:0.0.1"))
+	modImplementation(include("maven.modrinth:spasm:0.1"))
 
 	shadow(runtimeOnly('net.fabricmc:mapping-io:0.4.2')) {
 		transitive = false
