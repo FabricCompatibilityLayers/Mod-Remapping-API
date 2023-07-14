@@ -40,6 +40,8 @@ public class RemapUtil {
 
     private static String defaultPackage = "";
 
+    public static final List<String> MC_CLASS_NAMES = new ArrayList<>();
+
     public static void init() {
         downloadRemappingLibs();
         generateMappings();
@@ -55,6 +57,14 @@ public class RemapUtil {
 
         LOADER_TREE = makeTree(Constants.EXTRA_MAPPINGS_FILE);
         MINECRAFT_TREE = MappingsUtils.getMinecraftMappings();
+
+        for (MappingTree.ClassMapping classView : MINECRAFT_TREE.getClasses()) {
+            String className = classView.getName(getNativeNamespace());
+
+            if (className != null) {
+                MC_CLASS_NAMES.add(className);
+            }
+        }
     }
 
     private static void downloadRemappingLibs() {
@@ -122,7 +132,7 @@ public class RemapUtil {
 
                     String s1 = zipentry.getName();
                     if (!zipentry.isDirectory()) {
-                        files.add(s1);
+                        files.add(s1.replace("\\", "/"));
                     }
                 }
             } catch (IOException e) {
@@ -135,7 +145,10 @@ public class RemapUtil {
         List<String> classes = new ArrayList<>();
 
         for (String file : files) {
-            if (file.endsWith(".class")) classes.add(file.replace(".class", ""));
+            if (file.endsWith(".class")) {
+                String clName = file.replace(".class", "");
+                if (!MC_CLASS_NAMES.contains(clName) || ModRemappingAPI.remapClassEdits) classes.add(clName);
+            }
         }
 
         classes.forEach(cl -> MOD_MAPPINGS.put(cl, (cl.contains("/") ? "" : defaultPackage) + cl));

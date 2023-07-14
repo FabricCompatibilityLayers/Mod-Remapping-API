@@ -13,7 +13,7 @@ public class ModRemappingAPI {
     public static final List<ModRemapper> MOD_REMAPPERS = new ArrayList<>();
     private static final String entrypointName = "mod-remapper-api:modremapper";
 
-    public static boolean remapModClasses = true;
+    public static boolean remapClassEdits = false;
 
     public static final boolean BABRIC = FabricLoader.getInstance().getModContainer("fabricloader")
             .get().getMetadata().getVersion().getFriendlyString().contains("babric");
@@ -26,7 +26,7 @@ public class ModRemappingAPI {
             initializing = true;
 
             FabricLoader.getInstance().getConfigDir().toFile().mkdirs();
-            remapModClasses = new File(FabricLoader.getInstance().getConfigDir().toFile(), "modremapper").exists();
+            remapClassEdits = new File(FabricLoader.getInstance().getConfigDir().toFile(), ".remapclassedits").exists();
 
             MOD_REMAPPERS.addAll(FabricLoader.getInstance().getEntrypoints(entrypointName, ModRemapper.class));
             FakeModManager.init();
