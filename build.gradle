@@ -117,8 +117,7 @@ publishing {
 modrinth {
 	token = System.getenv("MODRINTH_TOKEN")
 	projectId = "mod-remapping-api"
-	changelog = """Switch ClassTransformer to use spASM for compatibility.
-Stop using Fabric-ASM completely."""
+	changelog = """Fix crash when a mod path contains spaces."""
 	uploadFile = remapJar
 
 	dependencies {
