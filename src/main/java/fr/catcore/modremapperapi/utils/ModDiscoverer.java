@@ -196,7 +196,7 @@ public class ModDiscoverer {
                 /* Specify the encoding as UTF -8 */
                 zip_properties.put("encoding", "UTF-8");
 
-                try (FileSystem zipfs = FileSystems.newFileSystem(new URI("jar:file:" + entry.getValue().toFile().getAbsolutePath()), zip_properties)) {
+                try (FileSystem zipfs = FileSystems.newFileSystem(new URI("jar:" + entry.getValue().toUri()), zip_properties)) {
                     for (String clName : RemapUtil.MC_CLASS_NAMES) {
                         Path classPath = zipfs.getPath("/" + clName + ".class");
 
