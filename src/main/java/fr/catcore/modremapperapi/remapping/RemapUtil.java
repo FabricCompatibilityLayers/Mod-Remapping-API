@@ -74,6 +74,7 @@ public class RemapUtil {
                     File libPath = new File(Constants.LIB_FOLDER, library.fileName);
 
                     if (!libPath.exists() && !library.url.isEmpty()) {
+                        Constants.MAIN_LOGGER.info("Downloading remapping library '" + library.fileName + "' from url '" + library.url + "'");
                         try (BufferedInputStream inputStream = new BufferedInputStream(new URL(library.url).openStream())) {
                             try (BufferedOutputStream outputStream = new BufferedOutputStream(Files.newOutputStream(libPath.toPath()))) {
                                 byte[] buffer = new byte[2048];
@@ -96,8 +97,11 @@ public class RemapUtil {
                         }
 
                         FileUtils.excludeFromZipFile(libPath, library.toExclude);
+                        Constants.MAIN_LOGGER.info("Remapping library ready for use.");
                     } else if (!libPath.exists() && library.path != null) {
+                        Constants.MAIN_LOGGER.info("Extracting remapping library '" + library.fileName + "' from mod jar.");
                         FileUtils.copyFile(library.path, libPath.toPath());
+                        Constants.MAIN_LOGGER.info("Remapping library ready for use.");
                     }
                 }
             }
