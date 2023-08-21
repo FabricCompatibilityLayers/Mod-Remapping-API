@@ -117,7 +117,11 @@ publishing {
 modrinth {
 	token = System.getenv("MODRINTH_TOKEN")
 	projectId = "mod-remapping-api"
-	changelog = """Fix crash when a mod path contains spaces."""
+	changelog = """Update SpASM to 0.2.\
+Allow to register Post-Mixin ClassTransformers.\
+Log more info when a remapping library is either downloaded or extracted.\
+Update bundled MixinExtras version to 0.2.0-beta.10.
+"""
 	uploadFile = remapJar
 
 	dependencies {
