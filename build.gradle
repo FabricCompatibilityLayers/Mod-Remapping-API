@@ -44,7 +44,7 @@ dependencies {
 		transitive = false
 	}
 
-	modImplementation(include("com.github.LlamaLad7.MixinExtras:mixinextras-fabric:${project.mixin_extras_version}"))
+	implementation(include("com.github.llamalad7.mixinextras:mixinextras-fabric:${project.mixin_extras_version}"))
 }
 
 base {
