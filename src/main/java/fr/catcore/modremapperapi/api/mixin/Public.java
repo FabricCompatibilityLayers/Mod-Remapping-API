@@ -8,7 +8,9 @@ import java.lang.annotation.Target;
 /**
  * Makes the annotated element public at runtime.
  * Mostly to use with static elements.
+ * @deprecated : Use {@link fr.catcore.cursedmixinextensions.annotations.Public} instead
  */
+@Deprecated
 @Target({ ElementType.METHOD, ElementType.FIELD })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Public {

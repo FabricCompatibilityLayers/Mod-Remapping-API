@@ -7,7 +7,9 @@ import java.lang.annotation.Target;
 
 /**
  * Change the super class of the annotated class.
+ * @deprecated : Use {@link fr.catcore.cursedmixinextensions.annotations.ChangeSuperClass} instead
  */
+@Deprecated
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ChangeSuperClass {

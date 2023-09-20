@@ -1,5 +1,6 @@
 package fr.catcore.modremapperapi.utils;
 
+import fr.catcore.cursedmixinextensions.CursedMixinExtensions;
 import fr.catcore.modremapperapi.api.mixin.*;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -15,9 +16,21 @@ import java.util.function.Consumer;
 
 /**
  * @author LlamaLad7, Cat Core
+ * @deprecated : Use {@link fr.catcore.cursedmixinextensions.CursedMixinExtensions} instead
  */
+@Deprecated
 public class MixinUtils {
+    /**
+     * @deprecated : Use {@link fr.catcore.cursedmixinextensions.CursedMixinExtensions#postApply(ClassNode)} instead
+     * @param targetClassName
+     * @param targetClass
+     * @param mixinClassName
+     * @param mixinInfo
+     */
+    @Deprecated
     public static void applyASMMagic(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
+        CursedMixinExtensions.postApply(targetClass);
+
         AnnotationNode changeSuperClass = Annotations.getVisible(targetClass, ChangeSuperClass.class);
 
         if (changeSuperClass != null) {
