@@ -118,10 +118,8 @@ publishing {
 modrinth {
 	token = System.getenv("MODRINTH_TOKEN")
 	projectId = "mod-remapping-api"
-	changelog = """Update SpASM to 0.2.\
-Allow to register Post-Mixin ClassTransformers.\
-Log more info when a remapping library is either downloaded or extracted.\
-Update bundled MixinExtras version to 0.2.0-beta.10.
+	changelog = """Move out annotations to an included library (CursedMixinExtensions).\
+Update bundled MixinExtras version to 0.2.0-rc.4.
 """
 	uploadFile = remapJar
 
