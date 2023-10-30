@@ -32,7 +32,7 @@
   "depends": {
     "fabricloader": ">=0.14.18",
     "spasm": ">=0.2.0",
-    "com_github_llamalad7_mixinextras": ">=0.2.0-rc.4"
+    "com_github_llamalad7_mixinextras": ">=0.2.0"
   },
   "mixins": [
     "mixins.mod-remapping-api.json"

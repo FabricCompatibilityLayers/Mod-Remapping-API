@@ -1,8 +1,10 @@
 package fr.catcore.modremapperapi.utils;
 
 import fr.catcore.modremapperapi.ModRemappingAPI;
+import fr.catcore.modremapperapi.remapping.RefmapRemapper;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.impl.launch.FabricLauncherBase;
 import net.fabricmc.loader.impl.launch.MappingConfiguration;
 import net.fabricmc.loader.impl.util.ManifestUtil;
 import net.fabricmc.loader.impl.util.log.Log;
@@ -15,18 +17,22 @@ import net.fabricmc.mappingio.format.Tiny1Reader;
 import net.fabricmc.mappingio.format.Tiny2Reader;
 import net.fabricmc.mappingio.tree.MappingTree;
 import net.fabricmc.mappingio.tree.MemoryMappingTree;
-import net.fabricmc.tinyremapper.IMappingProvider;
+import net.fabricmc.tinyremapper.*;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
+import java.io.*;
 import java.net.JarURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import java.util.zip.ZipError;
+
+import static fr.catcore.modremapperapi.remapping.RemapUtil.getRemapClasspath;
 
 public class MappingsUtils {
     private static MemoryMappingTree MINECRAFT_MAPPINGS;
@@ -41,7 +47,7 @@ public class MappingsUtils {
     }
 
     public static String getTargetNamespace() {
-        return "intermediary";
+        return !FabricLoader.getInstance().isDevelopmentEnvironment() ? "intermediary" : FabricLoader.getInstance().getMappingResolver().getCurrentRuntimeNamespace();
     }
     
     private static void initialize() {
@@ -179,7 +185,164 @@ public class MappingsUtils {
         };
     }
 
+    private static IMappingProvider createBackwardProvider(MappingTree mappings) {
+        return (acceptor) -> {
+            final int fromId = mappings.getNamespaceId(getTargetNamespace());
+            final int toId = mappings.getNamespaceId(getNativeNamespace());
+
+            for (MappingTree.ClassMapping classDef : mappings.getClasses()) {
+                String className = classDef.getName(fromId);
+                String dstName = classDef.getName(toId);
+
+                if (ModRemappingAPI.BABRIC && dstName == null) {
+                    if (className == null) continue;
+                    dstName = className;
+                }
+
+                if (className == null) {
+                    className = dstName;
+                }
+
+                acceptor.acceptClass(className, dstName);
+
+                for (MappingTree.FieldMapping field : classDef.getFields()) {
+                    String fieldName = field.getName(fromId);
+                    String dstFieldName = field.getName(toId);
+                    String fieldDesc = field.getDesc(fromId);
+                    String dstFieldDesc = field.getDesc(toId);
+
+                    if (ModRemappingAPI.BABRIC && dstFieldName == null) {
+                        if (fieldName == null) continue;
+                        dstFieldName = fieldName;
+                    }
+
+                    if (ModRemappingAPI.BABRIC && dstFieldDesc == null) {
+                        if (fieldDesc == null) continue;
+                        dstFieldDesc = fieldDesc;
+                    }
+
+                    acceptor.acceptField(memberOf(className, fieldName, fieldDesc), dstFieldName);
+                }
+
+                for (MappingTree.MethodMapping method : classDef.getMethods()) {
+                    String methodName = method.getName(fromId);
+                    String dstMethodName = method.getName(toId);
+                    String methodDesc = method.getDesc(fromId);
+                    String dstMethodDesc = method.getDesc(toId);
+
+                    if (ModRemappingAPI.BABRIC && dstMethodName == null) {
+                        if (methodName == null) continue;
+                        dstMethodName = methodName;
+                    }
+
+                    if (ModRemappingAPI.BABRIC && dstMethodDesc == null) {
+                        if (methodDesc == null) continue;
+                        dstMethodDesc = methodDesc;
+                    }
+
+                    IMappingProvider.Member methodIdentifier = memberOf(className, methodName, methodDesc);
+                    acceptor.acceptMethod(methodIdentifier, dstMethodName);
+                }
+            }
+        };
+    }
+
     private static IMappingProvider.Member memberOf(String className, String memberName, String descriptor) {
         return new IMappingProvider.Member(className, memberName, descriptor);
+    }
+
+    private static Path[] getMinecraftJar() throws IOException {
+        Path[] originalClassPath = getRemapClasspath().toArray(new Path[0]);
+
+        Map<Path, Path> paths = new HashMap<>();
+
+        for (Path path :
+                originalClassPath) {
+            Constants.MAIN_LOGGER.info(path.toString());
+            paths.put(path, new File(Constants.LIB_FOLDER, path.toFile().getName()).toPath());
+            paths.get(path).toFile().delete();
+        }
+
+        TinyRemapper.Builder builder = TinyRemapper
+                .newRemapper()
+                .renameInvalidLocals(true)
+                .ignoreFieldDesc(false)
+                .propagatePrivate(true)
+                .ignoreConflicts(true)
+                .fixPackageAccess(true)
+                .withMappings(createBackwardProvider(getMinecraftMappings()));
+
+        TinyRemapper remapper = builder.build();
+
+        Constants.MAIN_LOGGER.info("Remapping minecraft jar back to obfuscated!");
+
+        List<OutputConsumerPath> outputConsumerPaths = new ArrayList<>();
+
+        List<OutputConsumerPath.ResourceRemapper> resourceRemappers = new ArrayList<>(NonClassCopyMode.FIX_META_INF.remappers);
+
+        try {
+            Map<Path, InputTag> tagMap = new HashMap<>();
+
+            Constants.MAIN_LOGGER.debug("Creating InputTags!");
+            for (Path input : paths.keySet()) {
+                InputTag tag = remapper.createInputTag();
+                tagMap.put(input, tag);
+                remapper.readInputsAsync(tag, input);
+            }
+
+            Constants.MAIN_LOGGER.debug("Initializing remapping!");
+            for (Map.Entry<Path, Path> entry : paths.entrySet()) {
+                Constants.MAIN_LOGGER.debug("Starting remapping " + entry.getKey().toString() + " to " + entry.getValue().toString());
+                OutputConsumerPath outputConsumer = new OutputConsumerPath.Builder(entry.getValue()).build();
+
+                outputConsumerPaths.add(outputConsumer);
+
+                Constants.MAIN_LOGGER.debug("Apply remapper!");
+                remapper.apply(outputConsumer, tagMap.get(entry.getKey()));
+
+                Constants.MAIN_LOGGER.debug("Add input as non class file!");
+                outputConsumer.addNonClassFiles(entry.getKey(), remapper, resourceRemappers);
+
+                Constants.MAIN_LOGGER.debug("Done 1!");
+            }
+        } catch (Exception e) {
+            remapper.finish();
+            outputConsumerPaths.forEach(o -> {
+                try {
+                    o.close();
+                } catch (IOException e2) {
+                    e2.printStackTrace();
+                }
+            });
+            throw new RuntimeException("Failed to remap jar", e);
+        } finally {
+            remapper.finish();
+            outputConsumerPaths.forEach(o -> {
+                try {
+                    o.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+        }
+
+        return paths.values().toArray(new Path[0]);
+    }
+
+    public static void addMinecraftJar(TinyRemapper remapper) {
+        if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
+            try {
+                remapper.readClassPathAsync(getMinecraftJar());
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to populate default remap classpath", e);
+            }
+        } else {
+            remapper.readClassPathAsync((Path) FabricLoader.getInstance().getObjectShare().get("fabric-loader:inputGameJar"));
+
+            for (Path path : FabricLauncherBase.getLauncher().getClassPath()) {
+                Constants.MAIN_LOGGER.debug("Appending '%s' to remapper classpath", path);
+                remapper.readClassPathAsync(path);
+            }
+        }
     }
 }

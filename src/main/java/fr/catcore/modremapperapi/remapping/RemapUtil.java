@@ -8,7 +8,6 @@ import fr.catcore.modremapperapi.utils.FileUtils;
 import fr.catcore.modremapperapi.utils.MappingsUtils;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.loader.impl.launch.FabricLauncherBase;
 import net.fabricmc.mappingio.tree.MappingTree;
 import net.fabricmc.mappingio.tree.MemoryMappingTree;
 import net.fabricmc.tinyremapper.*;
@@ -171,7 +170,7 @@ public class RemapUtil {
         List<String> lines = new ArrayList<>();
 
         if (ModRemappingAPI.BABRIC) {
-            lines.add(toString("v1", "intermediary", "glue", "server", "client"));
+            lines.add(toString("v1", "intermediary", "glue", "server", "client", "named"));
         } else {
             lines.add(toString("v1", "official", "intermediary", "named"));
         }
@@ -226,7 +225,7 @@ public class RemapUtil {
         List<String> lines = new ArrayList<>();
 
         if (ModRemappingAPI.BABRIC) {
-            lines.add(toString("v1", "intermediary", "glue", "server", "client"));
+            lines.add(toString("v1", "intermediary", "glue", "server", "client", "named"));
         } else {
             lines.add(toString("v1", "official", "intermediary", "named"));
         }
@@ -319,20 +318,7 @@ public class RemapUtil {
 
         TinyRemapper remapper = builder.build();
 
-        if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
-            try {
-                remapper.readClassPathAsync(getRemapClasspath().toArray(new Path[0]));
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to populate default remap classpath", e);
-            }
-        } else {
-            remapper.readClassPathAsync((Path) FabricLoader.getInstance().getObjectShare().get("fabric-loader:inputGameJar"));
-
-            for (Path path : FabricLauncherBase.getLauncher().getClassPath()) {
-                Constants.MAIN_LOGGER.debug("Appending '%s' to remapper classpath", path);
-                remapper.readClassPathAsync(path);
-            }
-        }
+        MappingsUtils.addMinecraftJar(remapper);
 
         for (ModRemapper modRemapper : ModRemappingAPI.MOD_REMAPPERS) {
             for (RemapLibrary library : modRemapper.getRemapLibraries()) {
@@ -469,7 +455,7 @@ public class RemapUtil {
         return FabricLoader.getInstance().getEnvironmentType();
     }
 
-    private static List<Path> getRemapClasspath() throws IOException {
+    public static List<Path> getRemapClasspath() throws IOException {
         String remapClasspathFile = System.getProperty("fabric.remapClasspathFile");
 
         if (remapClasspathFile == null) {

@@ -55,7 +55,7 @@ public class MappingBuilder {
     public List<String> build() {
         List<String> list = new ArrayList<>();
         if (ModRemappingAPI.BABRIC) {
-            list.add(toString("CLASS", this.intermediary, this.intermediary, this.obfucated, this.obfucated));
+            list.add(toString("CLASS", this.intermediary, this.intermediary, this.obfucated, this.obfucated, this.intermediary));
         } else {
             list.add(toString("CLASS", this.obfucated, this.intermediary, this.intermediary));
         }
@@ -80,7 +80,7 @@ public class MappingBuilder {
 
         public String toString(String className) {
             if (ModRemappingAPI.BABRIC) {
-                return MappingBuilder.toString(this.type.name(), className, this.description, this.intermediary, this.intermediary, this.obfuscated, this.obfuscated);
+                return MappingBuilder.toString(this.type.name(), className, this.description, this.intermediary, this.intermediary, this.obfuscated, this.obfuscated, this.intermediary);
             } else {
                 return MappingBuilder.toString(this.type.name(), className, this.description, this.obfuscated, this.intermediary, this.intermediary);
             }
