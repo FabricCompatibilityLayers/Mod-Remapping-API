@@ -26,7 +26,6 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import static fr.catcore.modremapperapi.utils.MappingsUtils.getNativeNamespace;
 import static fr.catcore.modremapperapi.utils.MappingsUtils.getTargetNamespace;
 
 public class RemapUtil {

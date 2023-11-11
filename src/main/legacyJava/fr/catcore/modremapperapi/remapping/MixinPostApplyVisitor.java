@@ -13,9 +13,6 @@ import org.objectweb.asm.tree.ClassNode;
 import java.util.ArrayList;
 import java.util.List;
 
-import static fr.catcore.modremapperapi.utils.MappingsUtils.getNativeNamespace;
-import static fr.catcore.modremapperapi.utils.MappingsUtils.getTargetNamespace;
-
 public class MixinPostApplyVisitor implements TinyRemapper.ApplyVisitorProvider{
     private final List<MappingTree.ClassMapping> classDefs = new ArrayList<>();
     public MixinPostApplyVisitor(MappingTree[] trees) {

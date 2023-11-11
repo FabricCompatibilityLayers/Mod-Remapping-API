@@ -4,7 +4,6 @@ import fr.catcore.modremapperapi.ModRemappingAPI;
 import fr.catcore.modremapperapi.api.ModRemapper;
 import fr.catcore.modremapperapi.remapping.RemapUtil;
 import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.loader.impl.launch.FabricLauncher;
 import net.fabricmc.loader.impl.launch.FabricLauncherBase;
 import org.spongepowered.include.com.google.common.collect.ImmutableList;
 
