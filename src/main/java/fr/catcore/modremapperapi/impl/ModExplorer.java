@@ -1,26 +1,17 @@
 package fr.catcore.modremapperapi.impl;
 
-import fr.catcore.modremapperapi.api.v1.Constants;
-import fr.catcore.modremapperapi.api.v1.ModDiscoverer;
-import fr.catcore.modremapperapi.api.v1.ModRemapper;
+import fr.catcore.modremapperapi.api.v1.*;
 import net.legacyfabric.fabric.api.logger.v1.Logger;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 import static fr.catcore.modremapperapi.impl.FileUtils.getJarFS;
 import static fr.catcore.modremapperapi.impl.FileUtils.openZip;
@@ -29,13 +20,17 @@ public class ModExplorer {
     private static final Logger LOGGER = Logger.get("ModRemappingAPI", "ModExplorer");
     public static void start() {
         for (ModRemapper remapper : MRAPIImpl.REMAPPERS) {
+            List<ModEntry> entries = new ArrayList<>();
+
             for (ModDiscoverer discoverer : remapper.getModDiscoverers()) {
-                explore(discoverer);
+                explore(discoverer, entries);
             }
+
+            remapper.filterModEntries(entries);
         }
     }
 
-    public static void explore(ModDiscoverer discoverer) {
+    public static void explore(ModDiscoverer discoverer, List<ModEntry> entries) {
         for (String folderName : discoverer.getModFolders()) {
             Path originalPath = LoaderUtils.getMCFolder(folderName);
             Path cachePath = Constants.CACHE_FOLDER.resolve(folderName);
@@ -52,21 +47,21 @@ public class ModExplorer {
                 if (!Files.exists(cachePath)) Files.createDirectories(cachePath);
                 else FileUtils.emptyFolder(cachePath);
 
-                exploreFolder(discoverer, originalPath, cachePath);
+                exploreFolder(discoverer, originalPath, cachePath, entries);
             } catch (IOException e) {
-                // TODO
+                LOGGER.error("{}", e);
             }
         }
     }
 
-    public static void exploreFolder(ModDiscoverer discoverer, Path in, Path out) throws IOException {
+    public static void exploreFolder(ModDiscoverer discoverer, Path in, Path out, List<ModEntry> entries) throws IOException {
         try (Stream<Path> stream = Files.list(in)) {
             stream.forEach(item -> {
                 if (Files.isDirectory(item) && discoverer.acceptDirectories()) {
                     // TODO
                 } else {
                     try {
-                        if (isInteresting(discoverer, item) && !isFabricMod(item)) handleFile(discoverer, item);
+                        if (isInteresting(discoverer, item) && !isFabricMod(item)) handleFile(discoverer, item, entries);
                     } catch (IOException | URISyntaxException e) {
                         throw new RuntimeException(e);
                     }
@@ -90,16 +85,27 @@ public class ModExplorer {
         return open;
     }
 
-    public static void handleFile(ModDiscoverer discoverer, Path item) throws IOException, URISyntaxException {
-        if (discoverer.acceptAnyFile()) {
-            // TODO
-        } else {
-            List<String> zipEntries = new ArrayList<>();
-            List<String> mods = new ArrayList<>();
+    public static void handleFile(ModDiscoverer discoverer, Path item, List<ModEntry> entries) throws IOException, URISyntaxException {
+        List<String> zipEntries = new ArrayList<>();
+        List<String> mods = new ArrayList<>();
 
-            firstRound(item, discoverer, zipEntries, mods);
-            secondRound(item, discoverer, zipEntries, mods);
+        firstRoundZip(item, discoverer, zipEntries, mods);
+        secondRoundZip(item, discoverer, zipEntries, mods);
+
+        if (mods.isEmpty() && discoverer.acceptAnyFile()) {
+            try {
+                entries.add(new ModEntryImpl(
+                        item,
+                        null,
+                        discoverer.parseAnyInfos(item),
+                        discoverer
+                ));
+            } catch (IOException e) {
+                LOGGER.error("{}", e);
+            }
         }
+
+        parseModInfosZip(item, discoverer, mods, entries);
     }
 
     public static boolean isFabricMod(Path item) throws IOException {
@@ -119,7 +125,7 @@ public class ModExplorer {
         return fabric.get();
     }
 
-    public static void firstRound(Path mod, ModDiscoverer discoverer, List<String> entries, List<String> mods) throws IOException {
+    public static void firstRoundZip(Path mod, ModDiscoverer discoverer, List<String> entries, List<String> mods) throws IOException {
         openZip(mod, (entry, fullName, shortName) -> {
             if (!entry.isDirectory()) {
                 entries.add(fullName);
@@ -133,12 +139,17 @@ public class ModExplorer {
         });
     }
 
-    public static void secondRound(Path mod, ModDiscoverer discoverer, List<String> entries, List<String> mods) throws URISyntaxException, IOException {
+    public static void secondRoundZip(Path mod, ModDiscoverer discoverer, List<String> entries, List<String> mods) throws URISyntaxException, IOException {
         try (FileSystem fs = getJarFS(mod)) {
             mods.removeIf(modEntry -> {
                 Path modPath = fs.getPath(modEntry);
 
-                return !discoverer.isMod(modEntry, modPath);
+                try {
+                    return !discoverer.isMod(modEntry, modPath);
+                } catch (IOException e) {
+                    LOGGER.error("{}", e);
+                    return true;
+                }
             });
 
             for (String entry : entries) {
@@ -149,5 +160,24 @@ public class ModExplorer {
         }
     }
 
+    public static void parseModInfosZip(Path mod, ModDiscoverer discoverer, List<String> mods, List<ModEntry> entries) throws URISyntaxException, IOException {
+        try (FileSystem fs = getJarFS(mod)) {
+            mods.forEach(entry -> {
+                Path entryPath = fs.getPath(entry);
 
+                try {
+                    ModInfos infos = discoverer.parseModInfos(entry, entryPath);
+
+                    if (infos != null) entries.add(new ModEntryImpl(
+                            mod,
+                            entry,
+                            infos,
+                            discoverer
+                    ));
+                } catch (IOException e) {
+                    LOGGER.error("{}", e);
+                }
+            });
+        }
+    }
 }
