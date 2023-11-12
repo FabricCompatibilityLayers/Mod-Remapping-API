@@ -54,7 +54,7 @@ public class ModExplorer {
 
                 exploreFolder(discoverer, originalPath, cachePath);
             } catch (IOException e) {
-
+                // TODO
             }
         }
     }
@@ -63,7 +63,7 @@ public class ModExplorer {
         try (Stream<Path> stream = Files.list(in)) {
             stream.forEach(item -> {
                 if (Files.isDirectory(item) && discoverer.acceptDirectories()) {
-
+                    // TODO
                 } else {
                     try {
                         if (isInteresting(discoverer, item) && !isFabricMod(item)) handleFile(discoverer, item);
@@ -92,7 +92,7 @@ public class ModExplorer {
 
     public static void handleFile(ModDiscoverer discoverer, Path item) throws IOException, URISyntaxException {
         if (discoverer.acceptAnyFile()) {
-
+            // TODO
         } else {
             List<String> zipEntries = new ArrayList<>();
             List<String> mods = new ArrayList<>();

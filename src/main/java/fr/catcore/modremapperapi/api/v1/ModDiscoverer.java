@@ -1,5 +1,6 @@
 package fr.catcore.modremapperapi.api.v1;
 
+import java.io.IOException;
 import java.nio.file.Path;
 
 public interface ModDiscoverer {
@@ -11,7 +12,8 @@ public interface ModDiscoverer {
     String[] getModExtensions();
 
     boolean isMod(String fileName);
-    boolean isMod(String fileName, Path filePath);
+    boolean isMod(String fileName, Path filePath) throws IOException;
+    ModInfos parseModInfos(String fileName, Path filePath) throws IOException;
 
     default boolean acceptAnyFile() {
         return false;

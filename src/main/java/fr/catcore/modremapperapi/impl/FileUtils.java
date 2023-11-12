@@ -70,6 +70,7 @@ public class FileUtils {
         fileinputstream.close();
     }
 
+    @FunctionalInterface
     public interface ZipVisitor {
         boolean checkEntry(ZipEntry entry, String fullName, String shortName);
     }
