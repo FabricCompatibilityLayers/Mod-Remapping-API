@@ -2,9 +2,8 @@ package fr.catcore.modremapperapi.test.impl;
 
 import fr.catcore.modremapperapi.api.v1.ModDiscoverer;
 import fr.catcore.modremapperapi.api.v1.ModRemapper;
-import fr.catcore.modremapperapi.api.v1.ModEntry;
+import fr.catcore.modremapperapi.api.v1.ModCandidate;
 
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,7 +17,7 @@ public class MLModRemapper implements ModRemapper {
     }
 
     @Override
-    public void filterModEntries(List<ModEntry> entries) {
+    public void filterModEntries(List<ModCandidate> entries) {
         List<String> found = new ArrayList<>();
 
         entries.forEach(modEntry -> {

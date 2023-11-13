@@ -20,7 +20,7 @@ public class ModExplorer {
     private static final Logger LOGGER = Logger.get("ModRemappingAPI", "ModExplorer");
     public static void start() {
         for (ModRemapper remapper : MRAPIImpl.REMAPPERS) {
-            List<ModEntry> entries = new ArrayList<>();
+            List<ModCandidate> entries = new ArrayList<>();
 
             for (ModDiscoverer discoverer : remapper.getModDiscoverers()) {
                 explore(discoverer, entries);
@@ -30,7 +30,7 @@ public class ModExplorer {
         }
     }
 
-    public static void explore(ModDiscoverer discoverer, List<ModEntry> entries) {
+    public static void explore(ModDiscoverer discoverer, List<ModCandidate> entries) {
         for (String folderName : discoverer.getModFolders()) {
             Path originalPath = LoaderUtils.getMCFolder(folderName);
             Path cachePath = Constants.CACHE_FOLDER.resolve(folderName);
@@ -54,14 +54,14 @@ public class ModExplorer {
         }
     }
 
-    public static void exploreFolder(ModDiscoverer discoverer, Path in, Path out, List<ModEntry> entries) throws IOException {
+    public static void exploreFolder(ModDiscoverer discoverer, Path in, Path out, List<ModCandidate> entries) throws IOException {
         try (Stream<Path> stream = Files.list(in)) {
             stream.forEach(item -> {
                 if (Files.isDirectory(item) && discoverer.acceptDirectories()) {
                     // TODO
                 } else {
                     try {
-                        if (isInteresting(discoverer, item) && !isFabricMod(item)) handleFile(discoverer, item, entries);
+                        if (isInteresting(discoverer, item) && !isFabricMod(item)) handleFile(discoverer, item, entries, out);
                     } catch (IOException | URISyntaxException e) {
                         throw new RuntimeException(e);
                     }
@@ -85,7 +85,7 @@ public class ModExplorer {
         return open;
     }
 
-    public static void handleFile(ModDiscoverer discoverer, Path item, List<ModEntry> entries) throws IOException, URISyntaxException {
+    public static void handleFile(ModDiscoverer discoverer, Path item, List<ModCandidate> entries, Path out) throws IOException, URISyntaxException {
         List<String> zipEntries = new ArrayList<>();
         List<String> mods = new ArrayList<>();
 
@@ -94,18 +94,18 @@ public class ModExplorer {
 
         if (mods.isEmpty() && discoverer.acceptAnyFile()) {
             try {
-                entries.add(new ModEntryImpl(
+                entries.add(new ModCandidateImpl(
                         item,
                         null,
                         discoverer.parseAnyInfos(item),
-                        discoverer
-                ));
+                        discoverer,
+                        out));
             } catch (IOException e) {
                 LOGGER.error("{}", e);
             }
         }
 
-        parseModInfosZip(item, discoverer, mods, entries);
+        parseModInfosZip(item, discoverer, mods, entries, out);
     }
 
     public static boolean isFabricMod(Path item) throws IOException {
@@ -160,7 +160,7 @@ public class ModExplorer {
         }
     }
 
-    public static void parseModInfosZip(Path mod, ModDiscoverer discoverer, List<String> mods, List<ModEntry> entries) throws URISyntaxException, IOException {
+    public static void parseModInfosZip(Path mod, ModDiscoverer discoverer, List<String> mods, List<ModCandidate> entries, Path out) throws URISyntaxException, IOException {
         try (FileSystem fs = getJarFS(mod)) {
             mods.forEach(entry -> {
                 Path entryPath = fs.getPath(entry);
@@ -168,12 +168,12 @@ public class ModExplorer {
                 try {
                     ModInfos infos = discoverer.parseModInfos(entry, entryPath);
 
-                    if (infos != null) entries.add(new ModEntryImpl(
+                    if (infos != null) entries.add(new ModCandidateImpl(
                             mod,
                             entry,
                             infos,
-                            discoverer
-                    ));
+                            discoverer,
+                            out));
                 } catch (IOException e) {
                     LOGGER.error("{}", e);
                 }

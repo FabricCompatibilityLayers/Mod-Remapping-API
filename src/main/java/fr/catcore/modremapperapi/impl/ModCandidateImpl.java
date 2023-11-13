@@ -1,23 +1,25 @@
 package fr.catcore.modremapperapi.impl;
 
 import fr.catcore.modremapperapi.api.v1.ModDiscoverer;
-import fr.catcore.modremapperapi.api.v1.ModEntry;
+import fr.catcore.modremapperapi.api.v1.ModCandidate;
 import fr.catcore.modremapperapi.api.v1.ModInfos;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Path;
 
-public class ModEntryImpl implements ModEntry {
+public class ModCandidateImpl implements ModCandidate {
     private final Path filePath;
     private final @Nullable String modEntry;
     private final ModInfos infos;
     private final ModDiscoverer modDiscoverer;
+    private final Path outDir;
 
-    public ModEntryImpl(Path filePath, @Nullable String modEntry, ModInfos infos, ModDiscoverer modDiscoverer) {
+    public ModCandidateImpl(Path filePath, @Nullable String modEntry, ModInfos infos, ModDiscoverer modDiscoverer, Path outDir) {
         this.filePath = filePath;
         this.modEntry = modEntry;
         this.infos = infos;
         this.modDiscoverer = modDiscoverer;
+        this.outDir = outDir;
     }
 
     @Override

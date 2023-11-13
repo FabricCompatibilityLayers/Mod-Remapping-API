@@ -1,7 +1,7 @@
 package fr.catcore.modremapperapi.impl;
 
 import fr.catcore.modremapperapi.api.v1.ModDiscoverer;
-import fr.catcore.modremapperapi.api.v1.ModEntry;
+import fr.catcore.modremapperapi.api.v1.ModCandidate;
 import fr.catcore.modremapperapi.api.v1.ModRemapper;
 
 import java.util.List;
@@ -13,7 +13,7 @@ public class BuiltInRemapper implements ModRemapper {
     }
 
     @Override
-    public void filterModEntries(List<ModEntry> entries) {
+    public void filterModEntries(List<ModCandidate> entries) {
 
     }
 }
