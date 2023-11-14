@@ -6,4 +6,6 @@ public interface ModRemapper {
     ModDiscoverer[] getModDiscoverers();
 
     void filterModEntries(List<ModCandidate> entries);
+
+    String getDefaultPackage();
 }

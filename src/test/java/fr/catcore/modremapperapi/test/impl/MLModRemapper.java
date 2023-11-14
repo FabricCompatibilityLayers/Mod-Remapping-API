@@ -29,4 +29,9 @@ public class MLModRemapper implements ModRemapper {
         entries.removeIf(modEntry -> !(modEntry.getInfos() instanceof MLModInfos)
                 && found.contains(modEntry.getFilePath().toString()));
     }
+
+    @Override
+    public String getDefaultPackage() {
+        return "net/minecraft/";
+    }
 }

@@ -16,4 +16,9 @@ public class BuiltInRemapper implements ModRemapper {
     public void filterModEntries(List<ModCandidate> entries) {
 
     }
+
+    @Override
+    public String getDefaultPackage() {
+        return "";
+    }
 }
