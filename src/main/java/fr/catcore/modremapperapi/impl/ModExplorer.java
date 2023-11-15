@@ -9,7 +9,9 @@ import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
@@ -19,6 +21,8 @@ import static fr.catcore.modremapperapi.impl.FileUtils.openZip;
 public class ModExplorer {
     private static final Logger LOGGER = Logger.get("ModRemappingAPI", "ModExplorer");
     public static void start() {
+        Map<ModRemapper, List<ModCandidate>> candidates = new HashMap<>();
+
         for (ModRemapper remapper : MRAPIImpl.REMAPPERS) {
             List<ModCandidate> entries = new ArrayList<>();
 
@@ -27,6 +31,7 @@ public class ModExplorer {
             }
 
             remapper.filterModEntries(entries);
+            candidates.put(remapper, entries);
         }
     }
 
