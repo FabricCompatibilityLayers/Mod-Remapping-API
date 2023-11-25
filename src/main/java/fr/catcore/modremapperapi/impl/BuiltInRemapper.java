@@ -19,6 +19,6 @@ public class BuiltInRemapper implements ModRemapper {
 
     @Override
     public String getDefaultPackage() {
-        return "";
+        return null;
     }
 }

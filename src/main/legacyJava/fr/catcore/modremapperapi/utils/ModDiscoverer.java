@@ -41,29 +41,7 @@ public class ModDiscoverer {
                 if (!cacheFolder.exists()) cacheFolder.mkdirs();
 
                 try {
-                    Files.walkFileTree(cacheFolder.toPath(), new FileVisitor<Path>() {
-                        @Override
-                        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
-                            return FileVisitResult.CONTINUE;
-                        }
-
-                        @Override
-                        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                            Files.delete(file);
-                            return FileVisitResult.CONTINUE;
-                        }
-
-                        @Override
-                        public FileVisitResult visitFileFailed(Path file, IOException exc) {
-                            return FileVisitResult.CONTINUE;
-                        }
-
-                        @Override
-                        public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-                            Files.delete(dir);
-                            return FileVisitResult.CONTINUE;
-                        }
-                    });
+                    fr.catcore.modremapperapi.impl.FileUtils.emptyFolder(cacheFolder.toPath());
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -75,29 +53,7 @@ public class ModDiscoverer {
         File mainTempDir = new File(Constants.VERSIONED_FOLDER, "temp");
         if (mainTempDir.exists()) {
             try {
-                Files.walkFileTree(mainTempDir.toPath(), new FileVisitor<Path>() {
-                    @Override
-                    public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
-                        return FileVisitResult.CONTINUE;
-                    }
-
-                    @Override
-                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                        Files.delete(file);
-                        return FileVisitResult.CONTINUE;
-                    }
-
-                    @Override
-                    public FileVisitResult visitFileFailed(Path file, IOException exc) {
-                        return FileVisitResult.CONTINUE;
-                    }
-
-                    @Override
-                    public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-                        Files.delete(dir);
-                        return FileVisitResult.CONTINUE;
-                    }
-                });
+                fr.catcore.modremapperapi.impl.FileUtils.emptyFolder(mainTempDir.toPath());
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
