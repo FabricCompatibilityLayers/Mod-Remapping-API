@@ -1,6 +1,6 @@
 plugins {
-	id 'fabric-loom' version '1.3-SNAPSHOT'
-	id 'legacy-looming' version "1.3-SNAPSHOT" // Version must be the same as fabric-loom's
+	id 'fabric-loom' version '1.4-SNAPSHOT'
+	id 'legacy-looming' version "1.4-SNAPSHOT" // Version must be the same as fabric-loom's
 	id 'maven-publish'
 	id 'com.github.johnrengelman.shadow' version '8.1.1'
 	id "com.modrinth.minotaur" version "2.+"
@@ -36,7 +36,10 @@ dependencies {
 	modImplementation(include(legacy.apiModule("legacy-fabric-logger-api-v1", project.fabric_version)))
 	modImplementation(include("maven.modrinth:spasm:${project.spasm_version}"))
 
-	shadow(runtimeOnly('net.fabricmc:mapping-io:0.4.2')) {
+	shadow(runtimeOnly('net.fabricmc:mapping-io:0.5.0')) {
+		transitive = false
+	}
+	shadow(runtimeOnly('net.fabricmc:tiny-remapper:0.8.2')) {
 		transitive = false
 	}
 
@@ -83,6 +86,7 @@ shadowJar {
 	exclude("META-INF")
 
 	relocate 'net.fabricmc.mappingio', 'fr.catcore.modremapperapi.impl.lib.mappingio'
+	relocate 'net.fabricmc.tinyremapper', 'fr.catcore.modremapperapi.impl.lib.tinyremapper'
 	relocate 'com.google.gson', 'fr.catcore.modremapperapi.impl.lib.gson'
 }
 
