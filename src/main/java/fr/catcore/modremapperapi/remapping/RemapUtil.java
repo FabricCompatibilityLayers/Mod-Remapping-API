@@ -111,6 +111,7 @@ public class RemapUtil {
 
     public static void remapMods(Map<Path, Path> pathMap) {
         Constants.MAIN_LOGGER.debug("Starting jar remapping!");
+        preloadClasses();
         TinyRemapper remapper = makeRemapper(MINECRAFT_TREE, LOADER_TREE, MODS_TREE);
         Constants.MAIN_LOGGER.debug("Remapper created!");
         remapFiles(remapper, pathMap);
@@ -272,6 +273,35 @@ public class RemapUtil {
         return tree;
     }
 
+    private static String getLibClassName(String lib, String string) {
+        return "fr.catcore.modremapperapi.impl.lib." + lib + "." + string;
+    }
+
+    private static void preloadClasses() {
+        for (String clazz : new String[]{
+                "fr.catcore.modremapperapi.remapping.MRAMethodVisitor",
+                "fr.catcore.modremapperapi.remapping.VisitorInfos$Type",
+                "fr.catcore.modremapperapi.remapping.VisitorInfos$MethodValue",
+                "fr.catcore.modremapperapi.remapping.VisitorInfos$MethodNamed",
+                getLibClassName("tinyremapper", "TinyRemapper"),
+                getLibClassName("tinyremapper", "TinyRemapper$Builder"),
+
+                getLibClassName("tinyremapper", "AsmClassRemapper"),
+                getLibClassName("tinyremapper", "AsmRemapper"),
+                getLibClassName("tinyremapper", "OutputConsumerPath"),
+                getLibClassName("tinyremapper", "ClassInstance"),
+                getLibClassName("tinyremapper", "InputTag"),
+                getLibClassName("tinyremapper", "Propagator")
+        }) {
+            try {
+                System.out.println(clazz);
+                Class.forName(clazz);
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
     /**
      * Will create remapper with specified trees.
      */
@@ -295,15 +325,6 @@ public class RemapUtil {
         MixinPostApplyVisitor mixinPostApplyVisitor = new MixinPostApplyVisitor(trees);
 
         VisitorInfos infos = new VisitorInfos();
-
-        try {
-            Class.forName("fr.catcore.modremapperapi.remapping.MRAMethodVisitor");
-            Class.forName("fr.catcore.modremapperapi.remapping.VisitorInfos$Type");
-            Class.forName("fr.catcore.modremapperapi.remapping.VisitorInfos$MethodValue");
-            Class.forName("fr.catcore.modremapperapi.remapping.VisitorInfos$MethodNamed");
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
 
         for (ModRemapper modRemapper : ModRemappingAPI.MOD_REMAPPERS) {
             modRemapper.registerVisitors(infos);

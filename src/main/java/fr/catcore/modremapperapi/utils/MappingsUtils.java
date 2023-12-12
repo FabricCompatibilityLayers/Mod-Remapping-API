@@ -1,20 +1,17 @@
 package fr.catcore.modremapperapi.utils;
 
 import fr.catcore.modremapperapi.ModRemappingAPI;
-import fr.catcore.modremapperapi.remapping.RefmapRemapper;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.impl.launch.FabricLauncherBase;
 import net.fabricmc.loader.impl.launch.MappingConfiguration;
-import net.fabricmc.loader.impl.util.ManifestUtil;
 import net.fabricmc.loader.impl.util.log.Log;
 import net.fabricmc.loader.impl.util.log.LogCategory;
-import net.fabricmc.mapping.tree.TinyMappingFactory;
 import net.fabricmc.mappingio.MappingReader;
 import net.fabricmc.mappingio.MappingVisitor;
 import net.fabricmc.mappingio.format.MappingFormat;
-import net.fabricmc.mappingio.format.Tiny1Reader;
-import net.fabricmc.mappingio.format.Tiny2Reader;
+import net.fabricmc.mappingio.format.tiny.Tiny1FileReader;
+import net.fabricmc.mappingio.format.tiny.Tiny2FileReader;
 import net.fabricmc.mappingio.tree.MappingTree;
 import net.fabricmc.mappingio.tree.MemoryMappingTree;
 import net.fabricmc.tinyremapper.*;
@@ -79,11 +76,11 @@ public class MappingsUtils {
                     reader.reset();
 
                     switch (format) {
-                        case TINY:
-                            Tiny1Reader.read(reader, MINECRAFT_MAPPINGS);
+                        case TINY_FILE:
+                            Tiny1FileReader.read(reader, MINECRAFT_MAPPINGS);
                             break;
-                        case TINY_2:
-                            Tiny2Reader.read(reader, MINECRAFT_MAPPINGS);
+                        case TINY_2_FILE:
+                            Tiny2FileReader.read(reader, MINECRAFT_MAPPINGS);
                             break;
                         default:
                             throw new UnsupportedOperationException("Unsupported mapping format: " + format);
