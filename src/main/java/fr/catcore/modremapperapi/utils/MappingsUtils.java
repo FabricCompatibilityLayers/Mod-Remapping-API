@@ -56,15 +56,6 @@ public class MappingsUtils {
             try {
                 URLConnection connection = url.openConnection();
 
-                if (connection instanceof JarURLConnection) {
-                    Manifest manifest = ((JarURLConnection) connection).getManifest();
-
-                    if (manifest != null) {
-//                        gameId = ManifestUtil.getManifestValue(manifest, new Attributes.Name("Game-Id"));
-//                        gameVersion = ManifestUtil.getManifestValue(manifest, new Attributes.Name("Game-Version"));
-                    }
-                }
-
                 try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
                     long time = System.currentTimeMillis();
                     MINECRAFT_MAPPINGS = new MemoryMappingTree();

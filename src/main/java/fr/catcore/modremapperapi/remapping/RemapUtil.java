@@ -291,7 +291,25 @@ public class RemapUtil {
                 getLibClassName("tinyremapper", "OutputConsumerPath"),
                 getLibClassName("tinyremapper", "ClassInstance"),
                 getLibClassName("tinyremapper", "InputTag"),
-                getLibClassName("tinyremapper", "Propagator")
+                getLibClassName("tinyremapper", "Propagator"),
+                getLibClassName("tinyremapper", "BridgeHandler"),
+                getLibClassName("tinyremapper", "FileSystemHandler"),
+                getLibClassName("tinyremapper", "AsmClassRemapper$AsmAnnotationRemapper"),
+                getLibClassName("tinyremapper", "AsmClassRemapper$AsmAnnotationRemapper$AsmArrayAttributeAnnotationRemapper"),
+                getLibClassName("tinyremapper", "AsmClassRemapper$AsmFieldRemapper"),
+                getLibClassName("tinyremapper", "AsmClassRemapper$AsmMethodRemapper"),
+                getLibClassName("tinyremapper", "AsmClassRemapper$AsmRecordComponentRemapper"),
+                getLibClassName("tinyremapper", "FileSystemHandler$RefData"),
+                getLibClassName("tinyremapper", "OutputConsumerPath$Builder"),
+                getLibClassName("tinyremapper", "OutputConsumerPath$ResourceRemapper"),
+                getLibClassName("tinyremapper", "TinyRemapper$AnalyzeVisitorProvider"),
+                getLibClassName("tinyremapper", "TinyRemapper$ApplyVisitorProvider"),
+                getLibClassName("tinyremapper", "TinyRemapper$Direction"),
+                getLibClassName("tinyremapper", "TinyRemapper$Extension"),
+                getLibClassName("tinyremapper", "TinyRemapper$LinkedMethodPropagation"),
+                getLibClassName("tinyremapper", "TinyRemapper$MrjState"),
+                getLibClassName("tinyremapper", "TinyRemapper$Propagation"),
+                getLibClassName("tinyremapper", "TinyRemapper$StateProcessor")
         }) {
             try {
                 System.out.println(clazz);
