@@ -8,6 +8,15 @@ import java.util.List;
 import java.util.Set;
 
 public class RemapperPlugin implements IMixinConfigPlugin {
+
+    static {
+        try {
+            ((Runnable)Class.forName("fr.catcore.modremapperapi.ModRemappingApiInit").newInstance()).run();
+        } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @Override
     public void onLoad(String mixinPackage){}
 
@@ -26,12 +35,6 @@ public class RemapperPlugin implements IMixinConfigPlugin {
 
     @Override
     public List<String> getMixins(){
-        try {
-            ((Runnable)Class.forName("fr.catcore.modremapperapi.ModRemappingApiInit").newInstance()).run();
-        } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-
         return null;
     }
 

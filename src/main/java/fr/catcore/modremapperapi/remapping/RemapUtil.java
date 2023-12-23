@@ -113,9 +113,9 @@ public class RemapUtil {
         Constants.MAIN_LOGGER.debug("Starting jar remapping!");
         preloadClasses();
         TinyRemapper remapper = makeRemapper(MINECRAFT_TREE, LOADER_TREE, MODS_TREE);
-        Constants.MAIN_LOGGER.debug("Remapper created!");
+        Constants.MAIN_LOGGER.info("Remapper created!");
         remapFiles(remapper, pathMap);
-        Constants.MAIN_LOGGER.debug("Jar remapping done!");
+        Constants.MAIN_LOGGER.info("Jar remapping done!");
     }
 
     public static List<String> makeModMappings(Path modPath) {
@@ -274,18 +274,97 @@ public class RemapUtil {
     }
 
     private static String getLibClassName(String lib, String string) {
+        if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
+            return "net.fabricmc." + lib + "." + string;
+        }
+
         return "fr.catcore.modremapperapi.impl.lib." + lib + "." + string;
     }
 
     private static void preloadClasses() {
         for (String clazz : new String[]{
+                "java.io.IOException",
+                "java.net.URI",
+                "java.net.URISyntaxException",
+                "java.nio.file.FileSystem",
+                "java.nio.file.FileVisitResult",
+                "java.nio.file.Files",
+                "java.nio.file.Path",
+                "java.nio.file.SimpleFileVisitor",
+                "java.nio.file.attribute.BasicFileAttributes",
+                "java.util.ArrayDeque",
+                "java.util.ArrayList",
+                "java.util.Collection",
+                "java.util.Collections",
+                "java.util.HashMap",
+                "java.util.HashSet",
+                "java.util.IdentityHashMap",
+                "java.util.List",
+                "java.util.Map",
+                "java.util.Objects",
+                "java.util.Optional",
+                "java.util.Queue",
+                "java.util.Set",
+                "java.util.concurrent.CompletableFuture",
+                "java.util.concurrent.ConcurrentHashMap",
+                "java.util.concurrent.ExecutionException",
+                "java.util.concurrent.ExecutorService",
+                "java.util.concurrent.Executors",
+                "java.util.concurrent.Future",
+                "java.util.concurrent.TimeUnit",
+                "java.util.concurrent.atomic.AtomicReference",
+                "java.util.function.BiConsumer",
+                "java.util.function.Supplier",
+                "java.util.regex.Pattern",
+                "java.util.stream.Collectors",
+                "java.util.zip.ZipError",
+
+                "org.objectweb.asm.ClassReader",
+                "org.objectweb.asm.ClassVisitor",
+                "org.objectweb.asm.ClassWriter",
+                "org.objectweb.asm.FieldVisitor",
+                "org.objectweb.asm.MethodVisitor",
+                "org.objectweb.asm.Opcodes",
+                "org.objectweb.asm.commons.Remapper",
+                "org.objectweb.asm.util.CheckClassAdapter",
+
+                "fr.catcore.modremapperapi.api.RemapLibrary",
+                "fr.catcore.modremapperapi.api.ModRemapper",
+                "fr.catcore.modremapperapi.utils.BArrayList",
+                "fr.catcore.modremapperapi.utils.CollectionUtils",
+                "fr.catcore.modremapperapi.utils.Constants",
+                "fr.catcore.modremapperapi.utils.DefaultModEntry",
+                "fr.catcore.modremapperapi.utils.DefaultModRemapper",
+                "fr.catcore.modremapperapi.utils.FakeModManager",
+                "fr.catcore.modremapperapi.utils.FileUtils",
+                "fr.catcore.modremapperapi.utils.MappingsUtils",
+                "fr.catcore.modremapperapi.utils.MappingsUtils$1",
+                "fr.catcore.modremapperapi.utils.MixinUtils",
+                "fr.catcore.modremapperapi.utils.ModDiscoverer",
+                "fr.catcore.modremapperapi.utils.ModDiscoverer$1",
+                "fr.catcore.modremapperapi.utils.ModDiscoverer$2",
+                "fr.catcore.modremapperapi.utils.ModEntry",
+                "fr.catcore.modremapperapi.utils.RefmapJson",
+                "fr.catcore.modremapperapi.remapping.MapEntryType",
+                "fr.catcore.modremapperapi.remapping.MappingBuilder",
+                "fr.catcore.modremapperapi.remapping.MappingBuilder$Entry",
+                "fr.catcore.modremapperapi.remapping.MappingBuilder$Type",
+                "fr.catcore.modremapperapi.remapping.MixinPostApplyVisitor",
+                "fr.catcore.modremapperapi.remapping.MRAClassVisitor",
                 "fr.catcore.modremapperapi.remapping.MRAMethodVisitor",
-                "fr.catcore.modremapperapi.remapping.VisitorInfos$Type",
-                "fr.catcore.modremapperapi.remapping.VisitorInfos$MethodValue",
+                "fr.catcore.modremapperapi.remapping.MRAPostApplyVisitor",
+                "fr.catcore.modremapperapi.remapping.RefmapRemapper",
+                "fr.catcore.modremapperapi.remapping.RemapUtil",
+                "fr.catcore.modremapperapi.remapping.RemapUtil$MappingList",
+                "fr.catcore.modremapperapi.remapping.VisitorInfos",
                 "fr.catcore.modremapperapi.remapping.VisitorInfos$MethodNamed",
+                "fr.catcore.modremapperapi.remapping.VisitorInfos$MethodValue",
+                "fr.catcore.modremapperapi.remapping.VisitorInfos$Type",
+                "net.fabricmc.loader.impl.launch.FabricLauncher",
+                "net.fabricmc.loader.impl.launch.FabricLauncherBase",
+                "net.fabricmc.loader.api.ObjectShare",
                 getLibClassName("tinyremapper", "TinyRemapper"),
                 getLibClassName("tinyremapper", "TinyRemapper$Builder"),
-
                 getLibClassName("tinyremapper", "AsmClassRemapper"),
                 getLibClassName("tinyremapper", "AsmRemapper"),
                 getLibClassName("tinyremapper", "OutputConsumerPath"),
@@ -301,6 +380,7 @@ public class RemapUtil {
                 getLibClassName("tinyremapper", "AsmClassRemapper$AsmRecordComponentRemapper"),
                 getLibClassName("tinyremapper", "FileSystemHandler$RefData"),
                 getLibClassName("tinyremapper", "OutputConsumerPath$Builder"),
+                getLibClassName("tinyremapper", "OutputConsumerPath$1"),
                 getLibClassName("tinyremapper", "OutputConsumerPath$ResourceRemapper"),
                 getLibClassName("tinyremapper", "TinyRemapper$AnalyzeVisitorProvider"),
                 getLibClassName("tinyremapper", "TinyRemapper$ApplyVisitorProvider"),
@@ -309,7 +389,53 @@ public class RemapUtil {
                 getLibClassName("tinyremapper", "TinyRemapper$LinkedMethodPropagation"),
                 getLibClassName("tinyremapper", "TinyRemapper$MrjState"),
                 getLibClassName("tinyremapper", "TinyRemapper$Propagation"),
-                getLibClassName("tinyremapper", "TinyRemapper$StateProcessor")
+                getLibClassName("tinyremapper", "TinyRemapper$StateProcessor"),
+                getLibClassName("tinyremapper", "MetaInfRemover"),
+                getLibClassName("tinyremapper", "MetaInfFixer"),
+                getLibClassName("tinyremapper", "NonClassCopyMode"),
+                getLibClassName("tinyremapper", "TinyRemapper$1$1"),
+                getLibClassName("tinyremapper", "TinyRemapper$1"),
+                getLibClassName("tinyremapper", "TinyRemapper$2"),
+                getLibClassName("tinyremapper", "TinyRemapper$3"),
+                getLibClassName("tinyremapper", "TinyRemapper$4"),
+                getLibClassName("tinyremapper", "TinyRemapper$5"),
+                getLibClassName("tinyremapper", "extension.mixin.common.IMappable"),
+                getLibClassName("tinyremapper", "extension.mixin.common.MapUtility"),
+                getLibClassName("tinyremapper", "extension.mixin.common.ResolveUtility"),
+                getLibClassName("tinyremapper", "extension.mixin.common.StringUtility"),
+                getLibClassName("tinyremapper", "extension.mixin.common.data.Annotation"),
+                getLibClassName("tinyremapper", "extension.mixin.common.data.AnnotationElement"),
+                getLibClassName("tinyremapper", "extension.mixin.common.data.CommonData"),
+                getLibClassName("tinyremapper", "extension.mixin.common.data.Constant"),
+                getLibClassName("tinyremapper", "extension.mixin.common.data.Message"),
+                getLibClassName("tinyremapper", "extension.mixin.common.data.MxClass"),
+                getLibClassName("tinyremapper", "extension.mixin.common.data.MxMember"),
+                getLibClassName("tinyremapper", "extension.mixin.common.data.Pair"),
+                getLibClassName("tinyremapper", "extension.mixin.common.Logger"),
+                getLibClassName("tinyremapper", "extension.mixin.common.Logger$Level"),
+                getLibClassName("tinyremapper", "extension.mixin.soft.SoftTargetMixinClassVisitor"),
+                getLibClassName("tinyremapper", "extension.mixin.hard.HardTargetMixinClassVisitor"),
+                getLibClassName("tinyremapper", "extension.mixin.MixinExtension"),
+                getLibClassName("tinyremapper", "extension.mixin.MixinExtension$AnnotationTarget"),
+                getLibClassName("tinyremapper", "IMappingProvider"),
+                getLibClassName("tinyremapper", "IMappingProvider$Member"),
+                getLibClassName("tinyremapper", "IMappingProvider$MappingAcceptor"),
+                getLibClassName("tinyremapper", "api.TrClass"),
+                getLibClassName("tinyremapper", "api.TrEnvironment"),
+                getLibClassName("tinyremapper", "api.TrField"),
+                getLibClassName("tinyremapper", "api.TrMember"),
+                getLibClassName("tinyremapper", "api.TrMember$MemberType"),
+                getLibClassName("tinyremapper", "api.TrMethod"),
+                getLibClassName("tinyremapper", "api.TrRemapper"),
+                getLibClassName("mappingio", "MappingReader"),
+                getLibClassName("mappingio", "MappingReader$1"),
+                getLibClassName("mappingio", "FlatMappingVisitor"),
+                getLibClassName("mappingio", "MappedElementKind"),
+                getLibClassName("mappingio", "MappingFlag"),
+                getLibClassName("mappingio", "MappingUtil"),
+                getLibClassName("mappingio", "MappingVisitor"),
+                getLibClassName("mappingio", "MappingWriter"),
+                getLibClassName("mappingio", "MappingWriter$1")
         }) {
             try {
                 System.out.println(clazz);
@@ -365,7 +491,7 @@ public class RemapUtil {
                 if (libPath.exists()) {
                     remapper.readClassPathAsync(libPath.toPath());
                 } else {
-                    Constants.MAIN_LOGGER.error("Library " + libPath.toPath() + " does not exist.");
+                    Constants.MAIN_LOGGER.info("Library " + libPath.toPath() + " does not exist.");
                 }
             }
         }
@@ -387,27 +513,27 @@ public class RemapUtil {
         try {
             Map<Path, InputTag> tagMap = new HashMap<>();
 
-            Constants.MAIN_LOGGER.debug("Creating InputTags!");
+            Constants.MAIN_LOGGER.info("Creating InputTags!");
             for (Path input : paths.keySet()) {
                 InputTag tag = remapper.createInputTag();
                 tagMap.put(input, tag);
                 remapper.readInputsAsync(tag, input);
             }
 
-            Constants.MAIN_LOGGER.debug("Initializing remapping!");
+            Constants.MAIN_LOGGER.info("Initializing remapping!");
             for (Map.Entry<Path, Path> entry : paths.entrySet()) {
-                Constants.MAIN_LOGGER.debug("Starting remapping " + entry.getKey().toString() + " to " + entry.getValue().toString());
+                Constants.MAIN_LOGGER.info("Starting remapping " + entry.getKey().toString() + " to " + entry.getValue().toString());
                 OutputConsumerPath outputConsumer = new OutputConsumerPath.Builder(entry.getValue()).build();
 
                 outputConsumerPaths.add(outputConsumer);
 
-                Constants.MAIN_LOGGER.debug("Apply remapper!");
+                Constants.MAIN_LOGGER.info("Apply remapper!");
                 remapper.apply(outputConsumer, tagMap.get(entry.getKey()));
 
-                Constants.MAIN_LOGGER.debug("Add input as non class file!");
+                Constants.MAIN_LOGGER.info("Add input as non class file!");
                 outputConsumer.addNonClassFiles(entry.getKey(), remapper, resourceRemappers);
 
-                Constants.MAIN_LOGGER.debug("Done 1!");
+                Constants.MAIN_LOGGER.info("Done 1!");
             }
         } catch (Exception e) {
             remapper.finish();
