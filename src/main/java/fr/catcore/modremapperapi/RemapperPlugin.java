@@ -9,10 +9,6 @@ import java.util.Set;
 
 public class RemapperPlugin implements IMixinConfigPlugin {
 
-    static {
-
-    }
-
     @Override
     public void onLoad(String mixinPackage){}
 

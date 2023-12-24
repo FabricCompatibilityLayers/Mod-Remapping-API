@@ -87,7 +87,7 @@ public class RemapUtil {
                                     // Writing data
                                     outputStream.write(buffer, 0, length);
                                     downloaded += length;
-                                    //System.out.println("Downlad Status: " + (downloaded * 100) / (contentLength * 1.0) + "%");
+//                                    Constants.MAIN_LOGGER.debug("Download Status: " + (downloaded * 100) / (contentLength * 1.0) + "%");
                                 }
 
                                 outputStream.close();
@@ -113,9 +113,9 @@ public class RemapUtil {
         Constants.MAIN_LOGGER.debug("Starting jar remapping!");
         preloadClasses();
         TinyRemapper remapper = makeRemapper(MINECRAFT_TREE, LOADER_TREE, MODS_TREE);
-        Constants.MAIN_LOGGER.info("Remapper created!");
+        Constants.MAIN_LOGGER.debug("Remapper created!");
         remapFiles(remapper, pathMap);
-        Constants.MAIN_LOGGER.info("Jar remapping done!");
+        Constants.MAIN_LOGGER.debug("Jar remapping done!");
     }
 
     public static List<String> makeModMappings(Path modPath) {
@@ -363,6 +363,7 @@ public class RemapUtil {
                 "net.fabricmc.loader.impl.launch.FabricLauncher",
                 "net.fabricmc.loader.impl.launch.FabricLauncherBase",
                 "net.fabricmc.loader.api.ObjectShare",
+
                 getLibClassName("tinyremapper", "AsmClassRemapper"),
                 getLibClassName("tinyremapper", "AsmClassRemapper$AsmAnnotationRemapper"),
                 getLibClassName("tinyremapper", "AsmClassRemapper$AsmAnnotationRemapper$AsmArrayAttributeAnnotationRemapper"),
@@ -412,7 +413,6 @@ public class RemapUtil {
                 getLibClassName("tinyremapper", "TinyUtils$SimpleClassMapper"),
                 getLibClassName("tinyremapper", "VisitTrackingClassRemapper"),
                 getLibClassName("tinyremapper", "VisitTrackingClassRemapper$VisitKind"),
-
                 getLibClassName("tinyremapper", "extension.mixin.common.IMappable"),
                 getLibClassName("tinyremapper", "extension.mixin.common.MapUtility"),
                 getLibClassName("tinyremapper", "extension.mixin.common.ResolveUtility"),
@@ -428,7 +428,62 @@ public class RemapUtil {
                 getLibClassName("tinyremapper", "extension.mixin.common.Logger"),
                 getLibClassName("tinyremapper", "extension.mixin.common.Logger$Level"),
                 getLibClassName("tinyremapper", "extension.mixin.soft.SoftTargetMixinClassVisitor"),
+                getLibClassName("tinyremapper", "extension.mixin.soft.SoftTargetMixinMethodVisitor"),
+                getLibClassName("tinyremapper", "extension.mixin.soft.annotation.AccessorAnnotationVisitor"),
+                getLibClassName("tinyremapper", "extension.mixin.soft.annotation.AccessorAnnotationVisitor$AccessorSecondPassAnnotationVisitor"),
+                getLibClassName("tinyremapper", "extension.mixin.soft.annotation.FirstPassAnnotationVisitor"),
+                getLibClassName("tinyremapper", "extension.mixin.soft.annotation.InvokerAnnotationVisitor"),
+                getLibClassName("tinyremapper", "extension.mixin.soft.annotation.InvokerAnnotationVisitor$InvokerSecondPassAnnotationVisitor"),
+                getLibClassName("tinyremapper", "extension.mixin.soft.annotation.MixinAnnotationVisitor"),
+                getLibClassName("tinyremapper", "extension.mixin.soft.annotation.MixinAnnotationVisitor$MixinSecondPassAnnotationVisitor"),
+                getLibClassName("tinyremapper", "extension.mixin.soft.annotation.MixinAnnotationVisitor$MixinSecondPassAnnotationVisitor$1"),
+                getLibClassName("tinyremapper", "extension.mixin.soft.annotation.MixinAnnotationVisitor$MixinSecondPassAnnotationVisitor$2"),
+                getLibClassName("tinyremapper", "extension.mixin.soft.annotation.injection.AtAnnotationVisitor"),
+                getLibClassName("tinyremapper", "extension.mixin.soft.annotation.injection.AtAnnotationVisitor$AtConstructorMappable"),
+                getLibClassName("tinyremapper", "extension.mixin.soft.annotation.injection.AtAnnotationVisitor$AtMethodMappable"),
+                getLibClassName("tinyremapper", "extension.mixin.soft.annotation.injection.AtAnnotationVisitor$AtSecondPassAnnotationVisitor"),
+                getLibClassName("tinyremapper", "extension.mixin.soft.annotation.injection.AtAnnotationVisitor$AtSecondPassAnnotationVisitor$1"),
+                getLibClassName("tinyremapper", "extension.mixin.soft.annotation.injection.CommonInjectionAnnotationVisitor"),
+                getLibClassName("tinyremapper", "extension.mixin.soft.annotation.injection.CommonInjectionAnnotationVisitor$CommonInjectionSecondPassAnnotationVisitor"),
+                getLibClassName("tinyremapper", "extension.mixin.soft.annotation.injection.CommonInjectionAnnotationVisitor$CommonInjectionSecondPassAnnotationVisitor$1"),
+                getLibClassName("tinyremapper", "extension.mixin.soft.annotation.injection.CommonInjectionAnnotationVisitor$CommonInjectionSecondPassAnnotationVisitor$2"),
+                getLibClassName("tinyremapper", "extension.mixin.soft.annotation.injection.CommonInjectionAnnotationVisitor$CommonInjectionSecondPassAnnotationVisitor$3"),
+                getLibClassName("tinyremapper", "extension.mixin.soft.annotation.injection.CommonInjectionAnnotationVisitor$InjectMethodMappable"),
+                getLibClassName("tinyremapper", "extension.mixin.soft.annotation.injection.InjectAnnotationVisitor"),
+                getLibClassName("tinyremapper", "extension.mixin.soft.annotation.injection.ModifyArgAnnotationVisitor"),
+                getLibClassName("tinyremapper", "extension.mixin.soft.annotation.injection.ModifyArgsAnnotationVisitor"),
+                getLibClassName("tinyremapper", "extension.mixin.soft.annotation.injection.ModifyConstantAnnotationVisitor"),
+                getLibClassName("tinyremapper", "extension.mixin.soft.annotation.injection.ModifyVariableAnnotationVisitor"),
+                getLibClassName("tinyremapper", "extension.mixin.soft.annotation.injection.RedirectAnnotationVisitor"),
+                getLibClassName("tinyremapper", "extension.mixin.soft.annotation.injection.SliceAnnotationVisitor"),
+                getLibClassName("tinyremapper", "extension.mixin.soft.data.MemberInfo"),
+                getLibClassName("tinyremapper", "extension.mixin.soft.util.NamedMappable"),
                 getLibClassName("tinyremapper", "extension.mixin.hard.HardTargetMixinClassVisitor"),
+                getLibClassName("tinyremapper", "extension.mixin.hard.HardTargetMixinFieldVisitor"),
+                getLibClassName("tinyremapper", "extension.mixin.hard.HardTargetMixinMethodVisitor"),
+                getLibClassName("tinyremapper", "extension.mixin.hard.annotation.AccessorAnnotationVisitor"),
+                getLibClassName("tinyremapper", "extension.mixin.hard.annotation.AccessorAnnotationVisitor$AccessorMappable"),
+                getLibClassName("tinyremapper", "extension.mixin.hard.annotation.ImplementsAnnotationVisitor"),
+                getLibClassName("tinyremapper", "extension.mixin.hard.annotation.ImplementsAnnotationVisitor$1"),
+                getLibClassName("tinyremapper", "extension.mixin.hard.annotation.ImplementsAnnotationVisitor$InterfaceAnnotationVisitor"),
+                getLibClassName("tinyremapper", "extension.mixin.hard.annotation.ImplementsAnnotationVisitor$SoftImplementsMappable"),
+                getLibClassName("tinyremapper", "extension.mixin.hard.annotation.InvokerAnnotationVisitor"),
+                getLibClassName("tinyremapper", "extension.mixin.hard.annotation.InvokerAnnotationVisitor$InvokerMappable"),
+                getLibClassName("tinyremapper", "extension.mixin.hard.annotation.MixinAnnotationVisitor"),
+                getLibClassName("tinyremapper", "extension.mixin.hard.annotation.MixinAnnotationVisitor$1"),
+                getLibClassName("tinyremapper", "extension.mixin.hard.annotation.MixinAnnotationVisitor$2"),
+                getLibClassName("tinyremapper", "extension.mixin.hard.annotation.OverwriteAnnotationVisitor"),
+                getLibClassName("tinyremapper", "extension.mixin.hard.annotation.OverwriteAnnotationVisitor$OverwriteMappable"),
+                getLibClassName("tinyremapper", "extension.mixin.hard.annotation.ShadowAnnotationVisitor"),
+                getLibClassName("tinyremapper", "extension.mixin.hard.annotation.ShadowAnnotationVisitor$ShadowPrefixMappable"),
+                getLibClassName("tinyremapper", "extension.mixin.hard.data.SoftInterface"),
+                getLibClassName("tinyremapper", "extension.mixin.hard.data.SoftInterface$Remap"),
+                getLibClassName("tinyremapper", "extension.mixin.hard.util.CamelPrefixString"),
+                getLibClassName("tinyremapper", "extension.mixin.hard.util.ConvertibleMappable"),
+                getLibClassName("tinyremapper", "extension.mixin.hard.util.HardTargetMappable"),
+                getLibClassName("tinyremapper", "extension.mixin.hard.util.IConvertibleString"),
+                getLibClassName("tinyremapper", "extension.mixin.hard.util.IdentityString"),
+                getLibClassName("tinyremapper", "extension.mixin.hard.util.PrefixString"),
                 getLibClassName("tinyremapper", "extension.mixin.MixinExtension"),
                 getLibClassName("tinyremapper", "extension.mixin.MixinExtension$AnnotationTarget"),
                 getLibClassName("tinyremapper", "api.TrClass"),
@@ -438,6 +493,7 @@ public class RemapUtil {
                 getLibClassName("tinyremapper", "api.TrMember$MemberType"),
                 getLibClassName("tinyremapper", "api.TrMethod"),
                 getLibClassName("tinyremapper", "api.TrRemapper"),
+
                 getLibClassName("mappingio", "MappingReader"),
                 getLibClassName("mappingio", "MappingReader$1"),
                 getLibClassName("mappingio", "FlatMappingVisitor"),
@@ -449,7 +505,7 @@ public class RemapUtil {
                 getLibClassName("mappingio", "MappingWriter$1")
         }) {
             try {
-                System.out.println(clazz);
+                Constants.MAIN_LOGGER.info("Preloading class: " + clazz);
                 Class.forName(clazz);
             } catch (ClassNotFoundException e) {
                 throw new RuntimeException(e);
@@ -524,27 +580,27 @@ public class RemapUtil {
         try {
             Map<Path, InputTag> tagMap = new HashMap<>();
 
-            Constants.MAIN_LOGGER.info("Creating InputTags!");
+            Constants.MAIN_LOGGER.debug("Creating InputTags!");
             for (Path input : paths.keySet()) {
                 InputTag tag = remapper.createInputTag();
                 tagMap.put(input, tag);
                 remapper.readInputsAsync(tag, input);
             }
 
-            Constants.MAIN_LOGGER.info("Initializing remapping!");
+            Constants.MAIN_LOGGER.debug("Initializing remapping!");
             for (Map.Entry<Path, Path> entry : paths.entrySet()) {
-                Constants.MAIN_LOGGER.info("Starting remapping " + entry.getKey().toString() + " to " + entry.getValue().toString());
+                Constants.MAIN_LOGGER.debug("Starting remapping " + entry.getKey().toString() + " to " + entry.getValue().toString());
                 OutputConsumerPath outputConsumer = new OutputConsumerPath.Builder(entry.getValue()).build();
 
                 outputConsumerPaths.add(outputConsumer);
 
-                Constants.MAIN_LOGGER.info("Apply remapper!");
+                Constants.MAIN_LOGGER.debug("Apply remapper!");
                 remapper.apply(outputConsumer, tagMap.get(entry.getKey()));
 
-                Constants.MAIN_LOGGER.info("Add input as non class file!");
+                Constants.MAIN_LOGGER.debug("Add input as non class file!");
                 outputConsumer.addNonClassFiles(entry.getKey(), remapper, resourceRemappers);
 
-                Constants.MAIN_LOGGER.info("Done 1!");
+                Constants.MAIN_LOGGER.debug("Done 1!");
             }
         } catch (Exception e) {
             remapper.finish();

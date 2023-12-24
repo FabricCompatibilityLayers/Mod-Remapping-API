@@ -15,8 +15,8 @@
   ],
   "contact": {
     "homepage": "https://modrinth.com/mod/mod-remapping-api",
-    "sources": "https://github.com/thecatcore/Mod-Remapping-API",
-    "issues": "https://github.com/thecatcore/Mod-Remapping-API/issues"
+    "sources": "https://github.com/FabricCompatibilityLayers/Mod-Remapping-API",
+    "issues": "https://github.com/FabricCompatibilityLayers/Mod-Remapping-API/issues"
   },
   "license": "CC0-1.0",
   "icon": "assets/mod-remapping-api/icon.png",
