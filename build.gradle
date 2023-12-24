@@ -123,8 +123,10 @@ modrinth {
 	token = System.getenv("MODRINTH_TOKEN")
 	projectId = "mod-remapping-api"
 	changelog = """
-Working Dev environment for 1.3+, client and server separated but not pre 1.3 client-server-merged.
-Update bundled MixinExtras version to 0.2.0.
+Fix crash on loader 0.15+ while keeping compatibility with 0.14 for now.
+Now shadowing and relocating tiny-remapper 0.8.2.
+Updated mapping-io to 0.5.0.
+Compiling against loader 0.15 now.
 """
 	uploadFile = remapJar
 
