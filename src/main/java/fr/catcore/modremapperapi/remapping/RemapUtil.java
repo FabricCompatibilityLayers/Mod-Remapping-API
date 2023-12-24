@@ -505,7 +505,7 @@ public class RemapUtil {
                 getLibClassName("mappingio", "MappingWriter$1")
         }) {
             try {
-                Constants.MAIN_LOGGER.info("Preloading class: " + clazz);
+                Constants.MAIN_LOGGER.debug("Preloading class: " + clazz);
                 Class.forName(clazz);
             } catch (ClassNotFoundException e) {
                 throw new RuntimeException(e);
