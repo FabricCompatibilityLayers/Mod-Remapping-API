@@ -1,6 +1,6 @@
-package fr.catcore.modremapperapi.impl;
+package fr.catcore.modremappingapi.impl;
 
-import fr.catcore.modremapperapi.api.v1.ModRemapper;
+import fr.catcore.modremappingapi.api.v1.ModRemapper;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,6 +1,6 @@
-package fr.catcore.modremapperapi.api.v1;
+package fr.catcore.modremappingapi.api.v1;
 
-import fr.catcore.modremapperapi.impl.LibraryModInfo;
+import fr.catcore.modremappingapi.impl.LibraryModInfo;
 
 import java.io.IOException;
 import java.nio.file.Path;

@@ -1,6 +1,6 @@
-package fr.catcore.modremapperapi.impl;
+package fr.catcore.modremappingapi.impl;
 
-import fr.catcore.modremapperapi.api.v1.ModInfos;
+import fr.catcore.modremappingapi.api.v1.ModInfos;
 
 import java.util.Locale;
 

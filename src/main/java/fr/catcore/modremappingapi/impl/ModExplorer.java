@@ -1,6 +1,7 @@
-package fr.catcore.modremapperapi.impl;
+package fr.catcore.modremappingapi.impl;
 
 import fr.catcore.modremapperapi.api.v1.*;
+import fr.catcore.modremappingapi.api.v1.*;
 import net.legacyfabric.fabric.api.logger.v1.Logger;
 
 import java.io.IOException;
@@ -14,9 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
-
-import static fr.catcore.modremapperapi.impl.FileUtils.getJarFS;
-import static fr.catcore.modremapperapi.impl.FileUtils.openZip;
 
 public class ModExplorer {
     private static final Logger LOGGER = Logger.get("ModRemappingAPI", "ModExplorer");
@@ -116,7 +114,7 @@ public class ModExplorer {
     public static boolean isFabricMod(Path item) throws IOException {
         AtomicBoolean fabric = new AtomicBoolean(false);
 
-        openZip(item, (entry, fullName, shortName) -> {
+        FileUtils.openZip(item, (entry, fullName, shortName) -> {
             if (!entry.isDirectory()) {
                 if (shortName.equals("fabric.mod.json") || shortName.equals("quilt.mod.json")) {
                     fabric.set(true);
@@ -131,7 +129,7 @@ public class ModExplorer {
     }
 
     public static void firstRoundZip(Path mod, ModDiscoverer discoverer, List<String> entries, List<String> mods) throws IOException {
-        openZip(mod, (entry, fullName, shortName) -> {
+        FileUtils.openZip(mod, (entry, fullName, shortName) -> {
             if (!entry.isDirectory()) {
                 entries.add(fullName);
 
@@ -145,7 +143,7 @@ public class ModExplorer {
     }
 
     public static void secondRoundZip(Path mod, ModDiscoverer discoverer, List<String> entries, List<String> mods) throws URISyntaxException, IOException {
-        try (FileSystem fs = getJarFS(mod)) {
+        try (FileSystem fs = FileUtils.getJarFS(mod)) {
             mods.removeIf(modEntry -> {
                 Path modPath = fs.getPath(modEntry);
 
@@ -166,7 +164,7 @@ public class ModExplorer {
     }
 
     public static void parseModInfosZip(Path mod, ModDiscoverer discoverer, List<String> mods, List<ModCandidate> entries, Path out) throws URISyntaxException, IOException {
-        try (FileSystem fs = getJarFS(mod)) {
+        try (FileSystem fs = FileUtils.getJarFS(mod)) {
             mods.forEach(entry -> {
                 Path entryPath = fs.getPath(entry);
 

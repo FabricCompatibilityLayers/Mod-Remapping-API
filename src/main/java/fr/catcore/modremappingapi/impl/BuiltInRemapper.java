@@ -1,8 +1,8 @@
-package fr.catcore.modremapperapi.impl;
+package fr.catcore.modremappingapi.impl;
 
-import fr.catcore.modremapperapi.api.v1.ModDiscoverer;
-import fr.catcore.modremapperapi.api.v1.ModCandidate;
-import fr.catcore.modremapperapi.api.v1.ModRemapper;
+import fr.catcore.modremappingapi.api.v1.ModDiscoverer;
+import fr.catcore.modremappingapi.api.v1.ModCandidate;
+import fr.catcore.modremappingapi.api.v1.ModRemapper;
 
 import java.util.List;
 

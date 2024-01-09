@@ -1,6 +1,6 @@
 package fr.catcore.modremapperapi.test.impl;
 
-import fr.catcore.modremapperapi.api.v1.ModInfos;
+import fr.catcore.modremappingapi.api.v1.ModInfos;
 
 public class MLModInfos implements ModInfos {
     private final String name, id, version;

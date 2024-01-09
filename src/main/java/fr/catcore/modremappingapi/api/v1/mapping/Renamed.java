@@ -1,4 +1,4 @@
-package fr.catcore.modremapperapi.api.v1.mapping;
+package fr.catcore.modremappingapi.api.v1.mapping;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

@@ -1,6 +1,6 @@
-package fr.catcore.modremapperapi.api.v1;
+package fr.catcore.modremappingapi.api.v1;
 
-import fr.catcore.modremapperapi.impl.LoaderUtils;
+import fr.catcore.modremappingapi.impl.LoaderUtils;
 import net.legacyfabric.fabric.api.logger.v1.Logger;
 
 import java.nio.file.Path;

@@ -1,4 +1,4 @@
-package fr.catcore.modremapperapi.impl;
+package fr.catcore.modremappingapi.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
