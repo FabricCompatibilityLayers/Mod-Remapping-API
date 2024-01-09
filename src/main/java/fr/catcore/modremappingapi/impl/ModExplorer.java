@@ -1,6 +1,5 @@
 package fr.catcore.modremappingapi.impl;
 
-import fr.catcore.modremapperapi.api.v1.*;
 import fr.catcore.modremappingapi.api.v1.*;
 import net.legacyfabric.fabric.api.logger.v1.Logger;
 

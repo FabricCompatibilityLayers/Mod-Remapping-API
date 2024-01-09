@@ -41,7 +41,7 @@ public class ModDiscoverer {
                 if (!cacheFolder.exists()) cacheFolder.mkdirs();
 
                 try {
-                    fr.catcore.modremapperapi.impl.FileUtils.emptyFolder(cacheFolder.toPath());
+                    fr.catcore.modremappingapi.impl.FileUtils.emptyFolder(cacheFolder.toPath());
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -53,7 +53,7 @@ public class ModDiscoverer {
         File mainTempDir = new File(Constants.VERSIONED_FOLDER, "temp");
         if (mainTempDir.exists()) {
             try {
-                fr.catcore.modremapperapi.impl.FileUtils.emptyFolder(mainTempDir.toPath());
+                fr.catcore.modremappingapi.impl.FileUtils.emptyFolder(mainTempDir.toPath());
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
