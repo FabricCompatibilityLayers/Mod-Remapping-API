@@ -13,7 +13,7 @@ import java.nio.file.Path;
 import java.util.List;
 
 public class RefmapRemapper implements OutputConsumerPath.ResourceRemapper {
-    private final Gson GSON = new Gson();
+    private Gson GSON;
     @Override
     public boolean canTransform(TinyRemapper remapper, Path relativePath) {
         return relativePath.toString().toLowerCase().contains("refmap") && relativePath.toString().endsWith(".json");
@@ -24,6 +24,8 @@ public class RefmapRemapper implements OutputConsumerPath.ResourceRemapper {
         Path outputFile = destinationDirectory.resolve(relativePath);
         Path outputDir = outputFile.getParent();
         if (outputDir != null) Files.createDirectories(outputDir);
+
+        if (GSON == null) GSON = new Gson();
 
         RefmapJson json = GSON.fromJson(new InputStreamReader(input), RefmapJson.class);
 

@@ -1,26 +1,23 @@
 package fr.catcore.modremapperapi.utils;
 
 import fr.catcore.modremapperapi.ModRemappingAPI;
-import fr.catcore.modremapperapi.remapping.RefmapRemapper;
 import net.fabricmc.api.EnvType;
-import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.api.*;
+import net.fabricmc.loader.api.metadata.version.VersionPredicate;
 import net.fabricmc.loader.impl.launch.FabricLauncherBase;
 import net.fabricmc.loader.impl.launch.MappingConfiguration;
-import net.fabricmc.loader.impl.util.ManifestUtil;
 import net.fabricmc.loader.impl.util.log.Log;
 import net.fabricmc.loader.impl.util.log.LogCategory;
-import net.fabricmc.mapping.tree.TinyMappingFactory;
 import net.fabricmc.mappingio.MappingReader;
 import net.fabricmc.mappingio.MappingVisitor;
 import net.fabricmc.mappingio.format.MappingFormat;
-import net.fabricmc.mappingio.format.Tiny1Reader;
-import net.fabricmc.mappingio.format.Tiny2Reader;
+import net.fabricmc.mappingio.format.tiny.Tiny1FileReader;
+import net.fabricmc.mappingio.format.tiny.Tiny2FileReader;
 import net.fabricmc.mappingio.tree.MappingTree;
 import net.fabricmc.mappingio.tree.MemoryMappingTree;
 import net.fabricmc.tinyremapper.*;
 
 import java.io.*;
-import java.net.JarURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.file.Path;
@@ -28,8 +25,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.jar.Attributes;
-import java.util.jar.Manifest;
 import java.util.zip.ZipError;
 
 import static fr.catcore.modremapperapi.remapping.RemapUtil.getRemapClasspath;
@@ -59,15 +54,6 @@ public class MappingsUtils {
             try {
                 URLConnection connection = url.openConnection();
 
-                if (connection instanceof JarURLConnection) {
-                    Manifest manifest = ((JarURLConnection) connection).getManifest();
-
-                    if (manifest != null) {
-//                        gameId = ManifestUtil.getManifestValue(manifest, new Attributes.Name("Game-Id"));
-//                        gameVersion = ManifestUtil.getManifestValue(manifest, new Attributes.Name("Game-Version"));
-                    }
-                }
-
                 try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
                     long time = System.currentTimeMillis();
                     MINECRAFT_MAPPINGS = new MemoryMappingTree();
@@ -79,11 +65,11 @@ public class MappingsUtils {
                     reader.reset();
 
                     switch (format) {
-                        case TINY:
-                            Tiny1Reader.read(reader, MINECRAFT_MAPPINGS);
+                        case TINY_FILE:
+                            Tiny1FileReader.read(reader, MINECRAFT_MAPPINGS);
                             break;
-                        case TINY_2:
-                            Tiny2Reader.read(reader, MINECRAFT_MAPPINGS);
+                        case TINY_2_FILE:
+                            Tiny2FileReader.read(reader, MINECRAFT_MAPPINGS);
                             break;
                         default:
                             throw new UnsupportedOperationException("Unsupported mapping format: " + format);
@@ -337,9 +323,37 @@ public class MappingsUtils {
                 throw new RuntimeException("Failed to populate default remap classpath", e);
             }
         } else {
-            remapper.readClassPathAsync((Path) FabricLoader.getInstance().getObjectShare().get("fabric-loader:inputGameJar"));
+            ObjectShare share = FabricLoader.getInstance().getObjectShare();
+            Object inputs = share.get("fabric-loader:inputGameJars");
+            List<Path> list = new ArrayList<>();
 
-            for (Path path : FabricLauncherBase.getLauncher().getClassPath()) {
+            Object oldJar = FabricLoader.getInstance().getObjectShare().get("fabric-loader:inputGameJar");
+
+            List<Path> classPaths = FabricLauncherBase.getLauncher().getClassPath();
+
+            if (inputs instanceof List) {
+                List<Path> paths = (List<Path>) inputs;
+
+                if (oldJar instanceof Path) {
+                    if (paths.get(0).toString().equals(oldJar.toString())) {
+                        list.addAll(paths);
+                    } else {
+                        list.add((Path) oldJar);
+                    }
+                } else {
+                    list.addAll(paths);
+                }
+            } else {
+                list.add((Path) oldJar);
+            }
+
+            list.addAll(classPaths);
+
+            Object realmsJar = share.get("fabric-loader:inputRealmsJar");
+
+            if (realmsJar instanceof Path) list.add((Path) realmsJar);
+
+            for (Path path : list) {
                 Constants.MAIN_LOGGER.debug("Appending '%s' to remapper classpath", path);
                 remapper.readClassPathAsync(path);
             }
