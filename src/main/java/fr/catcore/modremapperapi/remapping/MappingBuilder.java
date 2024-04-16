@@ -1,7 +1,10 @@
 package fr.catcore.modremapperapi.remapping;
 
 import fr.catcore.modremapperapi.ModRemappingAPI;
+import net.fabricmc.mappingio.MappedElementKind;
+import net.fabricmc.mappingio.MappingVisitor;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -65,6 +68,15 @@ public class MappingBuilder {
         return list;
     }
 
+    public void accept(MappingVisitor visitor) throws IOException {
+        visitor.visitClass(obfucated);
+        visitor.visitDstName(MappedElementKind.CLASS, 0, this.intermediary);
+
+        for (Entry entry : this.entries) {
+            entry.accept(visitor);
+        }
+    }
+
     public static class Entry {
         private final String obfuscated;
         private final String intermediary;
@@ -84,6 +96,13 @@ public class MappingBuilder {
             } else {
                 return MappingBuilder.toString(this.type.name(), className, this.description, this.obfuscated, this.intermediary, this.intermediary);
             }
+        }
+
+        public void accept(MappingVisitor visitor) throws IOException {
+            if (type == Type.FIELD) visitor.visitField(obfuscated, description);
+            else visitor.visitMethod(obfuscated, description);
+
+            visitor.visitDstName(type == Type.FIELD ? MappedElementKind.FIELD : MappedElementKind.METHOD, 0, intermediary);
         }
     }
 

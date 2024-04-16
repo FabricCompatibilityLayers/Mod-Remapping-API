@@ -8,6 +8,9 @@ import fr.catcore.modremapperapi.utils.FileUtils;
 import fr.catcore.modremapperapi.utils.MappingsUtils;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.mappingio.MappingVisitor;
+import net.fabricmc.mappingio.MappingWriter;
+import net.fabricmc.mappingio.format.MappingFormat;
 import net.fabricmc.mappingio.tree.MappingTree;
 import net.fabricmc.mappingio.tree.MemoryMappingTree;
 import net.fabricmc.tinyremapper.*;
@@ -25,7 +28,6 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import static fr.catcore.modremapperapi.utils.MappingsUtils.getNativeNamespace;
 import static fr.catcore.modremapperapi.utils.MappingsUtils.getTargetNamespace;
 
 public class RemapUtil {
@@ -33,7 +35,7 @@ public class RemapUtil {
     private static MappingTree MINECRAFT_TREE;
     private static MappingTree MODS_TREE;
 
-    private static final Map<String, String> MOD_MAPPINGS = new HashMap<>();
+    private static final MappingList MOD_MAPPINGS = new MappingList();
 
     protected static final Map<String, List<String>> MIXINED = new HashMap<>();
 
@@ -43,7 +45,6 @@ public class RemapUtil {
 
     public static void init() {
         downloadRemappingLibs();
-        generateMappings();
 
         for (ModRemapper remapper : ModRemappingAPI.MOD_REMAPPERS) {
             Optional<String> pkg = remapper.getDefaultPackage();
@@ -54,7 +55,7 @@ public class RemapUtil {
             }
         }
 
-        LOADER_TREE = makeTree(Constants.EXTRA_MAPPINGS_FILE);
+        LOADER_TREE = generateMappings();
         MINECRAFT_TREE = MappingsUtils.getMinecraftMappings();
 
         for (MappingTree.ClassMapping classView : MINECRAFT_TREE.getClasses()) {
@@ -155,32 +156,31 @@ public class RemapUtil {
             }
         }
 
-        classes.forEach(cl -> MOD_MAPPINGS.put(cl, (cl.contains("/") ? "" : defaultPackage) + cl));
+        classes.forEach(cl -> MOD_MAPPINGS.add(cl, (cl.contains("/") ? "" : defaultPackage) + cl));
 
         return files;
     }
 
     public static void generateModMappings() {
-        if (Constants.REMAPPED_MAPPINGS_FILE.exists()) {
-            Constants.REMAPPED_MAPPINGS_FILE.delete();
+        MemoryMappingTree mappingTree = new MemoryMappingTree();
+
+        try {
+            mappingTree.visitHeader();
+            List<String> namespaces = new ArrayList<>();
+            namespaces.add("target");
+            mappingTree.visitNamespaces("source", namespaces);
+
+            MOD_MAPPINGS.accept(mappingTree);
+
+            mappingTree.visitEnd();
+
+            MappingWriter writer = MappingWriter.create(Constants.REMAPPED_MAPPINGS_FILE.toPath(), MappingFormat.TINY_2_FILE);
+            mappingTree.accept(writer);
+        } catch (IOException e) {
+            throw new RuntimeException("Error while generating mods mappings", e);
         }
 
-        MappingList mappings = new MappingList();
-        MOD_MAPPINGS.forEach(mappings::add);
-
-        List<String> lines = new ArrayList<>();
-
-        if (ModRemappingAPI.BABRIC) {
-            lines.add(toString("v1", "intermediary", "glue", "server", "client", "named"));
-        } else {
-            lines.add(toString("v1", "official", "intermediary", "named"));
-        }
-
-        mappings.forEach(mappingBuilder -> lines.addAll(mappingBuilder.build()));
-
-        FileUtils.writeTextFile(lines, Constants.REMAPPED_MAPPINGS_FILE);
-
-        MODS_TREE = makeTree(Constants.REMAPPED_MAPPINGS_FILE);
+        MODS_TREE = mappingTree;
     }
 
     private static List<String> generateFolderMappings(File[] files) {
@@ -216,30 +216,38 @@ public class RemapUtil {
             this.add(builder);
             return builder;
         }
+
+        public void accept(MappingVisitor visitor) throws IOException {
+            for (MappingBuilder builder : this) builder.accept(visitor);
+        }
     }
 
-    private static void generateMappings() {
-        if (Constants.EXTRA_MAPPINGS_FILE.exists()) {
-            Constants.EXTRA_MAPPINGS_FILE.delete();
+    private static MappingTree generateMappings() {
+        MemoryMappingTree mappingTree = new MemoryMappingTree();
+
+        try {
+            mappingTree.visitHeader();
+            List<String> namespaces = new ArrayList<>();
+            namespaces.add("target");
+            mappingTree.visitNamespaces("source", namespaces);
+
+            MappingList mappingList = new MappingList();
+
+            for (ModRemapper remapper : ModRemappingAPI.MOD_REMAPPERS) {
+                remapper.getMappingList(mappingList);
+            }
+
+            mappingList.accept(mappingTree);
+
+            mappingTree.visitEnd();
+
+            MappingWriter mappingWriter = MappingWriter.create(Constants.EXTRA_MAPPINGS_FILE.toPath(), MappingFormat.TINY_2_FILE);
+            mappingTree.accept(mappingWriter);
+        } catch (IOException e) {
+            throw new RuntimeException("Error while generating remappers mappings", e);
         }
 
-        List<String> lines = new ArrayList<>();
-
-        if (ModRemappingAPI.BABRIC) {
-            lines.add(toString("v1", "intermediary", "glue", "server", "client", "named"));
-        } else {
-            lines.add(toString("v1", "official", "intermediary", "named"));
-        }
-
-        MappingList mappingList = new MappingList();
-
-        for (ModRemapper remapper : ModRemappingAPI.MOD_REMAPPERS) {
-            remapper.getMappingList(mappingList);
-        }
-
-        mappingList.forEach(mappingBuilder -> lines.addAll(mappingBuilder.build()));
-
-        FileUtils.writeTextFile(lines, Constants.EXTRA_MAPPINGS_FILE);
+        return mappingTree;
     }
 
     /**
