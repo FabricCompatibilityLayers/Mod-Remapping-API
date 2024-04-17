@@ -49,6 +49,7 @@ dependencies {
 
 	implementation(include("io.github.llamalad7:mixinextras-fabric:${project.mixin_extras_version}"))
 	implementation(include("com.github.thecatcore.CursedMixinExtensions:fabric:1.0.0"))
+	implementation(include("com.github.thecatcore:WFVAIO:1.1.0"))
 }
 
 base {

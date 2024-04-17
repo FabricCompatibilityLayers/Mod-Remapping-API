@@ -6,6 +6,8 @@ import fr.catcore.modremapperapi.api.RemapLibrary;
 import fr.catcore.modremapperapi.utils.Constants;
 import fr.catcore.modremapperapi.utils.FileUtils;
 import fr.catcore.modremapperapi.utils.MappingsUtils;
+import io.github.fabriccompatibiltylayers.modremappingapi.api.MappingUtils;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingsUtilsImpl;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.mappingio.MappingVisitor;
@@ -15,6 +17,7 @@ import net.fabricmc.mappingio.tree.MappingTree;
 import net.fabricmc.mappingio.tree.MemoryMappingTree;
 import net.fabricmc.tinyremapper.*;
 import net.fabricmc.tinyremapper.extension.mixin.MixinExtension;
+import org.jetbrains.annotations.ApiStatus;
 import org.objectweb.asm.*;
 
 import java.io.*;
@@ -56,10 +59,10 @@ public class RemapUtil {
         }
 
         LOADER_TREE = generateMappings();
-        MINECRAFT_TREE = MappingsUtils.getMinecraftMappings();
+        MINECRAFT_TREE = MappingsUtilsImpl.getMinecraftMappings();
 
         for (MappingTree.ClassMapping classView : MINECRAFT_TREE.getClasses()) {
-            String className = classView.getName(getNativeNamespace());
+            String className = classView.getName("official");
 
             if (className != null) {
                 MC_CLASS_NAMES.add(className);
@@ -165,10 +168,7 @@ public class RemapUtil {
         MemoryMappingTree mappingTree = new MemoryMappingTree();
 
         try {
-            mappingTree.visitHeader();
-            List<String> namespaces = new ArrayList<>();
-            namespaces.add("target");
-            mappingTree.visitNamespaces("source", namespaces);
+            MappingsUtilsImpl.initializeMappingTree(mappingTree);
 
             MOD_MAPPINGS.accept(mappingTree);
 
@@ -226,10 +226,7 @@ public class RemapUtil {
         MemoryMappingTree mappingTree = new MemoryMappingTree();
 
         try {
-            mappingTree.visitHeader();
-            List<String> namespaces = new ArrayList<>();
-            namespaces.add("target");
-            mappingTree.visitNamespaces("source", namespaces);
+            MappingsUtilsImpl.initializeMappingTree(mappingTree);
 
             MappingList mappingList = new MappingList();
 
@@ -262,23 +259,6 @@ public class RemapUtil {
             builder.append(line[j]);
         }
         return builder.toString();
-    }
-
-    /**
-     * Will make tree for specified mappings file.
-     *
-     * @param file mappings {@link File} in tiny format.
-     */
-    private static MappingTree makeTree(File file) {
-        MemoryMappingTree tree = new MemoryMappingTree();
-        try {
-            FileReader reader = new FileReader(file);
-            BufferedReader bufferedReader = new BufferedReader(reader);
-            MappingsUtils.loadMappings(bufferedReader, tree);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return tree;
     }
 
     private static String getLibClassName(String lib, String string) {
@@ -346,7 +326,7 @@ public class RemapUtil {
                 "fr.catcore.modremapperapi.utils.FakeModManager",
                 "fr.catcore.modremapperapi.utils.FileUtils",
                 "fr.catcore.modremapperapi.utils.MappingsUtils",
-                "fr.catcore.modremapperapi.utils.MappingsUtils$1",
+//                "fr.catcore.modremapperapi.utils.MappingsUtils$1",
                 "fr.catcore.modremapperapi.utils.MixinUtils",
                 "fr.catcore.modremapperapi.utils.ModDiscoverer",
                 "fr.catcore.modremapperapi.utils.ModDiscoverer$1",
@@ -532,7 +512,7 @@ public class RemapUtil {
         }
 
         for (MappingTree tree : trees) {
-            builder.withMappings(MappingsUtils.createProvider(tree));
+            builder.withMappings(MappingsUtilsImpl.createProvider(tree, "official", MappingsUtils.getTargetNamespace()));
         }
 
         MRAPostApplyVisitor applyVisitor = new MRAPostApplyVisitor();
@@ -580,6 +560,11 @@ public class RemapUtil {
         List<OutputConsumerPath.ResourceRemapper> resourceRemappers = new ArrayList<>(NonClassCopyMode.FIX_META_INF.remappers);
         resourceRemappers.add(new RefmapRemapper());
 
+        applyRemapper(remapper, paths, outputConsumerPaths, resourceRemappers);
+    }
+
+    @ApiStatus.Internal
+    public static void applyRemapper(TinyRemapper remapper, Map<Path, Path> paths, List<OutputConsumerPath> outputConsumerPaths, List<OutputConsumerPath.ResourceRemapper> resourceRemappers) {
         try {
             Map<Path, InputTag> tagMap = new HashMap<>();
 
@@ -627,60 +612,14 @@ public class RemapUtil {
         }
     }
 
+    @Deprecated
     public static String getRemappedFieldName(Class<?> owner, String fieldName) {
-        int target = MINECRAFT_TREE.getNamespaceId(getTargetNamespace());
-        MappingTree.ClassMapping classMapping = MINECRAFT_TREE.getClass(owner.getName().replace(".", "/"), target);
-
-        if (classMapping != null) {
-            for (MappingTree.FieldMapping fieldDef : classMapping.getFields()) {
-                String fieldSubName = fieldDef.getName(getNativeNamespace());
-                if (!(ModRemappingAPI.BABRIC && fieldSubName == null) && Objects.equals(fieldSubName, fieldName)) {
-                    return fieldDef.getName(getTargetNamespace());
-                }
-            }
-        }
-
-        if (owner.getSuperclass() != null) {
-            fieldName = getRemappedFieldName(owner.getSuperclass(), fieldName);
-        }
-
-        return fieldName;
+        return MappingUtils.mapField(owner, fieldName).name;
     }
 
+    @Deprecated
     public static String getRemappedMethodName(Class<?> owner, String methodName, Class<?>[] parameterTypes) {
-        String argDesc = classTypeToDescriptor(parameterTypes);
-
-        int target = MINECRAFT_TREE.getNamespaceId(getTargetNamespace());
-        MappingTree.ClassMapping classMapping = MINECRAFT_TREE.getClass(owner.getName().replace(".", "/"), target);
-
-        if (classMapping != null) {
-            for (MappingTree.MethodMapping methodDef : classMapping.getMethods()) {
-                String methodSubName = methodDef.getName(getNativeNamespace());
-                if (!(ModRemappingAPI.BABRIC && methodSubName == null) && Objects.equals(methodSubName, methodName)) {
-                    String methodDescriptor = methodDef.getDesc(getTargetNamespace());
-
-                    if (methodDescriptor.startsWith(argDesc)) {
-                        return methodDef.getName(getTargetNamespace());
-                    }
-                }
-            }
-        }
-
-        if (owner.getSuperclass() != null) {
-            methodName = getRemappedMethodName(owner.getSuperclass(), methodName, parameterTypes);
-        }
-
-        return methodName;
-    }
-
-    private static String classTypeToDescriptor(Class<?>[] classTypes) {
-        StringBuilder desc = new StringBuilder("(");
-
-        for (Class<?> clas : classTypes) {
-            desc.append(Type.getDescriptor(clas));
-        }
-
-        return desc + ")";
+        return MappingUtils.mapMethod(owner, methodName, parameterTypes).name;
     }
 
     /**
