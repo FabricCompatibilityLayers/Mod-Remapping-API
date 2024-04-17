@@ -124,10 +124,9 @@ modrinth {
 	token = System.getenv("MODRINTH_TOKEN")
 	projectId = "mod-remapping-api"
 	changelog = """
-Fix crash on loader 0.15+ while keeping compatibility with 0.14 for now.
-Now shadowing and relocating tiny-remapper 0.8.2.
-Updated mapping-io to 0.5.0.
-Compiling against loader 0.15 now.
+Updated mapping-io to 0.6.1 and tiny-remapper to 0.10.1.
+Improve mappings handling and apis.
+Start work towards clarifying what is api and what is internal for modders.
 """
 	uploadFile = remapJar
 
