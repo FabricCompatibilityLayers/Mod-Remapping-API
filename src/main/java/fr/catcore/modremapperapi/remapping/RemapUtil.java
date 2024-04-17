@@ -12,6 +12,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.mappingio.MappingVisitor;
 import net.fabricmc.mappingio.MappingWriter;
+import net.fabricmc.mappingio.extras.TinyRemapperHierarchyProvider;
 import net.fabricmc.mappingio.format.MappingFormat;
 import net.fabricmc.mappingio.tree.MappingTree;
 import net.fabricmc.mappingio.tree.MemoryMappingTree;
@@ -58,8 +59,9 @@ public class RemapUtil {
             }
         }
 
-        LOADER_TREE = generateMappings();
         MINECRAFT_TREE = MappingsUtilsImpl.getMinecraftMappings();
+        LOADER_TREE = generateMappings();
+        MappingsUtilsImpl.addMappingsToContext(LOADER_TREE);
 
         for (MappingTree.ClassMapping classView : MINECRAFT_TREE.getClasses()) {
             String className = classView.getName("official");
@@ -181,6 +183,7 @@ public class RemapUtil {
         }
 
         MODS_TREE = mappingTree;
+        MappingsUtilsImpl.addMappingsToContext(MODS_TREE);
     }
 
     private static List<String> generateFolderMappings(File[] files) {
@@ -590,6 +593,8 @@ public class RemapUtil {
 
                 Constants.MAIN_LOGGER.debug("Done 1!");
             }
+
+            MappingsUtilsImpl.completeMappingsFromTr(remapper.getEnvironment());
         } catch (Exception e) {
             remapper.finish();
             outputConsumerPaths.forEach(o -> {
