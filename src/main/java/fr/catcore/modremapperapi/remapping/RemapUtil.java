@@ -12,14 +12,12 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.mappingio.MappingVisitor;
 import net.fabricmc.mappingio.MappingWriter;
-import net.fabricmc.mappingio.extras.TinyRemapperHierarchyProvider;
 import net.fabricmc.mappingio.format.MappingFormat;
 import net.fabricmc.mappingio.tree.MappingTree;
 import net.fabricmc.mappingio.tree.MemoryMappingTree;
 import net.fabricmc.tinyremapper.*;
 import net.fabricmc.tinyremapper.extension.mixin.MixinExtension;
 import org.jetbrains.annotations.ApiStatus;
-import org.objectweb.asm.*;
 
 import java.io.*;
 import java.net.URL;
@@ -31,8 +29,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-
-import static fr.catcore.modremapperapi.utils.MappingsUtils.getTargetNamespace;
 
 public class RemapUtil {
     private static MappingTree LOADER_TREE;
