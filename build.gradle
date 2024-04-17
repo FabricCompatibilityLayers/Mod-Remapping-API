@@ -124,9 +124,7 @@ modrinth {
 	token = System.getenv("MODRINTH_TOKEN")
 	projectId = "mod-remapping-api"
 	changelog = """
-Updated mapping-io to 0.6.1 and tiny-remapper to 0.10.1.
-Improve mappings handling and apis.
-Start work towards clarifying what is api and what is internal for modders.
+Propagate and complete mappings from TR context.
 """
 	uploadFile = remapJar
 
