@@ -8,6 +8,7 @@ import fr.catcore.modremapperapi.utils.FileUtils;
 import fr.catcore.modremapperapi.utils.MappingsUtils;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.MappingUtils;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingsUtilsImpl;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.VisitorInfosImpl;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.mappingio.MappingVisitor;
@@ -517,7 +518,7 @@ public class RemapUtil {
         MRAPostApplyVisitor applyVisitor = new MRAPostApplyVisitor();
         MixinPostApplyVisitor mixinPostApplyVisitor = new MixinPostApplyVisitor(trees);
 
-        VisitorInfos infos = new VisitorInfos();
+        VisitorInfosImpl infos = new VisitorInfosImpl();
 
         for (ModRemapper modRemapper : ModRemappingAPI.MOD_REMAPPERS) {
             modRemapper.registerVisitors(infos);

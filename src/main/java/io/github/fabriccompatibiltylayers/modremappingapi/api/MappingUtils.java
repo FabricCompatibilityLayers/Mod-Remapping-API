@@ -1,6 +1,7 @@
 package io.github.fabriccompatibiltylayers.modremappingapi.api;
 
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingsUtilsImpl;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public interface MappingUtils {
@@ -37,10 +38,12 @@ public interface MappingUtils {
     }
 
     class ClassMember {
-        public final String name;
+        public final @NotNull String name;
         public final @Nullable String desc;
 
-        public ClassMember(String name, @Nullable String desc) {
+        public ClassMember(@NotNull String name, @Nullable String desc) {
+            assert name != null;
+
             this.name = name;
             this.desc = desc;
         }

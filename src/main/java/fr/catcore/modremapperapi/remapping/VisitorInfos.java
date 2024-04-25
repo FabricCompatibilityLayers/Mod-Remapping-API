@@ -1,41 +1,41 @@
 package fr.catcore.modremapperapi.remapping;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 
+@Deprecated
 public class VisitorInfos {
-    protected final Map<Type, Type> SUPERS = new HashMap<>();
-    protected final Map<Type, Type> ANNOTATION = new HashMap<>();
-    protected final Map<Type, Type> METHOD_TYPE = new HashMap<>();
-    protected final Map<MethodNamed, MethodNamed> METHOD_FIELD = new HashMap<>();
-    protected final Map<MethodNamed, MethodNamed> METHOD_METHOD = new HashMap<>();
-    protected final Map<MethodValue, MethodValue> METHOD_LDC = new HashMap<>();
 
-    public void registerSuperType(Type methodType, Type methodType2) {
-        SUPERS.put(methodType, methodType2);
+    @Deprecated
+    public void registerSuperType(Type target, Type replacement) {
+        throw new RuntimeException("This is not supposed to happen!");
     }
 
-    public void registerTypeAnnotation(Type methodType, Type methodType2) {
-        ANNOTATION.put(methodType, methodType2);
+    @Deprecated
+    public void registerTypeAnnotation(Type target, Type replacement) {
+        throw new RuntimeException("This is not supposed to happen!");
     }
 
-    public void registerMethodTypeIns(Type methodType, Type methodType2) {
-        METHOD_TYPE.put(methodType, methodType2);
+    @Deprecated
+    public void registerMethodTypeIns(Type target, Type replacement) {
+        throw new RuntimeException("This is not supposed to happen!");
     }
 
-    public void registerMethodFieldIns(MethodNamed methodNamed, MethodNamed methodNamed2) {
-        METHOD_FIELD.put(methodNamed, methodNamed2);
+    @Deprecated
+    public void registerMethodFieldIns(MethodNamed target, MethodNamed replacementObject) {
+        throw new RuntimeException("This is not supposed to happen!");
     }
 
-    public void registerMethodMethodIns(MethodNamed methodNamed, MethodNamed methodNamed2) {
-        METHOD_METHOD.put(methodNamed, methodNamed2);
+    @Deprecated
+    public void registerMethodMethodIns(MethodNamed target, MethodNamed replacementObject) {
+        throw new RuntimeException("This is not supposed to happen!");
     }
 
-    public void registerMethodLdcIns(MethodValue methodValue, MethodValue methodValue2) {
-        METHOD_LDC.put(methodValue, methodValue2);
+    @Deprecated
+    public void registerMethodLdcIns(MethodValue target, MethodValue replacement) {
+        throw new RuntimeException("This is not supposed to happen!");
     }
 
+    @Deprecated
     public static class Type {
         public final String type;
 
@@ -52,6 +52,7 @@ public class VisitorInfos {
         }
     }
 
+    @Deprecated
     public static class MethodValue {
         public final String owner;
         public final Object value;
@@ -70,6 +71,7 @@ public class VisitorInfos {
         }
     }
 
+    @Deprecated
     public static class MethodNamed {
         public final String owner, name;
 

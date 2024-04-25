@@ -1,14 +1,15 @@
 package fr.catcore.modremapperapi.remapping;
 
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.VisitorInfosImpl;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 import java.util.Map;
 
-public class MRAMethodVisitor extends MethodVisitor {
-    private final VisitorInfos infos;
+public class MRAMethodVisitor extends MethodVisitor implements Opcodes {
+    private final VisitorInfosImpl infos;
     private final String className;
-    protected MRAMethodVisitor(MethodVisitor methodVisitor, VisitorInfos visitorInfos, String className) {
+    protected MRAMethodVisitor(MethodVisitor methodVisitor, VisitorInfosImpl visitorInfos, String className) {
         super(Opcodes.ASM9, methodVisitor);
         this.infos = visitorInfos;
         this.className = className;
@@ -16,59 +17,128 @@ public class MRAMethodVisitor extends MethodVisitor {
 
     @Override
     public void visitTypeInsn(int opcode, String type) {
-        VisitorInfos.Type superType = new VisitorInfos.Type(type);
+        String currentType = type;
 
-        for (Map.Entry<VisitorInfos.Type, VisitorInfos.Type> entry : infos.METHOD_TYPE.entrySet()) {
-            if (entry.getKey().type.equals(type)) {
-                superType = entry.getValue();
-                break;
-            }
+        boolean skip = false;
+
+        if (opcode == NEW && infos.INSTANTIATION.containsKey(type)) {
+            currentType = infos.INSTANTIATION.get(type);
+            skip = true;
         }
 
-        super.visitTypeInsn(opcode, superType.type);
+        if (!skip && infos.METHOD_TYPE.containsKey(type)) {
+            currentType = infos.METHOD_TYPE.get(type);
+        }
+
+        super.visitTypeInsn(opcode, currentType);
     }
 
     @Override
     public void visitFieldInsn(int opcode, String owner, String name, String descriptor) {
-        VisitorInfos.MethodNamed superType = new VisitorInfos.MethodNamed(owner, name);
+        String currentOwner = owner;
+        String currentName = name;
+        String currentDescriptor = descriptor;
 
-        for (Map.Entry<VisitorInfos.MethodNamed, VisitorInfos.MethodNamed> entry : infos.METHOD_FIELD.entrySet()) {
-            if (entry.getKey().owner.equals(owner)) {
-                if (entry.getKey().name.isEmpty() || entry.getKey().name.equals(name)) {
-                    superType = entry.getValue();
+        if (infos.FIELD_REF.containsKey(owner)) {
+            Map<String, Map<String, io.github.fabriccompatibiltylayers.modremappingapi.api.VisitorInfos.FullClassMember>> fields = infos.FIELD_REF.get(owner);
+
+            Map<String, io.github.fabriccompatibiltylayers.modremappingapi.api.VisitorInfos.FullClassMember> args = fields.get(name);
+
+            if (args == null) {
+                args = fields.get("");
+            }
+
+            if (args != null) {
+                io.github.fabriccompatibiltylayers.modremappingapi.api.VisitorInfos.FullClassMember classMember = args.get(descriptor);
+
+                if (classMember == null) {
+                    classMember = args.get("");
+                }
+
+                if (classMember != null) {
+                    currentOwner = classMember.owner;
+                    currentName = classMember.name;
+                    currentDescriptor  = classMember.desc;
                 }
             }
         }
 
-        super.visitFieldInsn(opcode, superType.owner, superType.name.isEmpty() ? name : superType.name, descriptor);
+        if (currentName.isEmpty()) {
+            currentName = name;
+        }
+
+        if (currentDescriptor == null || currentDescriptor.isEmpty()) {
+            currentDescriptor = descriptor;
+        }
+
+        super.visitFieldInsn(opcode, currentOwner, currentName, currentDescriptor);
     }
 
     @Override
     public void visitMethodInsn(int opcode, String owner, String name, String descriptor, boolean isInterface) {
-        VisitorInfos.MethodNamed superType = new VisitorInfos.MethodNamed(owner, name);
+        int currentOpcode = opcode;
+        String currentOwner = owner;
+        String currentName = name;
+        String currentDescriptor = descriptor;
 
-        for (Map.Entry<VisitorInfos.MethodNamed, VisitorInfos.MethodNamed> entry : infos.METHOD_METHOD.entrySet()) {
-            if (entry.getKey().owner.equals(owner)) {
-                if (entry.getKey().name.isEmpty() || entry.getKey().name.equals(name)) {
-                    superType = entry.getValue();
+        boolean skip = false;
+
+        if (opcode == INVOKESPECIAL && infos.INSTANTIATION.containsKey(owner) && name.equals("<init>")) {
+            currentOwner = infos.INSTANTIATION.get(owner);
+            skip = true;
+        }
+
+        if (!skip && (opcode == INVOKEVIRTUAL || opcode == INVOKESTATIC)) {
+            if (infos.METHOD_INVOCATION.containsKey(owner)) {
+                Map<String, Map<String, io.github.fabriccompatibiltylayers.modremappingapi.api.VisitorInfos.FullClassMember>> methods = infos.METHOD_INVOCATION.get(owner);
+
+                Map<String, io.github.fabriccompatibiltylayers.modremappingapi.api.VisitorInfos.FullClassMember> args = methods.get(currentName);
+
+                if (args == null) {
+                    args = methods.get("");
+                }
+
+                if (args != null) {
+                    io.github.fabriccompatibiltylayers.modremappingapi.api.VisitorInfos.FullClassMember fullClassMember = args.get(currentDescriptor);
+
+                    if (fullClassMember == null) {
+                        fullClassMember = args.get("");
+                    }
+
+                    if (fullClassMember != null) {
+                        currentOwner = fullClassMember.owner;
+                        currentName = fullClassMember.name;
+                        currentDescriptor  = fullClassMember.desc;
+
+                        if (fullClassMember.isStatic != null) currentOpcode = fullClassMember.isStatic ? INVOKESTATIC : INVOKEVIRTUAL;
+                    }
                 }
             }
         }
 
-        super.visitMethodInsn(opcode, superType.owner, superType.name.isEmpty() ? name : superType.name, descriptor, isInterface);
+        if (currentName.isEmpty()) {
+            currentName = name;
+        }
+
+        if (currentDescriptor == null || currentDescriptor.isEmpty()) {
+            currentDescriptor = descriptor;
+        }
+
+        super.visitMethodInsn(currentOpcode, currentOwner, currentName, currentDescriptor, isInterface);
     }
 
     @Override
     public void visitLdcInsn(Object value) {
-        VisitorInfos.MethodValue val = new VisitorInfos.MethodValue(this.className, value);
+        Object currentValue = value;
 
-        for (Map.Entry<VisitorInfos.MethodValue, VisitorInfos.MethodValue> entry : infos.METHOD_LDC.entrySet()) {
-            if (entry.getKey().value.equals(value)) {
-                val = entry.getValue();
-                break;
+        if (infos.LDC.containsKey(this.className)) {
+            Map<Object, Object> map = infos.LDC.get(this.className);
+
+            if (map.containsKey(value)) {
+                currentValue = map.get(value);
             }
         }
 
-        super.visitLdcInsn(val.value);
+        super.visitLdcInsn(currentValue);
     }
 }

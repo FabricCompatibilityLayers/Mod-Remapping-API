@@ -1,13 +1,13 @@
 package fr.catcore.modremapperapi.remapping;
 
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.VisitorInfosImpl;
 import org.objectweb.asm.*;
 
-import java.util.Map;
-
 public class MRAClassVisitor extends ClassVisitor {
-    private final VisitorInfos infos;
+    private final VisitorInfosImpl infos;
     private final String className;
-    protected MRAClassVisitor(ClassVisitor classVisitor, VisitorInfos infos, String className) {
+
+    protected MRAClassVisitor(ClassVisitor classVisitor, VisitorInfosImpl infos, String className) {
         super(Opcodes.ASM9, classVisitor);
         this.infos = infos;
         this.className = className;
@@ -15,30 +15,24 @@ public class MRAClassVisitor extends ClassVisitor {
 
     @Override
     public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
-        VisitorInfos.Type superType = new VisitorInfos.Type(superName);
+        String superType = superName;
 
-        for (Map.Entry<VisitorInfos.Type, VisitorInfos.Type> entry : infos.SUPERS.entrySet()) {
-            if (entry.getKey().type.equals(superName)) {
-                superType = entry.getValue();
-                break;
-            }
+        if (infos.SUPERS.containsKey(superName)) {
+            superType = infos.SUPERS.get(superName);
         }
 
-        super.visit(version, access, name, signature, superType.type, interfaces);
+        super.visit(version, access, name, signature, superType, interfaces);
     }
 
     @Override
     public AnnotationVisitor visitTypeAnnotation(int typeRef, TypePath typePath, String descriptor, boolean visible) {
-        VisitorInfos.Type superType = new VisitorInfos.Type(descriptor);
+        String annotationType = descriptor;
 
-        for (Map.Entry<VisitorInfos.Type, VisitorInfos.Type> entry : infos.ANNOTATION.entrySet()) {
-            if (entry.getKey().type.equals(descriptor)) {
-                superType = entry.getValue();
-                break;
-            }
+        if (infos.ANNOTATION.containsKey(descriptor)) {
+            annotationType = infos.ANNOTATION.get(descriptor);
         }
 
-        return super.visitTypeAnnotation(typeRef, typePath, superType.type, visible);
+        return super.visitTypeAnnotation(typeRef, typePath, annotationType, visible);
     }
 
     @Override
