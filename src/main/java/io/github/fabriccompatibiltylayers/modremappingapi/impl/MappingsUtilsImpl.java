@@ -1,6 +1,5 @@
 package io.github.fabriccompatibiltylayers.modremappingapi.impl;
 
-import fr.catcore.modremapperapi.ModRemappingAPI;
 import fr.catcore.wfvaio.WhichFabricVariantAmIOn;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.MappingUtils;
 import net.fabricmc.loader.api.FabricLoader;
@@ -18,6 +17,7 @@ import net.fabricmc.mappingio.format.tiny.Tiny1FileReader;
 import net.fabricmc.mappingio.format.tiny.Tiny2FileReader;
 import net.fabricmc.mappingio.tree.*;
 import net.fabricmc.tinyremapper.IMappingProvider;
+import net.fabricmc.tinyremapper.TinyUtils;
 import net.fabricmc.tinyremapper.api.TrClass;
 import net.fabricmc.tinyremapper.api.TrEnvironment;
 import net.fabricmc.tinyremapper.api.TrMethod;
@@ -32,7 +32,6 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.*;
-import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import java.util.zip.ZipError;
 
@@ -176,60 +175,9 @@ public class MappingsUtilsImpl {
         return visitor;
     }
 
-    private static IMappingProvider.Member memberOf(String className, String memberName, String descriptor) {
-        return new IMappingProvider.Member(className, memberName, descriptor);
-    }
-
     @ApiStatus.Internal
     public static IMappingProvider createProvider(MappingTree mappings, String from, String to) {
-        return (acceptor) -> {
-            final int fromId = mappings.getNamespaceId(from);
-            final int toId = mappings.getNamespaceId(to);
-
-            for (MappingTree.ClassMapping classDef : mappings.getClasses()) {
-                String className = classDef.getName(fromId);
-                String dstName = classDef.getName(toId);
-
-                if (ModRemappingAPI.BABRIC && className == null) {
-                    if (dstName == null) continue;
-                    className = dstName;
-                }
-
-                if (dstName == null) {
-                    dstName = className;
-                }
-
-                acceptor.acceptClass(className, dstName);
-
-                for (MappingTree.FieldMapping field : classDef.getFields()) {
-                    acceptMember(acceptor::acceptField, className, field, fromId, toId);
-                }
-
-                for (MappingTree.MethodMapping method : classDef.getMethods()) {
-                    acceptMember(acceptor::acceptMethod, className, method, fromId, toId);
-                }
-            }
-        };
-    }
-
-    private static void acceptMember(BiConsumer<IMappingProvider.Member, String> consumer, String className,
-                                     MappingTreeView.MemberMappingView memberMappingView, int fromId, int toId) {
-        String memberName = memberMappingView.getName(fromId);
-        String memberDstName = memberMappingView.getName(toId);
-        String memberDesc = memberMappingView.getDesc(fromId);
-        String memberDstDesc = memberMappingView.getDesc(toId);
-
-        if (ModRemappingAPI.BABRIC && memberName == null) {
-            if (memberDstName == null) return;
-            memberName = memberDstName;
-        }
-
-        if (ModRemappingAPI.BABRIC && memberDesc == null) {
-            if (memberDstDesc == null) return;
-            memberDesc = memberDstDesc;
-        }
-
-        consumer.accept(memberOf(className, memberName, memberDesc), memberDstName);
+        return TinyUtils.createMappingProvider(mappings, from, to);
     }
 
     @ApiStatus.Internal
