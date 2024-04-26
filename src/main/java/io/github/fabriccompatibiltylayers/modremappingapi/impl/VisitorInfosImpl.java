@@ -1,6 +1,6 @@
 package io.github.fabriccompatibiltylayers.modremappingapi.impl;
 
-import io.github.fabriccompatibiltylayers.modremappingapi.api.VisitorInfos;
+import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.VisitorInfos;
 import org.jetbrains.annotations.ApiStatus;
 
 import java.util.HashMap;

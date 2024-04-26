@@ -13,13 +13,8 @@ import org.objectweb.asm.tree.ClassNode;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MixinPostApplyVisitor implements TinyRemapper.ApplyVisitorProvider{
-    private final List<MappingTree.ClassMapping> classDefs = new ArrayList<>();
-    public MixinPostApplyVisitor(MappingTree[] trees) {
-        for (MappingTree tree : trees) {
-            classDefs.addAll(tree.getClasses());
-        }
-    }
+public class MixinPostApplyVisitor implements TinyRemapper.ApplyVisitorProvider {
+    public MixinPostApplyVisitor() {}
 
     @Override
     public ClassVisitor insertApplyVisitor(TrClass cls, ClassVisitor next) {

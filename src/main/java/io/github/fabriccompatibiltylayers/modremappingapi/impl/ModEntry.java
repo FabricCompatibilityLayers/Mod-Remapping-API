@@ -1,4 +1,4 @@
-package fr.catcore.modremapperapi.utils;
+package io.github.fabriccompatibiltylayers.modremappingapi.impl;
 
 import java.io.File;
 

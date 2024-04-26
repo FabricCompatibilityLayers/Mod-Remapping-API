@@ -1,13 +1,16 @@
 package fr.catcore.modremapperapi.remapping;
 
-import fr.catcore.modremapperapi.ModRemappingAPI;
+import fr.catcore.wfvaio.FabricVariants;
+import fr.catcore.wfvaio.WhichFabricVariantAmIOn;
 import net.fabricmc.mappingio.MappedElementKind;
 import net.fabricmc.mappingio.MappingVisitor;
+import org.jetbrains.annotations.ApiStatus;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+@Deprecated
 public class MappingBuilder {
     private static final boolean BABRIC = WhichFabricVariantAmIOn.getVariant() == FabricVariants.BABRIC || WhichFabricVariantAmIOn.getVariant() == FabricVariants.BABRIC_NEW_FORMAT;
 
@@ -20,56 +23,41 @@ public class MappingBuilder {
         this.intermediary = intermediary;
     }
 
-    private static String toString(String... line) {
-        StringBuilder builder = new StringBuilder(line[0]);
-        for (int j = 1; j < line.length; j++) {
-            builder.append('\t');
-            builder.append(line[j]);
-        }
-        return builder.toString();
-    }
-
+    @ApiStatus.Internal
     public static MappingBuilder create(String obfucated, String intermediary) {
         return new MappingBuilder(obfucated, intermediary);
     }
 
+    @ApiStatus.Internal
     public static MappingBuilder create(String name) {
         return new MappingBuilder(name, name);
     }
 
+    @Deprecated
     public MappingBuilder field(String obfuscated, String intermediary, String description) {
         this.entries.add(new Entry(obfuscated, intermediary, description, Type.FIELD));
         return this;
     }
 
+    @Deprecated
     public MappingBuilder field(String name, String description) {
         this.entries.add(new Entry(name, name, description, Type.FIELD));
         return this;
     }
 
+    @Deprecated
     public MappingBuilder method(String obfuscated, String intermediary, String description) {
         this.entries.add(new Entry(obfuscated, intermediary, description, Type.METHOD));
         return this;
     }
 
+    @Deprecated
     public MappingBuilder method(String name, String description) {
         this.entries.add(new Entry(name, name, description, Type.METHOD));
         return this;
     }
 
-    public List<String> build() {
-        List<String> list = new ArrayList<>();
-        if (ModRemappingAPI.BABRIC) {
-            list.add(toString("CLASS", this.intermediary, this.intermediary, this.obfucated, this.obfucated, this.intermediary));
-        } else {
-            list.add(toString("CLASS", this.obfucated, this.intermediary, this.intermediary));
-        }
-
-        entries.forEach(entry -> list.add(entry.toString(ModRemappingAPI.BABRIC ? this.intermediary : this.obfucated)));
-
-        return list;
-    }
-
+    @ApiStatus.Internal
     public void accept(MappingVisitor visitor) throws IOException {
         visitor.visitClass(BABRIC ? intermediary : obfucated);
         visitor.visitDstName(MappedElementKind.CLASS, 0, BABRIC ? obfucated : this.intermediary);
@@ -79,6 +67,7 @@ public class MappingBuilder {
         }
     }
 
+    @ApiStatus.Internal
     public static class Entry {
         private final String obfuscated;
         private final String intermediary;
@@ -92,14 +81,7 @@ public class MappingBuilder {
             this.type = type;
         }
 
-        public String toString(String className) {
-            if (ModRemappingAPI.BABRIC) {
-                return MappingBuilder.toString(this.type.name(), className, this.description, this.intermediary, this.intermediary, this.obfuscated, this.obfuscated, this.intermediary);
-            } else {
-                return MappingBuilder.toString(this.type.name(), className, this.description, this.obfuscated, this.intermediary, this.intermediary);
-            }
-        }
-
+        @ApiStatus.Internal
         public void accept(MappingVisitor visitor) throws IOException {
             if (type == Type.FIELD) visitor.visitField(BABRIC ? intermediary : obfuscated, description);
             else visitor.visitMethod(BABRIC ? intermediary : obfuscated, description);
@@ -108,6 +90,7 @@ public class MappingBuilder {
         }
     }
 
+    @ApiStatus.Internal
     public enum Type {
         METHOD, FIELD;
     }

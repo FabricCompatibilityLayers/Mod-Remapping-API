@@ -1,10 +1,11 @@
-package fr.catcore.modremapperapi.utils;
+package io.github.fabriccompatibiltylayers.modremappingapi.impl;
 
-import fr.catcore.modremapperapi.ModRemappingAPI;
-import fr.catcore.modremapperapi.api.ModRemapper;
+import fr.catcore.modremapperapi.utils.Constants;
+import fr.catcore.modremapperapi.utils.FileUtils;
+import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.ModRemapper;
 import fr.catcore.modremapperapi.remapping.RemapUtil;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.compatibility.V0ModRemapper;
 import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.loader.impl.launch.FabricLauncher;
 import net.fabricmc.loader.impl.launch.FabricLauncherBase;
 import org.spongepowered.include.com.google.common.collect.ImmutableList;
 
@@ -17,6 +18,7 @@ import java.net.URISyntaxException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -24,16 +26,18 @@ import java.util.zip.ZipOutputStream;
 public class ModDiscoverer {
     private static final Map<String, List<String>> EXCLUDED = new HashMap<>();
 
-    protected static void init() {
-        RemapUtil.init();
+    protected static void init(List<ModRemapper> modRemappers, boolean remapClassEdits) {
+        RemapUtil.init(modRemappers);
 
         List<ModEntry> mods = new ArrayList<>();
 
-        for (ModRemapper remapper : ModRemappingAPI.MOD_REMAPPERS) {
-            EXCLUDED.putAll(remapper.getExclusions());
+        for (ModRemapper remapper : modRemappers) {
+            if (remapper instanceof V0ModRemapper) {
+                EXCLUDED.putAll(((V0ModRemapper) remapper).getExclusions());
+            }
         }
 
-        for (ModRemapper remapper : ModRemappingAPI.MOD_REMAPPERS) {
+        for (ModRemapper remapper : modRemappers) {
             for (String jarFolder : remapper.getJarFolders()) {
                 File mcSubFolder = new File(FabricLoader.getInstance().getGameDir().toFile(), jarFolder);
                 File cacheFolder = new File(Constants.VERSIONED_FOLDER, jarFolder);
@@ -41,33 +45,7 @@ public class ModDiscoverer {
                 if (!mcSubFolder.exists()) mcSubFolder.mkdirs();
                 if (!cacheFolder.exists()) cacheFolder.mkdirs();
 
-                try {
-                    Files.walkFileTree(cacheFolder.toPath(), new FileVisitor<Path>() {
-                        @Override
-                        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
-                            return FileVisitResult.CONTINUE;
-                        }
-
-                        @Override
-                        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                            Files.delete(file);
-                            return FileVisitResult.CONTINUE;
-                        }
-
-                        @Override
-                        public FileVisitResult visitFileFailed(Path file, IOException exc) {
-                            return FileVisitResult.CONTINUE;
-                        }
-
-                        @Override
-                        public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-                            Files.delete(dir);
-                            return FileVisitResult.CONTINUE;
-                        }
-                    });
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+                emptyDir(cacheFolder);
 
                 mods.addAll(discoverModsInFolder(mcSubFolder, cacheFolder));
             }
@@ -75,54 +53,55 @@ public class ModDiscoverer {
 
         File mainTempDir = new File(Constants.VERSIONED_FOLDER, "temp");
         if (mainTempDir.exists()) {
-            try {
-                Files.walkFileTree(mainTempDir.toPath(), new FileVisitor<Path>() {
-                    @Override
-                    public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
-                        return FileVisitResult.CONTINUE;
-                    }
+            emptyDir(mainTempDir);
+        }
 
-                    @Override
-                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                        Files.delete(file);
-                        return FileVisitResult.CONTINUE;
-                    }
+        Map<Path, Path> modPaths = mods.stream()
+                .filter(entry -> entry.original != null)
+                .collect(Collectors.toMap(entry -> entry.original.toPath(), entry -> entry.file.toPath()));
 
-                    @Override
-                    public FileVisitResult visitFileFailed(Path file, IOException exc) {
-                        return FileVisitResult.CONTINUE;
-                    }
+        if (!remapClassEdits) {
+            modPaths = excludeClassEdits(modPaths);
+        }
 
-                    @Override
-                    public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-                        Files.delete(dir);
-                        return FileVisitResult.CONTINUE;
-                    }
-                });
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+        for (Path path : modPaths.keySet()) {
+            RemapUtil.makeModMappings(path);
         }
 
         RemapUtil.generateModMappings();
 
-        Map<Path, Path> modPaths = new HashMap<>();
-
-        for (ModEntry entry : mods) {
-            if (entry.original != null) modPaths.put(entry.original.toPath(), entry.file.toPath());
-
-            FakeModManager.addModEntry(entry);
-        }
-
-        if (!ModRemappingAPI.remapClassEdits) {
-            modPaths = excludeClassEdits(modPaths);
-        }
-
         RemapUtil.remapMods(modPaths);
 
-        for (Path modPath : modPaths.values()) {
-            Constants.MAIN_LOGGER.debug("Adding path to classpath: " + modPath.toString());
-            FabricLauncherBase.getLauncher().addToClassPath(modPath);
+        modPaths.values().forEach(FabricLauncherBase.getLauncher()::addToClassPath);
+    }
+
+    private static void emptyDir(File mainTempDir) {
+        try {
+            Files.walkFileTree(mainTempDir.toPath(), new FileVisitor<Path>() {
+                @Override
+                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    Files.delete(file);
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult visitFileFailed(Path file, IOException exc) {
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                    Files.delete(dir);
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -130,6 +109,7 @@ public class ModDiscoverer {
         if (fileToZip.isHidden()) {
             return;
         }
+
         if (fileToZip.isDirectory()) {
             if (!root) {
                 if (fileName.endsWith("/")) {
@@ -140,20 +120,26 @@ public class ModDiscoverer {
                     zipOut.closeEntry();
                 }
             }
+
             File[] children = fileToZip.listFiles();
+
             for (File childFile : children) {
                 zipFile(childFile, (root ? "" : fileName + "/") + childFile.getName(), zipOut, false);
             }
+
             return;
         }
+
         FileInputStream fis = new FileInputStream(fileToZip);
         ZipEntry zipEntry = new ZipEntry(fileName);
         zipOut.putNextEntry(zipEntry);
         byte[] bytes = new byte[1024];
         int length;
+
         while ((length = fis.read(bytes)) >= 0) {
             zipOut.write(bytes, 0, length);
         }
+
         zipOut.closeEntry();
     }
 
@@ -211,9 +197,7 @@ public class ModDiscoverer {
             }
         }
 
-        for (Path path : errored) {
-            map.remove(path);
-        }
+        errored.forEach(map::remove);
 
         return map;
     }
@@ -308,14 +292,7 @@ public class ModDiscoverer {
                     }
                 }
 
-                if (!modName.isEmpty()) {
-                    RemapUtil.makeModMappings(file.toPath());
-
-                    while (!modName.isEmpty()) {
-                        ModEntry modname = modName.remove(0);
-                        mods.add(modname);
-                    }
-                }
+                mods.addAll(modName);
             }
         }
 

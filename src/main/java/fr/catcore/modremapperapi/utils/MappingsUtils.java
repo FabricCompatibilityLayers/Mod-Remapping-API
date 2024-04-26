@@ -11,6 +11,7 @@ import net.fabricmc.mappingio.MappingVisitor;
 import net.fabricmc.mappingio.tree.MappingTree;
 import net.fabricmc.mappingio.tree.MemoryMappingTree;
 import net.fabricmc.tinyremapper.*;
+import org.jetbrains.annotations.ApiStatus;
 
 import java.io.*;
 import java.nio.file.Path;
@@ -56,6 +57,7 @@ public class MappingsUtils {
         return MappingsUtilsImpl.getVanillaMappings();
     }
 
+    @Deprecated
     public static IMappingProvider createProvider(MappingTree mappings) {
         return MappingsUtilsImpl.createProvider(mappings, getNativeNamespace(), getTargetNamespace());
     }
@@ -98,6 +100,7 @@ public class MappingsUtils {
         return paths.values().toArray(new Path[0]);
     }
 
+    @ApiStatus.Internal
     public static void addMinecraftJar(TinyRemapper remapper) {
         if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
             try {

@@ -1,4 +1,4 @@
-package fr.catcore.modremapperapi;
+package io.github.fabriccompatibiltylayers.modremappingapi.impl;
 
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
@@ -28,7 +28,7 @@ public class RemapperPlugin implements IMixinConfigPlugin {
     @Override
     public List<String> getMixins(){
         try {
-            ((Runnable)Class.forName("fr.catcore.modremapperapi.ModRemappingApiInit").newInstance()).run();
+            ((Runnable)Class.forName("io.github.fabriccompatibiltylayers.modremappingapi.impl.ModRemappingApiInit").newInstance()).run();
         } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }

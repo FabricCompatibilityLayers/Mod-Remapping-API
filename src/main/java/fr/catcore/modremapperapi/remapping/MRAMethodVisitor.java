@@ -1,5 +1,6 @@
 package fr.catcore.modremapperapi.remapping;
 
+import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.VisitorInfos;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.VisitorInfosImpl;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -40,16 +41,16 @@ public class MRAMethodVisitor extends MethodVisitor implements Opcodes {
         String currentDescriptor = descriptor;
 
         if (infos.FIELD_REF.containsKey(owner)) {
-            Map<String, Map<String, io.github.fabriccompatibiltylayers.modremappingapi.api.VisitorInfos.FullClassMember>> fields = infos.FIELD_REF.get(owner);
+            Map<String, Map<String, VisitorInfos.FullClassMember>> fields = infos.FIELD_REF.get(owner);
 
-            Map<String, io.github.fabriccompatibiltylayers.modremappingapi.api.VisitorInfos.FullClassMember> args = fields.get(name);
+            Map<String, VisitorInfos.FullClassMember> args = fields.get(name);
 
             if (args == null) {
                 args = fields.get("");
             }
 
             if (args != null) {
-                io.github.fabriccompatibiltylayers.modremappingapi.api.VisitorInfos.FullClassMember classMember = args.get(descriptor);
+                VisitorInfos.FullClassMember classMember = args.get(descriptor);
 
                 if (classMember == null) {
                     classMember = args.get("");
@@ -90,16 +91,16 @@ public class MRAMethodVisitor extends MethodVisitor implements Opcodes {
 
         if (!skip && (opcode == INVOKEVIRTUAL || opcode == INVOKESTATIC)) {
             if (infos.METHOD_INVOCATION.containsKey(owner)) {
-                Map<String, Map<String, io.github.fabriccompatibiltylayers.modremappingapi.api.VisitorInfos.FullClassMember>> methods = infos.METHOD_INVOCATION.get(owner);
+                Map<String, Map<String, VisitorInfos.FullClassMember>> methods = infos.METHOD_INVOCATION.get(owner);
 
-                Map<String, io.github.fabriccompatibiltylayers.modremappingapi.api.VisitorInfos.FullClassMember> args = methods.get(currentName);
+                Map<String, VisitorInfos.FullClassMember> args = methods.get(currentName);
 
                 if (args == null) {
                     args = methods.get("");
                 }
 
                 if (args != null) {
-                    io.github.fabriccompatibiltylayers.modremappingapi.api.VisitorInfos.FullClassMember fullClassMember = args.get(currentDescriptor);
+                    VisitorInfos.FullClassMember fullClassMember = args.get(currentDescriptor);
 
                     if (fullClassMember == null) {
                         fullClassMember = args.get("");

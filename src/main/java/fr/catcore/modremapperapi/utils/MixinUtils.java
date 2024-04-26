@@ -27,7 +27,6 @@ public class MixinUtils {
      * @param mixinClassName
      * @param mixinInfo
      */
-    @Deprecated
     public static void applyASMMagic(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
         CursedMixinExtensions.postApply(targetClass);
 

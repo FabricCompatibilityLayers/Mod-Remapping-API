@@ -1,21 +1,19 @@
 package fr.catcore.modremapperapi.remapping;
 
 import fr.catcore.modremapperapi.ModRemappingAPI;
-import fr.catcore.modremapperapi.api.ModRemapper;
-import fr.catcore.modremapperapi.api.RemapLibrary;
 import fr.catcore.modremapperapi.utils.Constants;
 import fr.catcore.modremapperapi.utils.FileUtils;
 import fr.catcore.modremapperapi.utils.MappingsUtils;
-import fr.catcore.wfvaio.FabricVariants;
-import fr.catcore.wfvaio.WhichFabricVariantAmIOn;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.MappingUtils;
+import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.ModRemapper;
+import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.RemapLibrary;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingBuilderImpl;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingsUtilsImpl;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.VisitorInfosImpl;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.mappingio.MappingVisitor;
 import net.fabricmc.mappingio.MappingWriter;
-import net.fabricmc.mappingio.adapter.MappingSourceNsSwitch;
 import net.fabricmc.mappingio.format.MappingFormat;
 import net.fabricmc.mappingio.tree.MappingTree;
 import net.fabricmc.mappingio.tree.MemoryMappingTree;
@@ -35,7 +33,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 public class RemapUtil {
-    private static final boolean BABRIC = WhichFabricVariantAmIOn.getVariant() == FabricVariants.BABRIC || WhichFabricVariantAmIOn.getVariant() == FabricVariants.BABRIC_NEW_FORMAT;
+    private static List<ModRemapper> remappers;
     private static MappingTree LOADER_TREE;
     private static MappingTree MINECRAFT_TREE;
     private static MappingTree MODS_TREE;
@@ -48,10 +46,12 @@ public class RemapUtil {
 
     public static final List<String> MC_CLASS_NAMES = new ArrayList<>();
 
-    public static void init() {
+    public static void init(List<io.github.fabriccompatibiltylayers.modremappingapi.api.v1.ModRemapper> modRemappers) {
+        remappers = modRemappers;
+
         downloadRemappingLibs();
 
-        for (ModRemapper remapper : ModRemappingAPI.MOD_REMAPPERS) {
+        for (ModRemapper remapper : remappers) {
             Optional<String> pkg = remapper.getDefaultPackage();
 
             if (pkg.isPresent()) {
@@ -75,8 +75,12 @@ public class RemapUtil {
 
     private static void downloadRemappingLibs() {
         try {
-            for (ModRemapper remapper : ModRemappingAPI.MOD_REMAPPERS) {
-                for (RemapLibrary library : remapper.getRemapLibraries()) {
+            for (ModRemapper remapper : remappers) {
+                List<RemapLibrary> libraries = new ArrayList<>();
+
+                remapper.addRemapLibraries(libraries, FabricLoader.getInstance().getEnvironmentType());
+
+                for (RemapLibrary library : libraries) {
                     File libPath = new File(Constants.LIB_FOLDER, library.fileName);
 
                     if (!libPath.exists() && !library.url.isEmpty()) {
@@ -158,7 +162,7 @@ public class RemapUtil {
         for (String file : files) {
             if (file.endsWith(".class")) {
                 String clName = file.replace(".class", "");
-                if (!MC_CLASS_NAMES.contains(clName) || ModRemappingAPI.remapClassEdits) classes.add(clName);
+                classes.add(clName);
             }
         }
 
@@ -204,23 +208,27 @@ public class RemapUtil {
         return list;
     }
 
+    @Deprecated
     public static class MappingList extends ArrayList<MappingBuilder> {
         public MappingList() {
             super();
         }
 
+        @Deprecated
         public MappingBuilder add(String obfuscated, String intermediary) {
             MappingBuilder builder = MappingBuilder.create(obfuscated, intermediary);
             this.add(builder);
             return builder;
         }
 
+        @Deprecated
         public MappingBuilder add(String name) {
             MappingBuilder builder = MappingBuilder.create(name);
             this.add(builder);
             return builder;
         }
 
+        @ApiStatus.Internal
         public void accept(MappingVisitor visitor) throws IOException {
             for (MappingBuilder builder : this) builder.accept(visitor);
         }
@@ -230,51 +238,23 @@ public class RemapUtil {
         MemoryMappingTree mappingTree = new MemoryMappingTree();
 
         try {
-            if (BABRIC) {
-                MappingsUtilsImpl.initializeMappingTree(mappingTree, "intermediary", "official");
-            } else {
-                MappingsUtilsImpl.initializeMappingTree(mappingTree);
+            MappingsUtilsImpl.initializeMappingTree(mappingTree);
+
+            io.github.fabriccompatibiltylayers.modremappingapi.api.v1.MappingBuilder builder = new MappingBuilderImpl(mappingTree);
+
+            for (ModRemapper remapper : remappers) {
+                remapper.registerMappings(builder);
             }
-
-            MappingList mappingList = new MappingList();
-
-            for (ModRemapper remapper : ModRemappingAPI.MOD_REMAPPERS) {
-                remapper.getMappingList(mappingList);
-            }
-
-            mappingList.accept(mappingTree);
 
             mappingTree.visitEnd();
 
             MappingWriter mappingWriter = MappingWriter.create(Constants.EXTRA_MAPPINGS_FILE.toPath(), MappingFormat.TINY_2_FILE);
             mappingTree.accept(mappingWriter);
-
-            if (Objects.equals(mappingTree.getSrcNamespace(), "intermediary")) {
-                MemoryMappingTree newTree = new MemoryMappingTree();
-                MappingVisitor visitor = new MappingSourceNsSwitch(newTree, "official");
-
-                mappingTree.accept(visitor);
-                mappingTree = newTree;
-            }
         } catch (IOException e) {
             throw new RuntimeException("Error while generating remappers mappings", e);
         }
 
         return mappingTree;
-    }
-
-    /**
-     * Will convert array to mapping-like string (with tab separator).
-     *
-     * @param line array of {@link String} that represents mappings line.
-     */
-    private static String toString(String... line) {
-        StringBuilder builder = new StringBuilder(line[0]);
-        for (int j = 1; j < line.length; j++) {
-            builder.append('\t');
-            builder.append(line[j]);
-        }
-        return builder.toString();
     }
 
     private static String getLibClassName(String lib, String string) {
@@ -337,17 +317,14 @@ public class RemapUtil {
                 "fr.catcore.modremapperapi.utils.BArrayList",
                 "fr.catcore.modremapperapi.utils.CollectionUtils",
                 "fr.catcore.modremapperapi.utils.Constants",
-                "fr.catcore.modremapperapi.utils.DefaultModEntry",
-                "fr.catcore.modremapperapi.utils.DefaultModRemapper",
-                "fr.catcore.modremapperapi.utils.FakeModManager",
+                "io.github.fabriccompatibiltylayers.modremappingapi.impl.DefaultModEntry",
+                "io.github.fabriccompatibiltylayers.modremappingapi.impl.DefaultModRemapper",
                 "fr.catcore.modremapperapi.utils.FileUtils",
                 "fr.catcore.modremapperapi.utils.MappingsUtils",
-//                "fr.catcore.modremapperapi.utils.MappingsUtils$1",
                 "fr.catcore.modremapperapi.utils.MixinUtils",
-                "fr.catcore.modremapperapi.utils.ModDiscoverer",
-                "fr.catcore.modremapperapi.utils.ModDiscoverer$1",
-                "fr.catcore.modremapperapi.utils.ModDiscoverer$2",
-                "fr.catcore.modremapperapi.utils.ModEntry",
+                "io.github.fabriccompatibiltylayers.modremappingapi.impl.ModDiscoverer",
+                "io.github.fabriccompatibiltylayers.modremappingapi.impl.ModDiscoverer$1",
+                "io.github.fabriccompatibiltylayers.modremappingapi.impl.ModEntry",
                 "fr.catcore.modremapperapi.utils.RefmapJson",
                 "fr.catcore.modremapperapi.remapping.MapEntryType",
                 "fr.catcore.modremapperapi.remapping.MappingBuilder",
@@ -356,7 +333,7 @@ public class RemapUtil {
                 "fr.catcore.modremapperapi.remapping.MixinPostApplyVisitor",
                 "fr.catcore.modremapperapi.remapping.MRAClassVisitor",
                 "fr.catcore.modremapperapi.remapping.MRAMethodVisitor",
-                "fr.catcore.modremapperapi.remapping.MRAPostApplyVisitor",
+                "fr.catcore.modremapperapi.remapping.MRAApplyVisitor",
                 "fr.catcore.modremapperapi.remapping.RefmapRemapper",
                 "fr.catcore.modremapperapi.remapping.RemapUtil",
                 "fr.catcore.modremapperapi.remapping.RemapUtil$MappingList",
@@ -531,18 +508,23 @@ public class RemapUtil {
             builder.withMappings(MappingsUtilsImpl.createProvider(tree, "official", MappingsUtils.getTargetNamespace()));
         }
 
-        MRAPostApplyVisitor applyVisitor = new MRAPostApplyVisitor();
-        MixinPostApplyVisitor mixinPostApplyVisitor = new MixinPostApplyVisitor(trees);
+        MRAApplyVisitor preApplyVisitor = new MRAApplyVisitor();
+        MRAApplyVisitor postApplyVisitor = new MRAApplyVisitor();
+        MixinPostApplyVisitor mixinPostApplyVisitor = new MixinPostApplyVisitor();
 
-        VisitorInfosImpl infos = new VisitorInfosImpl();
+        VisitorInfosImpl preInfos = new VisitorInfosImpl();
+        VisitorInfosImpl postInfos = new VisitorInfosImpl();
 
-        for (ModRemapper modRemapper : ModRemappingAPI.MOD_REMAPPERS) {
-            modRemapper.registerVisitors(infos);
+        for (ModRemapper modRemapper : remappers) {
+            modRemapper.registerPreVisitors(preInfos);
+            modRemapper.registerPostVisitors(postInfos);
         }
 
-        applyVisitor.setInfos(infos);
+        preApplyVisitor.setInfos(preInfos);
+        postApplyVisitor.setInfos(postInfos);
 
-        builder.extraPostApplyVisitor(applyVisitor);
+        builder.extraPreApplyVisitor(preApplyVisitor);
+        builder.extraPostApplyVisitor(postApplyVisitor);
         builder.extraPostApplyVisitor(mixinPostApplyVisitor);
 
         builder.extension(new MixinExtension(EnumSet.of(MixinExtension.AnnotationTarget.HARD)));
@@ -551,9 +533,14 @@ public class RemapUtil {
 
         MappingsUtils.addMinecraftJar(remapper);
 
-        for (ModRemapper modRemapper : ModRemappingAPI.MOD_REMAPPERS) {
-            for (RemapLibrary library : modRemapper.getRemapLibraries()) {
+        for (ModRemapper modRemapper : remappers) {
+            List<RemapLibrary> libraries = new ArrayList<>();
+
+            modRemapper.addRemapLibraries(libraries, FabricLoader.getInstance().getEnvironmentType());
+
+            for (RemapLibrary library : libraries) {
                 File libPath = new File(Constants.LIB_FOLDER, library.fileName);
+
                 if (libPath.exists()) {
                     remapper.readClassPathAsync(libPath.toPath());
                 } else {

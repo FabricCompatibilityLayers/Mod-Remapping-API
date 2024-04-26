@@ -10,6 +10,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * @deprecated Use {@link io.github.fabriccompatibiltylayers.modremappingapi.api.v1.ModRemapper} instead with entrypoint key "mod-remapper-api:modremapper_v1"
+ */
+@Deprecated
 public interface ModRemapper {
 
     String[] getJarFolders();

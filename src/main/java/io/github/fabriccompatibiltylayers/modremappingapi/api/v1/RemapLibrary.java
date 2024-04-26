@@ -1,10 +1,11 @@
-package fr.catcore.modremapperapi.api;
+package io.github.fabriccompatibiltylayers.modremappingapi.api.v1;
+
+import org.jetbrains.annotations.ApiStatus;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-@Deprecated
 public class RemapLibrary {
     public final String url;
     public final Path path;
@@ -29,6 +30,14 @@ public class RemapLibrary {
         this.url = "";
         this.path = path;
         this.toExclude = new ArrayList<>();
+        this.fileName = fileName;
+    }
+
+    @ApiStatus.Internal
+    public RemapLibrary(String url, Path path, List<String> toExclude, String fileName) {
+        this.url = url;
+        this.path = path;
+        this.toExclude = toExclude;
         this.fileName = fileName;
     }
 }

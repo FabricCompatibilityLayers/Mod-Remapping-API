@@ -3,6 +3,7 @@ package fr.catcore.modremapperapi.utils;
 import java.util.*;
 import java.util.function.Function;
 
+@Deprecated
 public class CollectionUtils {
 
     public static <T> Collection<T> transformList(Collection<T> collection, Function<T, T> function) {

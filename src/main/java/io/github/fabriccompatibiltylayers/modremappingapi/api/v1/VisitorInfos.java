@@ -1,5 +1,6 @@
-package io.github.fabriccompatibiltylayers.modremappingapi.api;
+package io.github.fabriccompatibiltylayers.modremappingapi.api.v1;
 
+import io.github.fabriccompatibiltylayers.modremappingapi.api.MappingUtils;
 import org.jetbrains.annotations.Nullable;
 
 public interface VisitorInfos {

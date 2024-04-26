@@ -1,11 +1,9 @@
-package fr.catcore.modremapperapi;
-
-import static fr.catcore.modremapperapi.ModRemappingAPI.init;
+package io.github.fabriccompatibiltylayers.modremappingapi.impl;
 
 public class ModRemappingApiInit implements Runnable {
     public ModRemappingApiInit() {}
     @Override
     public void run() {
-        init();
+        ModRemappingAPIImpl.init();
     }
 }

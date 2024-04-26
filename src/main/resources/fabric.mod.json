@@ -22,8 +22,8 @@
   "icon": "assets/mod-remapping-api/icon.png",
   "environment": "*",
   "entrypoints": {
-    "mod-remapper-api:modremapper": [
-      "fr.catcore.modremapperapi.utils.DefaultModRemapper"
+    "mod-remapper-api:modremapper_v1": [
+      "io.github.fabriccompatibiltylayers.modremappingapi.impl.DefaultModRemapper"
     ],
     "spasm:raw_transformer": [
       "fr.catcore.modremapperapi.ClassTransformer"
