@@ -189,13 +189,13 @@ public class MappingsUtilsImpl {
         mappingVisitor.visitHeader();
 
         List<String> namespaces = new ArrayList<>();
-        namespaces.add(src);
+        namespaces.add(target);
 
         if (getMinecraftMappings().getDstNamespaces().contains("named")) {
             namespaces.add("named");
         }
 
-        mappingVisitor.visitNamespaces(target, namespaces);
+        mappingVisitor.visitNamespaces(src, namespaces);
     }
 
     @ApiStatus.Internal
