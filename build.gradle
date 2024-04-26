@@ -124,7 +124,13 @@ modrinth {
 	token = System.getenv("MODRINTH_TOKEN")
 	projectId = "mod-remapping-api"
 	changelog = """
-Propagate and complete mappings from TR context.
+Update TR to 0.10.2.\\
+V1 API with fully backward compatibility with V0 API.\\
+Added Extra visitors to apply during remapping:\\
+- Remap every instantiation of a class to another one.\\
+- Remap method call and change everything about it included whether it is static or not.\\
+You can now also register visitors to apply just before remapping instead of only after until now.\\
+Fix backward compatibility on Babric which was broken since 1.19.0.
 """
 	uploadFile = remapJar
 
