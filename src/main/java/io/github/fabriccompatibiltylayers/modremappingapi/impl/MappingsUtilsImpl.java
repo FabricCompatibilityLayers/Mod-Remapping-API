@@ -149,7 +149,6 @@ public class MappingsUtilsImpl {
             VANILLA_MAPPINGS.accept(visitor);
         } catch (IOException e) {
             e.printStackTrace();
-//            throw new RuntimeException(e);
         }
     }
 
@@ -182,16 +181,21 @@ public class MappingsUtilsImpl {
 
     @ApiStatus.Internal
     public static void initializeMappingTree(MappingVisitor mappingVisitor) throws IOException {
+        initializeMappingTree(mappingVisitor, "official", "intermediary");
+    }
+
+    @ApiStatus.Internal
+    public static void initializeMappingTree(MappingVisitor mappingVisitor, String src, String target) throws IOException {
         mappingVisitor.visitHeader();
 
         List<String> namespaces = new ArrayList<>();
-        namespaces.add("intermediary");
+        namespaces.add(src);
 
         if (getMinecraftMappings().getDstNamespaces().contains("named")) {
             namespaces.add("named");
         }
 
-        mappingVisitor.visitNamespaces("official", namespaces);
+        mappingVisitor.visitNamespaces(target, namespaces);
     }
 
     @ApiStatus.Internal

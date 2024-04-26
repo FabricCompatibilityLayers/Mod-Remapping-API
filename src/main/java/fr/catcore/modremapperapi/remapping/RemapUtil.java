@@ -6,6 +6,8 @@ import fr.catcore.modremapperapi.api.RemapLibrary;
 import fr.catcore.modremapperapi.utils.Constants;
 import fr.catcore.modremapperapi.utils.FileUtils;
 import fr.catcore.modremapperapi.utils.MappingsUtils;
+import fr.catcore.wfvaio.FabricVariants;
+import fr.catcore.wfvaio.WhichFabricVariantAmIOn;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.MappingUtils;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingsUtilsImpl;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.VisitorInfosImpl;
@@ -13,6 +15,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.mappingio.MappingVisitor;
 import net.fabricmc.mappingio.MappingWriter;
+import net.fabricmc.mappingio.adapter.MappingSourceNsSwitch;
 import net.fabricmc.mappingio.format.MappingFormat;
 import net.fabricmc.mappingio.tree.MappingTree;
 import net.fabricmc.mappingio.tree.MemoryMappingTree;
@@ -32,6 +35,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 public class RemapUtil {
+    private static final boolean BABRIC = WhichFabricVariantAmIOn.getVariant() == FabricVariants.BABRIC || WhichFabricVariantAmIOn.getVariant() == FabricVariants.BABRIC_NEW_FORMAT;
     private static MappingTree LOADER_TREE;
     private static MappingTree MINECRAFT_TREE;
     private static MappingTree MODS_TREE;
@@ -226,7 +230,11 @@ public class RemapUtil {
         MemoryMappingTree mappingTree = new MemoryMappingTree();
 
         try {
-            MappingsUtilsImpl.initializeMappingTree(mappingTree);
+            if (BABRIC) {
+                MappingsUtilsImpl.initializeMappingTree(mappingTree, "intermediary", "official");
+            } else {
+                MappingsUtilsImpl.initializeMappingTree(mappingTree);
+            }
 
             MappingList mappingList = new MappingList();
 
@@ -240,6 +248,14 @@ public class RemapUtil {
 
             MappingWriter mappingWriter = MappingWriter.create(Constants.EXTRA_MAPPINGS_FILE.toPath(), MappingFormat.TINY_2_FILE);
             mappingTree.accept(mappingWriter);
+
+            if (Objects.equals(mappingTree.getSrcNamespace(), "intermediary")) {
+                MemoryMappingTree newTree = new MemoryMappingTree();
+                MappingVisitor visitor = new MappingSourceNsSwitch(newTree, "official");
+
+                mappingTree.accept(visitor);
+                mappingTree = newTree;
+            }
         } catch (IOException e) {
             throw new RuntimeException("Error while generating remappers mappings", e);
         }

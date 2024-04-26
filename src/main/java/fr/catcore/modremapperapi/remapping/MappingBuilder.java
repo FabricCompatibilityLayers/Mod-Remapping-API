@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MappingBuilder {
+    private static final boolean BABRIC = WhichFabricVariantAmIOn.getVariant() == FabricVariants.BABRIC || WhichFabricVariantAmIOn.getVariant() == FabricVariants.BABRIC_NEW_FORMAT;
+
     private final String obfucated;
     private final String intermediary;
     private final List<Entry> entries = new ArrayList<>();
@@ -69,8 +71,8 @@ public class MappingBuilder {
     }
 
     public void accept(MappingVisitor visitor) throws IOException {
-        visitor.visitClass(obfucated);
-        visitor.visitDstName(MappedElementKind.CLASS, 0, this.intermediary);
+        visitor.visitClass(BABRIC ? intermediary : obfucated);
+        visitor.visitDstName(MappedElementKind.CLASS, 0, BABRIC ? obfucated : this.intermediary);
 
         for (Entry entry : this.entries) {
             entry.accept(visitor);
@@ -99,10 +101,10 @@ public class MappingBuilder {
         }
 
         public void accept(MappingVisitor visitor) throws IOException {
-            if (type == Type.FIELD) visitor.visitField(obfuscated, description);
-            else visitor.visitMethod(obfuscated, description);
+            if (type == Type.FIELD) visitor.visitField(BABRIC ? intermediary : obfuscated, description);
+            else visitor.visitMethod(BABRIC ? intermediary : obfuscated, description);
 
-            visitor.visitDstName(type == Type.FIELD ? MappedElementKind.FIELD : MappedElementKind.METHOD, 0, intermediary);
+            visitor.visitDstName(type == Type.FIELD ? MappedElementKind.FIELD : MappedElementKind.METHOD, 0, BABRIC ? obfuscated : intermediary);
         }
     }
 
