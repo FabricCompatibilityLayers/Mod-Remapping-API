@@ -29,7 +29,7 @@ public interface VisitorInfos {
         }
 
         public FullClassMember(String owner, String name, @Nullable Boolean isStatic) {
-            this(name, owner, null, isStatic);
+            this(owner, name, null, isStatic);
         }
     }
 }
