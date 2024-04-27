@@ -211,7 +211,7 @@ public class MappingsUtilsImpl {
         int srcNamespace = FULL_MAPPINGS.getNamespaceId("official");
         int targetNamespace = FULL_MAPPINGS.getNamespaceId(getTargetNamespace());
 
-        Map<String, List<ExtendedClassMember>> classMembers = new HashMap<>();
+        Map<ExtendedClassMember, List<String>> classMembers = new HashMap<>();
 
         for (MappingTree.ClassMapping classMapping : FULL_MAPPINGS.getClasses()) {
             String className = classMapping.getName(srcNamespace);
@@ -226,36 +226,52 @@ public class MappingsUtilsImpl {
                 TrMethod method = trClass.getMethod(methodMapping.getName(srcNamespace), methodMapping.getDesc(srcNamespace));
 
                 if (method != null && method.isVirtual()) {
-                    for (String child : children) {
-                        if (!classMembers.containsKey(child)) classMembers.put(child, new ArrayList<>());
-
-                        classMembers.get(child).add(new ExtendedClassMember(
-                                methodMapping.getName(srcNamespace), methodMapping.getDesc(srcNamespace), className
-                        ));
-                    }
+                    classMembers.put(new ExtendedClassMember(
+                            methodMapping.getName(srcNamespace), methodMapping.getDesc(srcNamespace), className
+                    ), children);
                 }
             }
         }
 
         int propagated = 0;
 
-        for (Map.Entry<String, List<ExtendedClassMember>> entry : classMembers.entrySet()) {
-            TrClass trClass = trEnvironment.getClass(entry.getKey());
+        for (Map.Entry<ExtendedClassMember, List<String>> entry : classMembers.entrySet()) {
+            List<String> toAdd = new ArrayList<>(entry.getValue());
 
-            if (trClass == null) continue;
+            while (!toAdd.isEmpty()) {
+                TrClass trClass = trEnvironment.getClass(toAdd.remove(0));
+                if (trClass == null) continue;
 
-            try {
-                FULL_MAPPINGS.visitClass(entry.getKey());
-            } catch (IOException e) {
-                e.printStackTrace();
+                List<String> children = trClass.getChildren().stream().map(TrClass::getName).collect(Collectors.toList());
+
+                for (String child : children) {
+                    if (!entry.getValue().contains(child)) {
+                        toAdd.add(child);
+                        entry.getValue().add(child);
+                    }
+                }
             }
+        }
 
-            MappingTree.ClassMapping classMapping = FULL_MAPPINGS.getClass(entry.getKey());
+        for (Map.Entry<ExtendedClassMember, List<String>> entry : classMembers.entrySet()) {
+            ExtendedClassMember member = entry.getKey();
 
-            for (ExtendedClassMember member : entry.getValue()) {
-                TrMethod method = trClass.getMethod(member.name, member.desc);
+            for (String child : entry.getValue()) {
+                TrClass trClass = trEnvironment.getClass(child);
+                if (trClass == null) continue;
 
-                if (method == null) continue;
+                try {
+                    FULL_MAPPINGS.visitClass(child);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                MappingTree.ClassMapping classMapping = FULL_MAPPINGS.getClass(child);
+
+                if (classMapping == null) continue;
+
+                TrMethod trMethod = trClass.getMethod(member.name, member.desc);
+                if (trMethod == null) continue;
 
                 if (classMapping.getMethod(member.name, member.desc, srcNamespace) != null) continue;
 
