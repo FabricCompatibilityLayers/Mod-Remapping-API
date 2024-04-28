@@ -233,25 +233,9 @@ public class MappingsUtilsImpl {
             }
         }
 
+        gatherChildClassCandidates(trEnvironment, classMembers);
+
         int propagated = 0;
-
-        for (Map.Entry<ExtendedClassMember, List<String>> entry : classMembers.entrySet()) {
-            List<String> toAdd = new ArrayList<>(entry.getValue());
-
-            while (!toAdd.isEmpty()) {
-                TrClass trClass = trEnvironment.getClass(toAdd.remove(0));
-                if (trClass == null) continue;
-
-                List<String> children = trClass.getChildren().stream().map(TrClass::getName).collect(Collectors.toList());
-
-                for (String child : children) {
-                    if (!entry.getValue().contains(child)) {
-                        toAdd.add(child);
-                        entry.getValue().add(child);
-                    }
-                }
-            }
-        }
 
         for (Map.Entry<ExtendedClassMember, List<String>> entry : classMembers.entrySet()) {
             ExtendedClassMember member = entry.getKey();
@@ -292,6 +276,26 @@ public class MappingsUtilsImpl {
         }
 
         System.out.println("Propagated: " + propagated + " methods");
+    }
+
+    private static void gatherChildClassCandidates(TrEnvironment trEnvironment, Map<ExtendedClassMember, List<String>> classMembers) {
+        for (Map.Entry<ExtendedClassMember, List<String>> entry : classMembers.entrySet()) {
+            List<String> toAdd = new ArrayList<>(entry.getValue());
+
+            while (!toAdd.isEmpty()) {
+                TrClass trClass = trEnvironment.getClass(toAdd.remove(0));
+                if (trClass == null) continue;
+
+                List<String> children = trClass.getChildren().stream().map(TrClass::getName).collect(Collectors.toList());
+
+                for (String child : children) {
+                    if (!entry.getValue().contains(child)) {
+                        toAdd.add(child);
+                        entry.getValue().add(child);
+                    }
+                }
+            }
+        }
     }
 
     static class ExtendedClassMember extends MappingUtils.ClassMember {
@@ -342,6 +346,11 @@ public class MappingsUtilsImpl {
 
         MappingTree.MethodMapping methodMapping = FULL_MAPPINGS.getMethod(className, methodName, methodDesc, srcNamespace);
 
+        if (methodMapping == null) {
+            MappingTree.ClassMapping classMapping = FULL_MAPPINGS.getClass(className, srcNamespace);
+            if (classMapping != null) methodMapping = mapMethodWithPartialDesc(classMapping, methodName, methodDesc, srcNamespace);
+        }
+
         return mapMember(methodName, methodDesc, targetNamespace, methodMapping);
     }
 
@@ -353,7 +362,23 @@ public class MappingsUtilsImpl {
         if (classMapping == null) return new MappingUtils.ClassMember(methodName, methodDesc);
 
         MappingTree.MethodMapping methodMapping = classMapping.getMethod(methodName, methodDesc, srcNamespace);
+
+        if (methodMapping == null) methodMapping = mapMethodWithPartialDesc(classMapping, methodName, methodDesc, srcNamespace);
+
         return mapMember(methodName, methodDesc, targetNamespace, methodMapping);
+    }
+
+    private static MappingTree.MethodMapping mapMethodWithPartialDesc(MappingTree.ClassMapping classMapping, String methodName, String methodDesc, int namespace) {
+        for (MappingTree.MethodMapping methodMapping : classMapping.getMethods()) {
+            String name = methodMapping.getName(namespace);
+            String desc = methodMapping.getDesc(namespace);
+
+            if (name != null && name.equals(methodName) && desc != null && desc.startsWith(methodDesc)) {
+                return methodMapping;
+            }
+        }
+
+        return null;
     }
 
     @NotNull
@@ -428,5 +453,12 @@ public class MappingsUtilsImpl {
         }
 
         return desc + ")";
+    }
+
+    public static String mapDescriptor(String desc) {
+        int srcNamespace = FULL_MAPPINGS.getNamespaceId("official");
+        int targetNamespace = FULL_MAPPINGS.getNamespaceId(getTargetNamespace());
+
+        return FULL_MAPPINGS.mapDesc(desc, srcNamespace, targetNamespace);
     }
 }
