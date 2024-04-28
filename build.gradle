@@ -124,7 +124,9 @@ modrinth {
 	token = System.getenv("MODRINTH_TOKEN")
 	projectId = "mod-remapping-api"
 	changelog = """
-Fix class member name and class name being inverted in FullClassMember constructor
+Improve method name propagation.\\
+Add method to map descriptors.\\
+Fix method mapping on partial descriptors not working anymore.
 """
 	uploadFile = remapJar
 
