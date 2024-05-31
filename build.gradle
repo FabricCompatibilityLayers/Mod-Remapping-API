@@ -124,9 +124,7 @@ modrinth {
 	token = System.getenv("MODRINTH_TOKEN")
 	projectId = "mod-remapping-api"
 	changelog = """
-Improve method name propagation.\\
-Add method to map descriptors.\\
-Fix method mapping on partial descriptors not working anymore.
+Fix mod mappings being inverted on Babric
 """
 	uploadFile = remapJar
 

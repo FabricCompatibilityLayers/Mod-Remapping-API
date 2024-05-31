@@ -1,6 +1,5 @@
 package fr.catcore.modremapperapi.remapping;
 
-import fr.catcore.modremapperapi.ModRemappingAPI;
 import fr.catcore.modremapperapi.utils.Constants;
 import fr.catcore.modremapperapi.utils.FileUtils;
 import fr.catcore.modremapperapi.utils.MappingsUtils;
@@ -36,9 +35,7 @@ public class RemapUtil {
     private static List<ModRemapper> remappers;
     private static MappingTree LOADER_TREE;
     private static MappingTree MINECRAFT_TREE;
-    private static MappingTree MODS_TREE;
-
-    private static final MappingList MOD_MAPPINGS = new MappingList();
+    private static MemoryMappingTree MODS_TREE;
 
     protected static final Map<String, List<String>> MIXINED = new HashMap<>();
 
@@ -70,6 +67,13 @@ public class RemapUtil {
             if (className != null) {
                 MC_CLASS_NAMES.add(className);
             }
+        }
+
+        try {
+            MODS_TREE = new MemoryMappingTree();
+            MappingsUtilsImpl.initializeMappingTree(MODS_TREE);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -166,28 +170,23 @@ public class RemapUtil {
             }
         }
 
-        classes.forEach(cl -> MOD_MAPPINGS.add(cl, (cl.contains("/") ? "" : defaultPackage) + cl));
+        io.github.fabriccompatibiltylayers.modremappingapi.api.v1.MappingBuilder mappingBuilder = new MappingBuilderImpl(MODS_TREE);
+
+        classes.forEach(cl -> mappingBuilder.addMapping(cl, (cl.contains("/") ? "" : defaultPackage) + cl));
 
         return files;
     }
 
     public static void generateModMappings() {
-        MemoryMappingTree mappingTree = new MemoryMappingTree();
-
         try {
-            MappingsUtilsImpl.initializeMappingTree(mappingTree);
-
-            MOD_MAPPINGS.accept(mappingTree);
-
-            mappingTree.visitEnd();
+            MODS_TREE.visitEnd();
 
             MappingWriter writer = MappingWriter.create(Constants.REMAPPED_MAPPINGS_FILE.toPath(), MappingFormat.TINY_2_FILE);
-            mappingTree.accept(writer);
+            MODS_TREE.accept(writer);
         } catch (IOException e) {
             throw new RuntimeException("Error while generating mods mappings", e);
         }
 
-        MODS_TREE = mappingTree;
         MappingsUtilsImpl.addMappingsToContext(MODS_TREE);
     }
 
