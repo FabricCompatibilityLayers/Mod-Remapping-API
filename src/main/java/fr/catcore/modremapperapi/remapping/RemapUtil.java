@@ -27,6 +27,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -57,12 +58,31 @@ public class RemapUtil {
             }
         }
 
+        for (ModRemapper remapper : remappers) {
+            Optional<String> sourceNamespace = remapper.getSourceNamespace();
+
+            if (sourceNamespace.isPresent()) {
+                MappingsUtilsImpl.setSourceNamespace(sourceNamespace.get());
+                break;
+            }
+        }
+
+        for (ModRemapper remapper : remappers) {
+            Optional<Supplier<InputStream>> mappings = remapper.getExtraMapping();
+
+            if (mappings.isPresent()) {
+                MappingsUtilsImpl.loadExtraMappings(mappings.get().get());
+                break;
+            }
+        }
+
         MINECRAFT_TREE = MappingsUtilsImpl.getMinecraftMappings();
+
         LOADER_TREE = generateMappings();
         MappingsUtilsImpl.addMappingsToContext(LOADER_TREE);
 
         for (MappingTree.ClassMapping classView : MINECRAFT_TREE.getClasses()) {
-            String className = classView.getName("official");
+            String className = classView.getName(MappingsUtilsImpl.getSourceNamespace());
 
             if (className != null) {
                 MC_CLASS_NAMES.add(className);
@@ -504,7 +524,7 @@ public class RemapUtil {
         }
 
         for (MappingTree tree : trees) {
-            builder.withMappings(MappingsUtilsImpl.createProvider(tree, "official", MappingsUtils.getTargetNamespace()));
+            builder.withMappings(MappingsUtilsImpl.createProvider(tree, MappingsUtilsImpl.getSourceNamespace(), MappingsUtils.getTargetNamespace()));
         }
 
         MRAApplyVisitor preApplyVisitor = new MRAApplyVisitor();
@@ -530,7 +550,11 @@ public class RemapUtil {
 
         TinyRemapper remapper = builder.build();
 
-        MappingsUtils.addMinecraftJar(remapper);
+        try {
+            MappingsUtils.addMinecraftJar(remapper);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
         for (ModRemapper modRemapper : remappers) {
             List<RemapLibrary> libraries = new ArrayList<>();
@@ -562,11 +586,11 @@ public class RemapUtil {
         List<OutputConsumerPath.ResourceRemapper> resourceRemappers = new ArrayList<>(NonClassCopyMode.FIX_META_INF.remappers);
         resourceRemappers.add(new RefmapRemapper());
 
-        applyRemapper(remapper, paths, outputConsumerPaths, resourceRemappers);
+        applyRemapper(remapper, paths, outputConsumerPaths, resourceRemappers, true);
     }
 
     @ApiStatus.Internal
-    public static void applyRemapper(TinyRemapper remapper, Map<Path, Path> paths, List<OutputConsumerPath> outputConsumerPaths, List<OutputConsumerPath.ResourceRemapper> resourceRemappers) {
+    public static void applyRemapper(TinyRemapper remapper, Map<Path, Path> paths, List<OutputConsumerPath> outputConsumerPaths, List<OutputConsumerPath.ResourceRemapper> resourceRemappers, boolean analyzeMapping) {
         try {
             Map<Path, InputTag> tagMap = new HashMap<>();
 
@@ -593,7 +617,7 @@ public class RemapUtil {
                 Constants.MAIN_LOGGER.debug("Done 1!");
             }
 
-            MappingsUtilsImpl.completeMappingsFromTr(remapper.getEnvironment());
+            if (analyzeMapping) MappingsUtilsImpl.completeMappingsFromTr(remapper.getEnvironment());
         } catch (Exception e) {
             remapper.finish();
             outputConsumerPaths.forEach(o -> {

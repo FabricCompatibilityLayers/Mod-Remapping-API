@@ -2,6 +2,7 @@ package io.github.fabriccompatibiltylayers.modremappingapi.impl;
 
 import fr.catcore.wfvaio.WhichFabricVariantAmIOn;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.MappingUtils;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.MappingTreeHelper;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.impl.launch.MappingConfiguration;
 import net.fabricmc.loader.impl.util.log.Log;
@@ -28,6 +29,7 @@ import org.objectweb.asm.Type;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
@@ -41,8 +43,12 @@ import static fr.catcore.modremapperapi.utils.MappingsUtils.getTargetNamespace;
 public class MappingsUtilsImpl {
     private static boolean initialized = false;
     private static MappingTree VANILLA_MAPPINGS;
-    private static MappingTree MINECRAFT_MAPPINGS;
+    private static VisitableMappingTree MINECRAFT_MAPPINGS;
     private static VisitableMappingTree FULL_MAPPINGS = new MemoryMappingTree();
+
+    private static String sourceNamespace = "official";
+
+    private static MappingTree EXTRA_MAPPINGS;
 
     @ApiStatus.Internal
     public static MappingTree getVanillaMappings() {
@@ -58,6 +64,54 @@ public class MappingsUtilsImpl {
         return MINECRAFT_MAPPINGS;
     }
 
+    @ApiStatus.Internal
+    public static String getSourceNamespace() {
+        return sourceNamespace;
+    }
+
+    @ApiStatus.Internal
+    public static void setSourceNamespace(String sourceNamespace) {
+        MappingsUtilsImpl.sourceNamespace = sourceNamespace;
+    }
+
+    @ApiStatus.Internal
+    public static void loadExtraMappings(InputStream stream) {
+        try {
+            EXTRA_MAPPINGS = loadMappings(stream);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @ApiStatus.Internal
+    public static MemoryMappingTree loadMappings(InputStream stream) throws IOException {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream))) {
+            long time = System.currentTimeMillis();
+            MemoryMappingTree mappingTree = new MemoryMappingTree();
+
+            // We will only ever need to read tiny here
+            // so to strip the other formats from the included copy of mapping IO, don't use MappingReader.read()
+            reader.mark(4096);
+            final MappingFormat format = MappingReader.detectFormat(reader);
+            reader.reset();
+
+            switch (format) {
+                case TINY_FILE:
+                    Tiny1FileReader.read(reader, mappingTree);
+                    break;
+                case TINY_2_FILE:
+                    Tiny2FileReader.read(reader, mappingTree);
+                    break;
+                default:
+                    throw new UnsupportedOperationException("Unsupported mapping format: " + format);
+            }
+
+            Log.debug(LogCategory.MAPPINGS, "Loading mappings took %d ms", System.currentTimeMillis() - time);
+
+            return mappingTree;
+        }
+    }
+
     private static void loadMappings() {
         if (initialized) return;
 
@@ -67,31 +121,7 @@ public class MappingsUtilsImpl {
             try {
                 URLConnection connection = url.openConnection();
 
-                try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
-                    long time = System.currentTimeMillis();
-                    MemoryMappingTree mappingTree = new MemoryMappingTree();
-
-                    // We will only ever need to read tiny here
-                    // so to strip the other formats from the included copy of mapping IO, don't use MappingReader.read()
-                    reader.mark(4096);
-                    final MappingFormat format = MappingReader.detectFormat(reader);
-                    reader.reset();
-
-                    switch (format) {
-                        case TINY_FILE:
-                            Tiny1FileReader.read(reader, mappingTree);
-                            break;
-                        case TINY_2_FILE:
-                            Tiny2FileReader.read(reader, mappingTree);
-                            break;
-                        default:
-                            throw new UnsupportedOperationException("Unsupported mapping format: " + format);
-                    }
-
-                    Log.debug(LogCategory.MAPPINGS, "Loading mappings took %d ms", System.currentTimeMillis() - time);
-
-                    VANILLA_MAPPINGS = mappingTree;
-                }
+                VANILLA_MAPPINGS = loadMappings(connection.getInputStream());
             } catch (IOException | ZipError e) {
                 throw new RuntimeException("Error reading "+url, e);
             }
@@ -143,22 +173,29 @@ public class MappingsUtilsImpl {
                 break;
         }
 
-        MappingVisitor visitor = getMappingVisitor(switchNamespace, renames);
+        MemoryMappingTree tempTree = new MemoryMappingTree();
+        MappingVisitor visitor = getMappingVisitor(tempTree, switchNamespace, renames);
 
         try {
             VANILLA_MAPPINGS.accept(visitor);
+
+            if (EXTRA_MAPPINGS == null) {
+                MINECRAFT_MAPPINGS.accept(tempTree);
+            } else {
+                MappingTreeHelper.mergeIntoNew(MINECRAFT_MAPPINGS, tempTree, EXTRA_MAPPINGS);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private static @NotNull MappingVisitor getMappingVisitor(boolean switchNamespace, Map<String, String> renames) {
+    private static @NotNull MappingVisitor getMappingVisitor(MemoryMappingTree tempTree, boolean switchNamespace, Map<String, String> renames) {
         List<String> targetNamespace = new ArrayList<>();
         targetNamespace.add("intermediary");
 
         if (VANILLA_MAPPINGS.getDstNamespaces().contains("named")) targetNamespace.add("named");
 
-        MappingVisitor visitor = (MappingVisitor) MINECRAFT_MAPPINGS;
+        MappingVisitor visitor = tempTree;
 
         if (switchNamespace) {
             visitor = new MappingSourceNsSwitch(
@@ -181,7 +218,7 @@ public class MappingsUtilsImpl {
 
     @ApiStatus.Internal
     public static void initializeMappingTree(MappingVisitor mappingVisitor) throws IOException {
-        initializeMappingTree(mappingVisitor, "official", "intermediary");
+        initializeMappingTree(mappingVisitor, getSourceNamespace(), "intermediary");
     }
 
     @ApiStatus.Internal
@@ -191,24 +228,20 @@ public class MappingsUtilsImpl {
         List<String> namespaces = new ArrayList<>();
         namespaces.add(target);
 
-        if (getMinecraftMappings().getDstNamespaces().contains("named")) {
-            namespaces.add("named");
-        }
-
         mappingVisitor.visitNamespaces(src, namespaces);
     }
 
     @ApiStatus.Internal
-    public static void addMappingsToContext(MappingTreeView mappingTreeView) {
+    public static void addMappingsToContext(MappingTree mappingTreeView) {
         try {
-            mappingTreeView.accept(FULL_MAPPINGS);
+            MappingTreeHelper.merge(FULL_MAPPINGS, mappingTreeView);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     public static void completeMappingsFromTr(TrEnvironment trEnvironment) {
-        int srcNamespace = FULL_MAPPINGS.getNamespaceId("official");
+        int srcNamespace = FULL_MAPPINGS.getNamespaceId(getSourceNamespace());
         int targetNamespace = FULL_MAPPINGS.getNamespaceId(getTargetNamespace());
 
         Map<ExtendedClassMember, List<String>> classMembers = new HashMap<>();
@@ -307,7 +340,7 @@ public class MappingsUtilsImpl {
     }
 
     public static String mapClass(String className) {
-        int srcNamespace = FULL_MAPPINGS.getNamespaceId("official");
+        int srcNamespace = FULL_MAPPINGS.getNamespaceId(getSourceNamespace());
         int targetNamespace = FULL_MAPPINGS.getNamespaceId(getTargetNamespace());
 
         return FULL_MAPPINGS.mapClassName(className, srcNamespace, targetNamespace);
@@ -315,13 +348,13 @@ public class MappingsUtilsImpl {
 
     public static String unmapClass(String className) {
         int srcNamespace = FULL_MAPPINGS.getNamespaceId(getTargetNamespace());
-        int targetNamespace = FULL_MAPPINGS.getNamespaceId("official");
+        int targetNamespace = FULL_MAPPINGS.getNamespaceId(getSourceNamespace());
 
         return FULL_MAPPINGS.mapClassName(className, srcNamespace, targetNamespace);
     }
 
     public static MappingUtils.ClassMember mapField(String className, String fieldName, @Nullable String fieldDesc) {
-        int srcNamespace = FULL_MAPPINGS.getNamespaceId("official");
+        int srcNamespace = FULL_MAPPINGS.getNamespaceId(getSourceNamespace());
         int targetNamespace = FULL_MAPPINGS.getNamespaceId(getTargetNamespace());
 
         MappingTree.FieldMapping fieldMapping = FULL_MAPPINGS.getField(className, fieldName, fieldDesc, srcNamespace);
@@ -330,7 +363,7 @@ public class MappingsUtilsImpl {
     }
 
     public static MappingUtils.ClassMember mapFieldFromRemappedClass(String className, String fieldName, @Nullable String fieldDesc) {
-        int srcNamespace = FULL_MAPPINGS.getNamespaceId("official");
+        int srcNamespace = FULL_MAPPINGS.getNamespaceId(getSourceNamespace());
         int targetNamespace = FULL_MAPPINGS.getNamespaceId(getTargetNamespace());
 
         MappingTree.ClassMapping classMapping = FULL_MAPPINGS.getClass(className, targetNamespace);
@@ -341,7 +374,7 @@ public class MappingsUtilsImpl {
     }
 
     public static MappingUtils.ClassMember mapMethod(String className, String methodName, String methodDesc) {
-        int srcNamespace = FULL_MAPPINGS.getNamespaceId("official");
+        int srcNamespace = FULL_MAPPINGS.getNamespaceId(getSourceNamespace());
         int targetNamespace = FULL_MAPPINGS.getNamespaceId(getTargetNamespace());
 
         MappingTree.MethodMapping methodMapping = FULL_MAPPINGS.getMethod(className, methodName, methodDesc, srcNamespace);
@@ -355,7 +388,7 @@ public class MappingsUtilsImpl {
     }
 
     public static MappingUtils.ClassMember mapMethodFromRemappedClass(String className, String methodName, String methodDesc) {
-        int srcNamespace = FULL_MAPPINGS.getNamespaceId("official");
+        int srcNamespace = FULL_MAPPINGS.getNamespaceId(getSourceNamespace());
         int targetNamespace = FULL_MAPPINGS.getNamespaceId(getTargetNamespace());
 
         MappingTree.ClassMapping classMapping = FULL_MAPPINGS.getClass(className, targetNamespace);
@@ -395,7 +428,7 @@ public class MappingsUtilsImpl {
     }
 
     public static MappingUtils.ClassMember mapField(Class<?> owner, String fieldName) {
-        int srcNamespace = FULL_MAPPINGS.getNamespaceId("official");
+        int srcNamespace = FULL_MAPPINGS.getNamespaceId(getSourceNamespace());
         int targetNamespace = FULL_MAPPINGS.getNamespaceId(getTargetNamespace());
         MappingTree.ClassMapping classMapping = FULL_MAPPINGS.getClass(owner.getName().replace(".", "/"), targetNamespace);
 
@@ -417,7 +450,7 @@ public class MappingsUtilsImpl {
     public static MappingUtils.ClassMember mapMethod(Class<?> owner, String methodName, Class<?>[] parameterTypes) {
         String argDesc = classTypeToDescriptor(parameterTypes);
 
-        int srcNamespace = FULL_MAPPINGS.getNamespaceId("official");
+        int srcNamespace = FULL_MAPPINGS.getNamespaceId(getSourceNamespace());
         int targetNamespace = FULL_MAPPINGS.getNamespaceId(getTargetNamespace());
         MappingTree.ClassMapping classMapping = FULL_MAPPINGS.getClass(owner.getName().replace(".", "/"), targetNamespace);
 
@@ -456,7 +489,7 @@ public class MappingsUtilsImpl {
     }
 
     public static String mapDescriptor(String desc) {
-        int srcNamespace = FULL_MAPPINGS.getNamespaceId("official");
+        int srcNamespace = FULL_MAPPINGS.getNamespaceId(getSourceNamespace());
         int targetNamespace = FULL_MAPPINGS.getNamespaceId(getTargetNamespace());
 
         return FULL_MAPPINGS.mapDesc(desc, srcNamespace, targetNamespace);

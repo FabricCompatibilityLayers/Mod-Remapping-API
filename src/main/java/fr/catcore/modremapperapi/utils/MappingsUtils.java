@@ -15,14 +15,12 @@ import org.jetbrains.annotations.ApiStatus;
 
 import java.io.*;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static fr.catcore.modremapperapi.remapping.RemapUtil.getRemapClasspath;
 
 public class MappingsUtils {
+    @Deprecated
     public static String getNativeNamespace() {
         if (ModRemappingAPI.BABRIC) {
             return FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT ? "client" : "server";
@@ -66,15 +64,18 @@ public class MappingsUtils {
         return MappingsUtilsImpl.createProvider(mappings, getTargetNamespace(), "official");
     }
 
-    private static Path[] getMinecraftJar() throws IOException {
-        Path[] originalClassPath = getRemapClasspath().toArray(new Path[0]);
+    private static Path[] getMinecraftJar(List<Path> sourcePaths, String src, String target) throws IOException {
+        Path[] originalClassPath = sourcePaths.toArray(new Path[0]);
 
         Map<Path, Path> paths = new HashMap<>();
 
         for (Path path :
                 originalClassPath) {
             Constants.MAIN_LOGGER.info(path.toString());
-            paths.put(path, new File(Constants.LIB_FOLDER, path.toFile().getName()).toPath());
+            paths.put(path, new File(
+                    new File(Constants.LIB_FOLDER, target),
+                    path.toFile().getName()).toPath()
+            );
             paths.get(path).toFile().delete();
         }
 
@@ -85,26 +86,28 @@ public class MappingsUtils {
                 .propagatePrivate(true)
                 .ignoreConflicts(true)
                 .fixPackageAccess(true)
-                .withMappings(createBackwardProvider(getMinecraftMappings()));
+                .withMappings(
+                        MappingsUtilsImpl.createProvider(MappingsUtilsImpl.getMinecraftMappings(), src, target)
+                );
 
         TinyRemapper remapper = builder.build();
 
-        Constants.MAIN_LOGGER.info("Remapping minecraft jar back to obfuscated!");
+        Constants.MAIN_LOGGER.info("Remapping minecraft jar from " + src + " to " + target + "!");
 
         List<OutputConsumerPath> outputConsumerPaths = new ArrayList<>();
 
         List<OutputConsumerPath.ResourceRemapper> resourceRemappers = new ArrayList<>(NonClassCopyMode.FIX_META_INF.remappers);
 
-        RemapUtil.applyRemapper(remapper, paths, outputConsumerPaths, resourceRemappers);
+        RemapUtil.applyRemapper(remapper, paths, outputConsumerPaths, resourceRemappers, false);
 
         return paths.values().toArray(new Path[0]);
     }
 
     @ApiStatus.Internal
-    public static void addMinecraftJar(TinyRemapper remapper) {
+    public static void addMinecraftJar(TinyRemapper remapper) throws IOException {
         if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
             try {
-                remapper.readClassPathAsync(getMinecraftJar());
+                remapper.readClassPathAsync(getMinecraftJar(getRemapClasspath(), getTargetNamespace(), "official"));
             } catch (IOException e) {
                 throw new RuntimeException("Failed to populate default remap classpath", e);
             }
@@ -139,7 +142,10 @@ public class MappingsUtils {
 
             if (realmsJar instanceof Path) list.add((Path) realmsJar);
 
-            for (Path path : list) {
+            for (Path path :
+                    !Objects.equals(MappingsUtilsImpl.getSourceNamespace(), "official") ?
+                            getMinecraftJar(list, "official", MappingsUtilsImpl.getSourceNamespace())
+                            : list.toArray(new Path[0])) {
                 Constants.MAIN_LOGGER.debug("Appending '%s' to remapper classpath", path);
                 remapper.readClassPathAsync(path);
             }
