@@ -2,8 +2,10 @@ package io.github.fabriccompatibiltylayers.modremappingapi.api.v1;
 
 import net.fabricmc.api.EnvType;
 
+import java.io.InputStream;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public interface ModRemapper {
     String[] getJarFolders();
@@ -20,4 +22,12 @@ public interface ModRemapper {
     }
 
     default void afterRemap() {}
+
+    default Optional<String> getSourceNamespace() {
+        return Optional.empty();
+    }
+
+    default Optional<Supplier<InputStream>> getExtraMapping() {
+        return Optional.empty();
+    }
 }

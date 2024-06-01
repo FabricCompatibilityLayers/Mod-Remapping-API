@@ -14,6 +14,8 @@ public class Constants {
     );
     public static final File EXTRA_MAPPINGS_FILE = new File(VERSIONED_FOLDER, "extra_mappings.tiny");
     public static final File REMAPPED_MAPPINGS_FILE = new File(VERSIONED_FOLDER, "remapped_mappings.tiny");
+    public static final File MC_MAPPINGS_FILE = new File(VERSIONED_FOLDER, "mc_mappings.tiny");
+    public static final File FULL_MAPPINGS_FILE = new File(VERSIONED_FOLDER, "full_mappings.tiny");
 
     public static final File LIB_FOLDER = new File(VERSIONED_FOLDER, "libs");
     public static final Logger MAIN_LOGGER = Logger.get("ModRemappingAPI");
