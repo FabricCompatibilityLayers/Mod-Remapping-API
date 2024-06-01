@@ -1,6 +1,7 @@
 package io.github.fabriccompatibiltylayers.modremappingapi.impl;
 
 import fr.catcore.modremapperapi.utils.Constants;
+import fr.catcore.modremapperapi.utils.MappingsUtils;
 import fr.catcore.wfvaio.WhichFabricVariantAmIOn;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.MappingUtils;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.MappingTreeHelper;
@@ -83,6 +84,10 @@ public class MappingsUtilsImpl {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static boolean isSourceNamespaceObf() {
+        return Objects.equals(sourceNamespace, "official");
     }
 
     @ApiStatus.Internal
@@ -220,7 +225,7 @@ public class MappingsUtilsImpl {
 
     @ApiStatus.Internal
     public static void initializeMappingTree(MappingVisitor mappingVisitor) throws IOException {
-        initializeMappingTree(mappingVisitor, getSourceNamespace(), "intermediary");
+        initializeMappingTree(mappingVisitor, getSourceNamespace(), MappingsUtils.getTargetNamespace());
     }
 
     @ApiStatus.Internal

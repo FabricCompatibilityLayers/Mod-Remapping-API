@@ -116,17 +116,18 @@ public class MappingsUtils {
                         "intermediary",
                         "official"
                 );
+                
+                if (!MappingsUtilsImpl.isSourceNamespaceObf()) {
+                    classPath = getMinecraftJar(
+                            Arrays.asList(
+                                    classPath
+                            ),
+                            "official",
+                            MappingsUtilsImpl.getSourceNamespace()
+                    );
+                }
 
-                remapper.readClassPathAsync(
-                        !Objects.equals(MappingsUtilsImpl.getSourceNamespace(), "official") ?
-                            getMinecraftJar(
-                                    Arrays.asList(
-                                            classPath
-                                    ),
-                                    "official",
-                                    MappingsUtilsImpl.getSourceNamespace()
-                            ) : classPath
-                );
+                remapper.readClassPathAsync(classPath);
             } catch (IOException e) {
                 throw new RuntimeException("Failed to populate default remap classpath", e);
             }
@@ -160,11 +161,14 @@ public class MappingsUtils {
             Object realmsJar = share.get("fabric-loader:inputRealmsJar");
 
             if (realmsJar instanceof Path) list.add((Path) realmsJar);
+            
+            Path[] classPath = list.toArray(new Path[0]);
+            
+            if (!MappingsUtilsImpl.isSourceNamespaceObf()) {
+                classPath = getMinecraftJar(list, "official", MappingsUtilsImpl.getSourceNamespace());
+            }
 
-            for (Path path :
-                    !Objects.equals(MappingsUtilsImpl.getSourceNamespace(), "official") ?
-                            getMinecraftJar(list, "official", MappingsUtilsImpl.getSourceNamespace())
-                            : list.toArray(new Path[0])) {
+            for (Path path : classPath) {
                 Constants.MAIN_LOGGER.debug("Appending '%s' to remapper classpath", path);
                 remapper.readClassPathAsync(path);
             }
