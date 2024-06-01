@@ -180,7 +180,7 @@ public class MappingsUtilsImpl {
             VANILLA_MAPPINGS.accept(visitor);
 
             if (EXTRA_MAPPINGS == null) {
-                MINECRAFT_MAPPINGS.accept(tempTree);
+                tempTree.accept(MINECRAFT_MAPPINGS);
             } else {
                 MappingTreeHelper.mergeIntoNew(MINECRAFT_MAPPINGS, tempTree, EXTRA_MAPPINGS);
             }

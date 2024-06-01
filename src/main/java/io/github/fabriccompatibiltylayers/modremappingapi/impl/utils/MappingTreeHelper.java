@@ -35,8 +35,8 @@ public class MappingTreeHelper {
         MemoryMappingTree reorderedRight = new MemoryMappingTree();
         right.accept(new MappingDstNsReorder(reorderedRight, dstNamespaces));
 
-        result.accept(reorderedLeft, VisitOrder.createByName());
-        result.accept(reorderedRight, VisitOrder.createByName());
+        reorderedLeft.accept(result, VisitOrder.createByName());
+        reorderedRight.accept(result, VisitOrder.createByName());
     }
 
     public static void merge(VisitableMappingTree main, MappingTree additional) throws IOException {

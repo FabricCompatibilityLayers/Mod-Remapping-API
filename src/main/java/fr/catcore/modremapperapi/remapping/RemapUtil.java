@@ -52,28 +52,15 @@ public class RemapUtil {
         for (ModRemapper remapper : remappers) {
             Optional<String> pkg = remapper.getDefaultPackage();
 
-            if (pkg.isPresent()) {
-                defaultPackage = pkg.get();
-                break;
-            }
-        }
+            pkg.ifPresent(s -> defaultPackage = s);
 
-        for (ModRemapper remapper : remappers) {
             Optional<String> sourceNamespace = remapper.getSourceNamespace();
 
-            if (sourceNamespace.isPresent()) {
-                MappingsUtilsImpl.setSourceNamespace(sourceNamespace.get());
-                break;
-            }
-        }
+            sourceNamespace.ifPresent(MappingsUtilsImpl::setSourceNamespace);
 
-        for (ModRemapper remapper : remappers) {
             Optional<Supplier<InputStream>> mappings = remapper.getExtraMapping();
 
-            if (mappings.isPresent()) {
-                MappingsUtilsImpl.loadExtraMappings(mappings.get().get());
-                break;
-            }
+            mappings.ifPresent(inputStreamSupplier -> MappingsUtilsImpl.loadExtraMappings(inputStreamSupplier.get()));
         }
 
         MINECRAFT_TREE = MappingsUtilsImpl.getMinecraftMappings();
