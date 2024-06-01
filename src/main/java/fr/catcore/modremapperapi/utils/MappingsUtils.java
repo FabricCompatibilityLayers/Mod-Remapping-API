@@ -71,7 +71,7 @@ public class MappingsUtils {
 
         for (Path path :
                 originalClassPath) {
-            Constants.MAIN_LOGGER.info(path.toString());
+            Constants.MAIN_LOGGER.debug(path.toString());
             paths.put(path, new File(
                     new File(Constants.LIB_FOLDER, target),
                     path.toFile().getName()).toPath()
@@ -98,7 +98,9 @@ public class MappingsUtils {
 
         List<OutputConsumerPath.ResourceRemapper> resourceRemappers = new ArrayList<>(NonClassCopyMode.FIX_META_INF.remappers);
 
-        RemapUtil.applyRemapper(remapper, paths, outputConsumerPaths, resourceRemappers, false);
+        RemapUtil.applyRemapper(remapper, paths, outputConsumerPaths, resourceRemappers, true, src, target);
+
+        Constants.MAIN_LOGGER.info("MC jar remapped successfully!");
 
         return paths.values().toArray(new Path[0]);
     }

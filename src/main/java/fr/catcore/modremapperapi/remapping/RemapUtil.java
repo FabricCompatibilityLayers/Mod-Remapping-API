@@ -65,6 +65,8 @@ public class RemapUtil {
 
         MINECRAFT_TREE = MappingsUtilsImpl.getMinecraftMappings();
 
+        writeMcMappings();
+
         LOADER_TREE = generateMappings();
         MappingsUtilsImpl.addMappingsToContext(LOADER_TREE);
 
@@ -138,6 +140,8 @@ public class RemapUtil {
         Constants.MAIN_LOGGER.debug("Remapper created!");
         remapFiles(remapper, pathMap);
         Constants.MAIN_LOGGER.debug("Jar remapping done!");
+
+        MappingsUtilsImpl.writeFullMappings();
     }
 
     public static List<String> makeModMappings(Path modPath) {
@@ -195,6 +199,15 @@ public class RemapUtil {
         }
 
         MappingsUtilsImpl.addMappingsToContext(MODS_TREE);
+    }
+
+    public static void writeMcMappings() {
+        try {
+            MappingWriter writer = MappingWriter.create(Constants.MC_MAPPINGS_FILE.toPath(), MappingFormat.TINY_2_FILE);
+            MINECRAFT_TREE.accept(writer);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static List<String> generateFolderMappings(File[] files) {
@@ -573,11 +586,11 @@ public class RemapUtil {
         List<OutputConsumerPath.ResourceRemapper> resourceRemappers = new ArrayList<>(NonClassCopyMode.FIX_META_INF.remappers);
         resourceRemappers.add(new RefmapRemapper());
 
-        applyRemapper(remapper, paths, outputConsumerPaths, resourceRemappers, true);
+        applyRemapper(remapper, paths, outputConsumerPaths, resourceRemappers, true, MappingsUtilsImpl.getSourceNamespace(), MappingsUtils.getTargetNamespace());
     }
 
     @ApiStatus.Internal
-    public static void applyRemapper(TinyRemapper remapper, Map<Path, Path> paths, List<OutputConsumerPath> outputConsumerPaths, List<OutputConsumerPath.ResourceRemapper> resourceRemappers, boolean analyzeMapping) {
+    public static void applyRemapper(TinyRemapper remapper, Map<Path, Path> paths, List<OutputConsumerPath> outputConsumerPaths, List<OutputConsumerPath.ResourceRemapper> resourceRemappers, boolean analyzeMapping, String srcNamespace, String targetNamespace) {
         try {
             Map<Path, InputTag> tagMap = new HashMap<>();
 
@@ -604,7 +617,7 @@ public class RemapUtil {
                 Constants.MAIN_LOGGER.debug("Done 1!");
             }
 
-            if (analyzeMapping) MappingsUtilsImpl.completeMappingsFromTr(remapper.getEnvironment());
+            if (analyzeMapping) MappingsUtilsImpl.completeMappingsFromTr(remapper.getEnvironment(), srcNamespace);
         } catch (Exception e) {
             remapper.finish();
             outputConsumerPaths.forEach(o -> {

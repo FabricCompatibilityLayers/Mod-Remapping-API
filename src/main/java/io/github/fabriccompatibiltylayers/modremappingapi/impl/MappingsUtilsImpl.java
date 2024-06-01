@@ -1,5 +1,6 @@
 package io.github.fabriccompatibiltylayers.modremappingapi.impl;
 
+import fr.catcore.modremapperapi.utils.Constants;
 import fr.catcore.wfvaio.WhichFabricVariantAmIOn;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.MappingUtils;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.MappingTreeHelper;
@@ -10,6 +11,7 @@ import net.fabricmc.loader.impl.util.log.LogCategory;
 import net.fabricmc.mappingio.MappedElementKind;
 import net.fabricmc.mappingio.MappingReader;
 import net.fabricmc.mappingio.MappingVisitor;
+import net.fabricmc.mappingio.MappingWriter;
 import net.fabricmc.mappingio.adapter.MappingDstNsReorder;
 import net.fabricmc.mappingio.adapter.MappingNsRenamer;
 import net.fabricmc.mappingio.adapter.MappingSourceNsSwitch;
@@ -240,9 +242,9 @@ public class MappingsUtilsImpl {
         }
     }
 
-    public static void completeMappingsFromTr(TrEnvironment trEnvironment) {
-        int srcNamespace = FULL_MAPPINGS.getNamespaceId(getSourceNamespace());
-        int targetNamespace = FULL_MAPPINGS.getNamespaceId(getTargetNamespace());
+    public static void completeMappingsFromTr(TrEnvironment trEnvironment, String src) {
+        int srcNamespace = FULL_MAPPINGS.getNamespaceId(src);
+        int trueSrcNamespace = FULL_MAPPINGS.getNamespaceId(FULL_MAPPINGS.getSrcNamespace());
 
         Map<ExtendedClassMember, List<String>> classMembers = new HashMap<>();
 
@@ -256,7 +258,12 @@ public class MappingsUtilsImpl {
             List<String> children = trClass.getChildren().stream().map(TrClass::getName).collect(Collectors.toList());
 
             for (MappingTree.MethodMapping methodMapping : classMapping.getMethods()) {
-                TrMethod method = trClass.getMethod(methodMapping.getName(srcNamespace), methodMapping.getDesc(srcNamespace));
+                String methodName = methodMapping.getName(srcNamespace);
+                String methodDesc = methodMapping.getDesc(srcNamespace);
+
+                if (methodName == null || methodDesc == null) continue;
+
+                TrMethod method = trClass.getMethod(methodName, methodDesc);
 
                 if (method != null && method.isVirtual()) {
                     classMembers.put(new ExtendedClassMember(
@@ -270,45 +277,102 @@ public class MappingsUtilsImpl {
 
         int propagated = 0;
 
+        try {
+            FULL_MAPPINGS.visitHeader();
+            FULL_MAPPINGS.visitNamespaces(FULL_MAPPINGS.getSrcNamespace(), FULL_MAPPINGS.getDstNamespaces());
+            FULL_MAPPINGS.visitContent();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
         for (Map.Entry<ExtendedClassMember, List<String>> entry : classMembers.entrySet()) {
             ExtendedClassMember member = entry.getKey();
 
             for (String child : entry.getValue()) {
+
                 TrClass trClass = trEnvironment.getClass(child);
                 if (trClass == null) continue;
 
                 try {
-                    FULL_MAPPINGS.visitClass(child);
+                    if (srcNamespace == trueSrcNamespace) {
+                        FULL_MAPPINGS.visitClass(child);
+                    } else {
+                        FULL_MAPPINGS.visitClass(FULL_MAPPINGS.mapClassName(child, srcNamespace, trueSrcNamespace));
+                    }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
 
-                MappingTree.ClassMapping classMapping = FULL_MAPPINGS.getClass(child);
+                MappingTree.ClassMapping classMapping = FULL_MAPPINGS.getClass(child, srcNamespace);
 
                 if (classMapping == null) continue;
 
                 TrMethod trMethod = trClass.getMethod(member.name, member.desc);
                 if (trMethod == null) continue;
 
-                if (classMapping.getMethod(member.name, member.desc, srcNamespace) != null) continue;
-
                 try {
-                    FULL_MAPPINGS.visitMethod(member.name, member.desc);
+                    if (srcNamespace == trueSrcNamespace) {
+                        FULL_MAPPINGS.visitMethod(member.name, member.desc);
+                    } else {
+                        MappingTree.MemberMapping memberMapping = FULL_MAPPINGS.getMethod(member.owner, member.name, member.desc, srcNamespace);
+                        if (memberMapping == null) continue;
+
+                        FULL_MAPPINGS.visitMethod(memberMapping.getSrcName(), memberMapping.getSrcDesc());
+
+                        FULL_MAPPINGS.visitDstName(MappedElementKind.METHOD, srcNamespace, member.name);
+                        FULL_MAPPINGS.visitDstDesc(MappedElementKind.METHOD, srcNamespace, member.desc);
+                    }
 
                     MappingTree.MethodMapping methodMapping = FULL_MAPPINGS.getMethod(member.owner, member.name, member.desc, srcNamespace);
                     if (methodMapping == null) continue;
 
-                    FULL_MAPPINGS.visitDstName(MappedElementKind.METHOD, targetNamespace, methodMapping.getName(targetNamespace));
-                    FULL_MAPPINGS.visitDstDesc(MappedElementKind.METHOD, targetNamespace, methodMapping.getDesc(targetNamespace));
+                    MappingTree.MethodMapping newMethodMapping = classMapping.getMethod(member.name, member.desc, srcNamespace);
 
-                    propagated++;
+                    boolean actualPropagated = false;
+
+                    for (String namespace : FULL_MAPPINGS.getDstNamespaces()) {
+                        int targetNamespace = FULL_MAPPINGS.getNamespaceId(namespace);
+
+                        if (targetNamespace == srcNamespace) continue;
+
+                        if (newMethodMapping.getName(targetNamespace) == null) {
+                            String targetName = methodMapping.getName(targetNamespace);
+
+                            if (targetName != null) {
+                                FULL_MAPPINGS.visitDstName(MappedElementKind.METHOD, targetNamespace, targetName);
+                                actualPropagated = true;
+                            }
+                        }
+
+                        if (newMethodMapping.getDesc(targetNamespace) == null) {
+                            String targetDesc = methodMapping.getDesc(targetNamespace);
+
+                            if (targetDesc != null) {
+                                FULL_MAPPINGS.visitDstDesc(MappedElementKind.METHOD, targetNamespace, targetDesc);
+                                actualPropagated = true;
+                            }
+                        }
+                    }
+
+                    if (actualPropagated) propagated++;
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
         }
 
-        System.out.println("Propagated: " + propagated + " methods");
+        Constants.MAIN_LOGGER.info("Propagated: " + propagated + " methods from namespace " + src);
+    }
+
+
+
+    public static void writeFullMappings() {
+        try {
+            MappingWriter writer = MappingWriter.create(Constants.FULL_MAPPINGS_FILE.toPath(), MappingFormat.TINY_2_FILE);
+            FULL_MAPPINGS.accept(writer);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static void gatherChildClassCandidates(TrEnvironment trEnvironment, Map<ExtendedClassMember, List<String>> classMembers) {
