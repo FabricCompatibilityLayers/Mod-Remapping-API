@@ -26,6 +26,10 @@ repositories {
 	}
 }
 
+loom.mods.register(project.name + "-testmod") {
+	sourceSet project.sourceSets.test
+}
+
 dependencies {
 	minecraft "net.minecraft:minecraft:${project.minecraft_version}"
 
@@ -104,6 +108,14 @@ remapJar {
 	// Set the input jar for the task. Here use the shadow Jar that include the .class of the transitive dependency
 	inputFile = file(shadowJar.archivePath)
 }
+
+tasks.register('testJar', Jar) {
+	from sourceSets.test.output
+	destinationDirectory = new File(project.buildDir, "devlibs")
+	archiveClassifier = "testmod"
+}
+
+tasks.build.dependsOn testJar
 
 // configure the maven publication
 publishing {
