@@ -1,5 +1,6 @@
 package io.github.fabriccompatibiltylayers.modremappingapi.test;
 
+import io.github.fabriccompatibiltylayers.modremappingapi.api.MappingUtils;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.MappingBuilder;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.ModRemapper;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.RemapLibrary;
@@ -13,6 +14,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -58,5 +60,15 @@ public class TestModRemapper implements ModRemapper {
                 throw new RuntimeException(e);
             }
         });
+    }
+
+    @Override
+    public void afterRemap() {
+        assert Objects.equals(
+                MappingUtils.mapClass("net/minecraft/server/gui/TextAreaLogHandlerINNER1"),
+                FabricLoader.getInstance().isDevelopmentEnvironment() ?
+                        "net/minecraft/client/class_785"
+                        : "net/minecraft/class_785"
+        );
     }
 }
