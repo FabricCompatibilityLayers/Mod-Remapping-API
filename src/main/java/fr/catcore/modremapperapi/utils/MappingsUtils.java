@@ -30,7 +30,7 @@ public class MappingsUtils {
     }
 
     public static String getTargetNamespace() {
-        return !FabricLoader.getInstance().isDevelopmentEnvironment() ? "intermediary" : FabricLoader.getInstance().getMappingResolver().getCurrentRuntimeNamespace();
+        return FabricLoader.getInstance().getMappingResolver().getCurrentRuntimeNamespace();
     }
 
     public static MappingTree loadMappings(Reader reader) {
@@ -58,10 +58,6 @@ public class MappingsUtils {
     @Deprecated
     public static IMappingProvider createProvider(MappingTree mappings) {
         return MappingsUtilsImpl.createProvider(mappings, getNativeNamespace(), getTargetNamespace());
-    }
-
-    private static IMappingProvider createBackwardProvider(MappingTree mappings) {
-        return MappingsUtilsImpl.createProvider(mappings, getTargetNamespace(), "official");
     }
 
     private static Path[] getMinecraftJar(List<Path> sourcePaths, String src, String target) throws IOException {
@@ -109,7 +105,28 @@ public class MappingsUtils {
     public static void addMinecraftJar(TinyRemapper remapper) throws IOException {
         if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
             try {
-                remapper.readClassPathAsync(getMinecraftJar(getRemapClasspath(), getTargetNamespace(), "official"));
+                Path[] classPath = getMinecraftJar(
+                        Arrays.asList(
+                                getMinecraftJar(
+                                        getRemapClasspath(),
+                                        getTargetNamespace(),
+                                        "intermediary"
+                                )
+                        ),
+                        "intermediary",
+                        "official"
+                );
+
+                remapper.readClassPathAsync(
+                        !Objects.equals(MappingsUtilsImpl.getSourceNamespace(), "official") ?
+                            getMinecraftJar(
+                                    Arrays.asList(
+                                            classPath
+                                    ),
+                                    "official",
+                                    MappingsUtilsImpl.getSourceNamespace()
+                            ) : classPath
+                );
             } catch (IOException e) {
                 throw new RuntimeException("Failed to populate default remap classpath", e);
             }
