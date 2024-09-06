@@ -1,0 +1,2 @@
+The file `calamus-1.6.4.tiny` was taken from OrnitheMC's "[Calamus](https://maven.ornithemc.net/releases/net/ornithemc/calamus-intermediary/1.6.4/calamus-intermediary-1.6.4-v2.jar)" intermediaries under the CC0 license. 
+The `intermediary` namespace renamed to `calamus`.

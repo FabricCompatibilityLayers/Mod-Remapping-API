@@ -22,7 +22,7 @@ public class TestModRemapper implements ModRemapper {
 
     @Override
     public String[] getJarFolders() {
-        return new String[0];
+        return new String[]{"test-mods"};
     }
 
     @Override
@@ -47,14 +47,14 @@ public class TestModRemapper implements ModRemapper {
 
     @Override
     public Optional<String> getSourceNamespace() {
-        return Optional.of("searge");
+        return Optional.of("calamus");
     }
 
     @Override
     public Optional<Supplier<InputStream>> getExtraMapping() {
         return Optional.of(() -> {
             try {
-                return Files.newInputStream(MOD_CONTAINER.findPath("./mappings-COMBINED-mcp-1.6.4-9.11.1.1345-official-5205111.tiny").get());
+                return Files.newInputStream(MOD_CONTAINER.findPath("./calamus-1.6.4.tiny").get());
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -64,7 +64,7 @@ public class TestModRemapper implements ModRemapper {
     @Override
     public void afterRemap() {
         assert Objects.equals(
-                MappingUtils.mapClass("net/minecraft/server/gui/TextAreaLogHandlerINNER1"),
+                MappingUtils.mapClass("net/minecraft/unmapped/C_0760609"),
                 FabricLoader.getInstance().isDevelopmentEnvironment() ?
                         "net/minecraft/client/class_785"
                         : "net/minecraft/class_785"
