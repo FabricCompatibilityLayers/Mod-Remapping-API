@@ -1,6 +1,6 @@
 # Mod Remapping API
 
-Remaps non-Fabric mods made for a different environment (by default obfuscated) to the current runtime one.\
+Remaps non-Fabric mods made for a different environment (by default obfuscated) to the current runtime mappings.\
 Provides hooks to expand the remapping process from other mods such as: 
 - Remapping mods from another folder than `mods`
 - Providing additional libraries as context to improve remapping quality
