@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "mod-remapping-api-test-mod",
+  "version": "${version}",
+  "name": "Mod Remapping API",
+  "description": "Remaps non fabric mods at runtime with hooks available to expand it.",
+  "authors": [
+    "CatCore"
+  ],
+  "contributors": [
+    "paulevsGitch",
+    "LlamaLad7",
+    "Zeichenreihe",
+    "skyrising"
+  ],
+  "contact": {
+    "homepage": "https://modrinth.com/mod/mod-remapping-api",
+    "sources": "https://github.com/FabricCompatibilityLayers/Mod-Remapping-API",
+    "issues": "https://github.com/FabricCompatibilityLayers/Mod-Remapping-API/issues"
+  },
+  "license": "CC0-1.0",
+  "icon": "assets/mod-remapping-api/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "mod-remapper-api:modremapper_v1": [
+      "io.github.fabriccompatibiltylayers.modremappingapi.test.TestModRemapper"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">0.14.23",
+    "spasm": ">=0.2.0",
+    "com_github_llamalad7_mixinextras": ">=0.2.0"
+  },
+  "mixins": [
+  ]
+}
