@@ -136,7 +136,7 @@ modrinth {
 	token = System.getenv("MODRINTH_TOKEN")
 	projectId = "mod-remapping-api"
 	changelog = """
-Fix mod mappings being inverted on Babric
+Support remapping mods from other namespaces than obfuscated/official.
 """
 	uploadFile = remapJar
 
