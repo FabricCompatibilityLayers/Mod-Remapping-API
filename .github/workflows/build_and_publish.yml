@@ -12,10 +12,30 @@
           with:
             java-version: 17
             distribution: temurin
-        - name: Build with Gradle
-          run: ./gradlew build
+
+        - name: Build
+          run: ./gradlew build -x test
+
+        - name: Test
+          run: ./gradlew test check
+
+        - name: Sonar
+          run: ./gradlew jacocoTestCoverageVerification jacocoTestReport sonar
+          env:
+            SONAR_URL: ${{ secrets.SONAR_URL }}
+            SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
         - if: github.repository == 'FabricCompatibilityLayers/Mod-Remapping-API' && github.ref_type == 'tag'
           name: Publish
           run: ./gradlew build modrinth
           env:
             MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+
+        - name: Store reports if any
+          if: failure()
+          uses: actions/upload-artifact@v4
+          with:
+            name: reports
+            path: |
+              **/build/reports/
+              **/build/test-results/

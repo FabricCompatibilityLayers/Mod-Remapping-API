@@ -3,9 +3,9 @@ package fr.catcore.modremapperapi.utils;
 import fr.catcore.modremapperapi.ModRemappingAPI;
 import fr.catcore.modremapperapi.remapping.RemapUtil;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingsUtilsImpl;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.RemapUtils;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.*;
-import net.fabricmc.loader.impl.launch.FabricLauncherBase;
 import net.fabricmc.mappingio.MappingReader;
 import net.fabricmc.mappingio.MappingVisitor;
 import net.fabricmc.mappingio.tree.MappingTree;
@@ -17,7 +17,7 @@ import java.io.*;
 import java.nio.file.Path;
 import java.util.*;
 
-import static fr.catcore.modremapperapi.remapping.RemapUtil.getRemapClasspath;
+import static io.github.fabriccompatibiltylayers.modremappingapi.impl.RemapUtils.getRemapClasspath;
 
 public class MappingsUtils {
     @Deprecated
@@ -132,35 +132,7 @@ public class MappingsUtils {
                 throw new RuntimeException("Failed to populate default remap classpath", e);
             }
         } else {
-            ObjectShare share = FabricLoader.getInstance().getObjectShare();
-            Object inputs = share.get("fabric-loader:inputGameJars");
-            List<Path> list = new ArrayList<>();
-
-            Object oldJar = FabricLoader.getInstance().getObjectShare().get("fabric-loader:inputGameJar");
-
-            List<Path> classPaths = FabricLauncherBase.getLauncher().getClassPath();
-
-            if (inputs instanceof List) {
-                List<Path> paths = (List<Path>) inputs;
-
-                if (oldJar instanceof Path) {
-                    if (paths.get(0).toString().equals(oldJar.toString())) {
-                        list.addAll(paths);
-                    } else {
-                        list.add((Path) oldJar);
-                    }
-                } else {
-                    list.addAll(paths);
-                }
-            } else {
-                list.add((Path) oldJar);
-            }
-
-            list.addAll(classPaths);
-
-            Object realmsJar = share.get("fabric-loader:inputRealmsJar");
-
-            if (realmsJar instanceof Path) list.add((Path) realmsJar);
+            List<Path> list = RemapUtils.getClassPathFromObjectShare();
             
             Path[] classPath = list.toArray(new Path[0]);
             
