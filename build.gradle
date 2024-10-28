@@ -11,8 +11,6 @@ plugins {
 version = project.mod_version
 group = project.maven_group
 
-def ENV = System.getenv();
-
 repositories {
 	mavenCentral()
 
@@ -128,8 +126,8 @@ jacocoTestReport {
 
 sonar {
 	properties {
-		property "sonar.host.url", ENV.SONAR_URL
-		property "sonar.token", ENV.SONAR_TOKEN
+		property "sonar.host.url", System.getenv("SONAR_URL")
+		property "sonar.token", System.getenv("SONAR_TOKEN")
 	}
 }
 

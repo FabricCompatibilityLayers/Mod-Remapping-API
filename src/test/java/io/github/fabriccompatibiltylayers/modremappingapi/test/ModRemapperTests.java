@@ -7,12 +7,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 public class ModRemapperTests {
-
-    @BeforeAll
-    static void beforeAll() {
-//        MixinBootstrap.init();
-    }
-
     @Test
     public void differentSourceNamespace() {
         Assertions.assertEquals(
