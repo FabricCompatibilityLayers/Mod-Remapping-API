@@ -22,13 +22,10 @@ import org.jetbrains.annotations.ApiStatus;
 
 import java.io.*;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -653,22 +650,9 @@ public class RemapUtil {
     /**
      * A shortcut to the Fabric Environment getter.
      */
+    @Deprecated
     public static EnvType getEnvironment() {
         return FabricLoader.getInstance().getEnvironmentType();
-    }
-
-    public static List<Path> getRemapClasspath() throws IOException {
-        String remapClasspathFile = System.getProperty("fabric.remapClasspathFile");
-
-        if (remapClasspathFile == null) {
-            throw new RuntimeException("No remapClasspathFile provided");
-        }
-
-        String content = new String(Files.readAllBytes(Paths.get(remapClasspathFile)), StandardCharsets.UTF_8);
-
-        return Arrays.stream(content.split(File.pathSeparator))
-                .map(Paths::get)
-                .collect(Collectors.toList());
     }
 
     @Deprecated
