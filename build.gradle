@@ -11,6 +11,8 @@ plugins {
 version = project.mod_version
 group = project.maven_group
 
+def ENV = System.getenv();
+
 repositories {
 	mavenCentral()
 
