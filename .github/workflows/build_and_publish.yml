@@ -13,13 +13,13 @@
             java-version: 17
             distribution: temurin
 
-        - name: Build with Gradle
-          run: ./gradlew build
+        - name: Build
+          run: ./gradlew build -x test
 
-        - name: run test
+        - name: Test
           run: ./gradlew test check
 
-        - name: sonar
+        - name: Sonar
           run: ./gradlew jacocoTestCoverageVerification jacocoTestReport sonar
           env:
             SONAR_URL: ${{ secrets.SONAR_URL }}
@@ -30,3 +30,12 @@
           run: ./gradlew build modrinth
           env:
             MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+
+        - name: Store reports if any
+          if: failure()
+          uses: actions/upload-artifact@v4
+          with:
+            name: reports
+            path: |
+              **/build/reports/
+              **/build/test-results/
