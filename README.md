@@ -18,8 +18,8 @@ This mod jar-in-jars:
 - [MixinExtras](https://github.com/LlamaLad7/MixinExtras) 0.2.1 for Fabric Loader 0.14 compatibility purpose only.
 
 This mod shadows and relocates for internal usage:
-- [mapping-io](https://github.com/FabricMC/mapping-io) 0.6.1
-- [tiny-remapper](https://github.com/FabricMC/tiny-remapper) 0.10.2
+- [mapping-io](https://github.com/FabricMC/mapping-io) 0.7.1
+- [tiny-remapper](https://github.com/FabricMC/tiny-remapper) 0.11.0
 - [gson](https://github.com/google/gson) 2.2.4
 
 This mod doesn't depend on a specific Minecraft version and should work on any version that Fabric Loader can launch.

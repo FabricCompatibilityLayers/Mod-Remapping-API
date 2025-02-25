@@ -42,10 +42,10 @@ dependencies {
 	modImplementation(include(legacy.apiModule("legacy-fabric-logger-api-v1", project.fabric_version)))
 	modImplementation(include("maven.modrinth:spasm:${project.spasm_version}"))
 
-	shadow(runtimeOnly('net.fabricmc:mapping-io:0.6.1')) {
+	shadow(runtimeOnly('net.fabricmc:mapping-io:0.7.1')) {
 		transitive = false
 	}
-	shadow(runtimeOnly('net.fabricmc:tiny-remapper:0.10.2')) {
+	shadow(runtimeOnly('net.fabricmc:tiny-remapper:0.11.0')) {
 		transitive = false
 	}
 
@@ -150,7 +150,8 @@ modrinth {
 	token = System.getenv("MODRINTH_TOKEN")
 	projectId = "mod-remapping-api"
 	changelog = """
-Support remapping mods from other namespaces than obfuscated/official.
+Update mapping-io to 0.7.1.\
+Update tiny remapper to 0.11.0.
 """
 	uploadFile = remapJar
 
