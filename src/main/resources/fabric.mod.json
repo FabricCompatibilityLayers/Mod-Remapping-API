@@ -26,7 +26,7 @@
       "io.github.fabriccompatibiltylayers.modremappingapi.impl.DefaultModRemapper"
     ],
     "spasm:raw_transformer": [
-      "fr.catcore.modremapperapi.ClassTransformer"
+      "io.github.fabriccompatibiltylayers.modremappingapi.impl.TransformerRegistry"
     ]
   },
   "depends": {

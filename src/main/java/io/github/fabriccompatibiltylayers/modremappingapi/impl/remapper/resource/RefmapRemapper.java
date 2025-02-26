@@ -1,6 +1,7 @@
-package fr.catcore.modremapperapi.remapping;
+package io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.resource;
 
 import com.google.gson.Gson;
+import fr.catcore.modremapperapi.remapping.RemapUtil;
 import fr.catcore.modremapperapi.utils.RefmapJson;
 import net.fabricmc.tinyremapper.OutputConsumerPath;
 import net.fabricmc.tinyremapper.TinyRemapper;

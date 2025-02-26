@@ -9,6 +9,10 @@ import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.RemapLibrary;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingBuilderImpl;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingsUtilsImpl;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.VisitorInfosImpl;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.resource.RefmapRemapper;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.visitor.MRAApplyVisitor;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.visitor.MixinPostApplyVisitor;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.CacheUtils;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.mappingio.MappingVisitor;
@@ -91,7 +95,7 @@ public class RemapUtil {
                 remapper.addRemapLibraries(libraries, FabricLoader.getInstance().getEnvironmentType());
 
                 for (RemapLibrary library : libraries) {
-                    File libPath = new File(Constants.LIB_FOLDER, library.fileName);
+                    File libPath = CacheUtils.getLibraryPath(library.fileName).toFile();
 
                     if (!libPath.exists() && !library.url.isEmpty()) {
                         Constants.MAIN_LOGGER.info("Downloading remapping library '" + library.fileName + "' from url '" + library.url + "'");
@@ -346,11 +350,11 @@ public class RemapUtil {
                 "fr.catcore.modremapperapi.remapping.MappingBuilder",
                 "fr.catcore.modremapperapi.remapping.MappingBuilder$Entry",
                 "fr.catcore.modremapperapi.remapping.MappingBuilder$Type",
-                "fr.catcore.modremapperapi.remapping.MixinPostApplyVisitor",
-                "fr.catcore.modremapperapi.remapping.MRAClassVisitor",
-                "fr.catcore.modremapperapi.remapping.MRAMethodVisitor",
-                "fr.catcore.modremapperapi.remapping.MRAApplyVisitor",
-                "fr.catcore.modremapperapi.remapping.RefmapRemapper",
+                "io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.visitor.MixinPostApplyVisitor",
+                "io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.asm.MRAClassVisitor",
+                "io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.asm.MRAMethodVisitor",
+                "io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.visitor.MRAApplyVisitor",
+                "io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.resource.RefmapRemapper",
                 "fr.catcore.modremapperapi.remapping.RemapUtil",
                 "fr.catcore.modremapperapi.remapping.RemapUtil$MappingList",
                 "fr.catcore.modremapperapi.remapping.VisitorInfos",
@@ -560,12 +564,12 @@ public class RemapUtil {
             modRemapper.addRemapLibraries(libraries, FabricLoader.getInstance().getEnvironmentType());
 
             for (RemapLibrary library : libraries) {
-                File libPath = new File(Constants.LIB_FOLDER, library.fileName);
+                Path libPath = CacheUtils.getLibraryPath(library.fileName);
 
-                if (libPath.exists()) {
-                    remapper.readClassPathAsync(libPath.toPath());
+                if (Files.exists(libPath)) {
+                    remapper.readClassPathAsync(libPath);
                 } else {
-                    Constants.MAIN_LOGGER.info("Library " + libPath.toPath() + " does not exist.");
+                    Constants.MAIN_LOGGER.info("Library " + libPath + " does not exist.");
                 }
             }
         }

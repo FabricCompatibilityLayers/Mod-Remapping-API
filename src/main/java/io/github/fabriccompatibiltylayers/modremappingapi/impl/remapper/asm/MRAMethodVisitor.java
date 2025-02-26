@@ -1,4 +1,4 @@
-package fr.catcore.modremapperapi.remapping;
+package io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.asm;
 
 import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.VisitorInfos;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.VisitorInfosImpl;

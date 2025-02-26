@@ -5,6 +5,7 @@ import fr.catcore.modremapperapi.utils.FileUtils;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.ModRemapper;
 import fr.catcore.modremapperapi.remapping.RemapUtil;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.compatibility.V0ModRemapper;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.CacheUtils;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.impl.launch.FabricLauncherBase;
 import org.spongepowered.include.com.google.common.collect.ImmutableList;
@@ -40,7 +41,7 @@ public class ModDiscoverer {
         for (ModRemapper remapper : modRemappers) {
             for (String jarFolder : remapper.getJarFolders()) {
                 File mcSubFolder = new File(FabricLoader.getInstance().getGameDir().toFile(), jarFolder);
-                File cacheFolder = new File(Constants.VERSIONED_FOLDER, jarFolder);
+                File cacheFolder = CacheUtils.getCachePath(jarFolder).toFile();
 
                 if (!mcSubFolder.exists()) mcSubFolder.mkdirs();
                 if (!cacheFolder.exists()) cacheFolder.mkdirs();
@@ -51,7 +52,7 @@ public class ModDiscoverer {
             }
         }
 
-        File mainTempDir = new File(Constants.VERSIONED_FOLDER, "temp");
+        File mainTempDir = CacheUtils.getCachePath("temp").toFile();
         if (mainTempDir.exists()) {
             emptyDir(mainTempDir);
         }
@@ -147,7 +148,7 @@ public class ModDiscoverer {
         Map<Path, Path> map = new HashMap<>();
         Map<Path, Path> convertMap = new HashMap<>();
 
-        File mainTempDir = new File(Constants.VERSIONED_FOLDER, "temp");
+        File mainTempDir = CacheUtils.getCachePath("temp").toFile();
         mainTempDir.mkdirs();
 
 

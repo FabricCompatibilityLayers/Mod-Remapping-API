@@ -1,7 +1,10 @@
 package fr.catcore.modremapperapi.api;
 
-// Original author is gudenau.
-public interface IClassTransformer {
-    boolean handlesClass(String name, String transformedName);
-    byte[] transformClass(String name, String transformedName, byte[] original);
+import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.ClassTransformer;
+
+/**
+ * @deprecated Use {@link ClassTransformer} instead.
+ */
+@Deprecated
+public interface IClassTransformer extends ClassTransformer {
 }
