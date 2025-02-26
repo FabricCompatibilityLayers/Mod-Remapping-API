@@ -1,4 +1,4 @@
-package io.github.fabriccompatibiltylayers.modremappingapi.impl;
+package io.github.fabriccompatibiltylayers.modremappingapi.impl.utils;
 
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.Version;
@@ -10,6 +10,9 @@ import org.jetbrains.annotations.ApiStatus;
 public class VersionHelper {
     private static final Version MC_VERSION = FabricLoader.getInstance().getModContainer("minecraft")
             .get().getMetadata().getVersion();
+
+    public static final String MINECRAFT_VERSION = MC_VERSION.getFriendlyString();
+    public static final String MOD_VERSION = FabricLoader.getInstance().getModContainer("mod-remapping-api").get().getMetadata().getVersion().getFriendlyString();
 
     public static Boolean predicate(String predicate) {
         try {

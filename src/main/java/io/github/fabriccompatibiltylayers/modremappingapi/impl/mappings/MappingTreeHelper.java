@@ -1,4 +1,4 @@
-package io.github.fabriccompatibiltylayers.modremappingapi.impl.utils;
+package io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings;
 
 import net.fabricmc.mappingio.MappingVisitor;
 import net.fabricmc.mappingio.adapter.MappingDstNsReorder;

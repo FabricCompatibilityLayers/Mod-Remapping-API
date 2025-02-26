@@ -4,6 +4,7 @@ import fr.catcore.modremapperapi.ModRemappingAPI;
 import fr.catcore.modremapperapi.remapping.RemapUtil;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingsUtilsImpl;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.RemapUtils;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.CacheUtils;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.*;
 import net.fabricmc.mappingio.MappingReader;
@@ -14,6 +15,7 @@ import net.fabricmc.tinyremapper.*;
 import org.jetbrains.annotations.ApiStatus;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -65,14 +67,14 @@ public class MappingsUtils {
 
         Map<Path, Path> paths = new HashMap<>();
 
-        for (Path path :
-                originalClassPath) {
+        for (Path path : originalClassPath) {
             Constants.MAIN_LOGGER.debug(path.toString());
-            paths.put(path, new File(
-                    new File(Constants.LIB_FOLDER, target),
-                    path.toFile().getName()).toPath()
-            );
-            paths.get(path).toFile().delete();
+
+            Path computedPath = CacheUtils.getLibraryPath(target)
+                    .resolve(path.toFile().getName());
+
+            paths.put(path, computedPath);
+            Files.delete(computedPath);
         }
 
         TinyRemapper.Builder builder = TinyRemapper

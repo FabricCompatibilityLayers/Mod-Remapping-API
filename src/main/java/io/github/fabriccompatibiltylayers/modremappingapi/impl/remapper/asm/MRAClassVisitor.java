@@ -1,4 +1,4 @@
-package fr.catcore.modremapperapi.remapping;
+package io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.asm;
 
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.VisitorInfosImpl;
 import org.objectweb.asm.*;
@@ -7,7 +7,7 @@ public class MRAClassVisitor extends ClassVisitor {
     private final VisitorInfosImpl infos;
     private final String className;
 
-    protected MRAClassVisitor(ClassVisitor classVisitor, VisitorInfosImpl infos, String className) {
+    public MRAClassVisitor(ClassVisitor classVisitor, VisitorInfosImpl infos, String className) {
         super(Opcodes.ASM9, classVisitor);
         this.infos = infos;
         this.className = className;
