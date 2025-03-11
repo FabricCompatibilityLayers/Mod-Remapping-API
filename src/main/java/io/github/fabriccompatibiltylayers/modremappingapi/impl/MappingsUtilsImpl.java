@@ -1,11 +1,12 @@
 package io.github.fabriccompatibiltylayers.modremappingapi.impl;
 
+import fr.catcore.modremapperapi.ModRemappingAPI;
 import fr.catcore.modremapperapi.utils.Constants;
-import fr.catcore.modremapperapi.utils.MappingsUtils;
 import fr.catcore.wfvaio.WhichFabricVariantAmIOn;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.MappingUtils;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingTreeHelper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.VersionHelper;
+import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.impl.launch.MappingConfiguration;
 import net.fabricmc.loader.impl.util.log.Log;
@@ -40,8 +41,6 @@ import java.net.URLConnection;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.zip.ZipError;
-
-import static fr.catcore.modremapperapi.utils.MappingsUtils.getTargetNamespace;
 
 @ApiStatus.Internal
 public class MappingsUtilsImpl {
@@ -89,6 +88,18 @@ public class MappingsUtilsImpl {
 
     public static boolean isSourceNamespaceObf() {
         return Objects.equals(sourceNamespace, "official");
+    }
+
+    public static String getTargetNamespace() {
+        return FabricLoader.getInstance().getMappingResolver().getCurrentRuntimeNamespace();
+    }
+
+    public static String getNativeNamespace() {
+        if (ModRemappingAPI.BABRIC) {
+            return FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT ? "client" : "server";
+        }
+
+        return "official";
     }
 
     @ApiStatus.Internal
@@ -226,7 +237,7 @@ public class MappingsUtilsImpl {
 
     @ApiStatus.Internal
     public static void initializeMappingTree(MappingVisitor mappingVisitor) throws IOException {
-        initializeMappingTree(mappingVisitor, getSourceNamespace(), MappingsUtils.getTargetNamespace());
+        initializeMappingTree(mappingVisitor, getSourceNamespace(), getTargetNamespace());
     }
 
     @ApiStatus.Internal

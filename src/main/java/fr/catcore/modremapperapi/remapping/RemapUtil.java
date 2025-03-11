@@ -2,13 +2,13 @@ package fr.catcore.modremapperapi.remapping;
 
 import fr.catcore.modremapperapi.utils.Constants;
 import fr.catcore.modremapperapi.utils.FileUtils;
-import fr.catcore.modremapperapi.utils.MappingsUtils;
-import io.github.fabriccompatibiltylayers.modremappingapi.api.MappingUtils;
+import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.MappingUtils;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.ModRemapper;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.RemapLibrary;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingBuilderImpl;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingsUtilsImpl;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.VisitorInfosImpl;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.minecraft.MinecraftRemapper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.resource.RefmapRemapper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.visitor.MRAApplyVisitor;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.visitor.MixinPostApplyVisitor;
@@ -39,7 +39,8 @@ public class RemapUtil {
     private static MappingTree MINECRAFT_TREE;
     private static MemoryMappingTree MODS_TREE;
 
-    protected static final Map<String, List<String>> MIXINED = new HashMap<>();
+    @ApiStatus.Internal
+    public static final Map<String, List<String>> MIXINED = new HashMap<>();
 
     private static String defaultPackage = "";
 
@@ -526,7 +527,7 @@ public class RemapUtil {
         }
 
         for (MappingTree tree : trees) {
-            builder.withMappings(MappingsUtilsImpl.createProvider(tree, MappingsUtilsImpl.getSourceNamespace(), MappingsUtils.getTargetNamespace()));
+            builder.withMappings(MappingsUtilsImpl.createProvider(tree, MappingsUtilsImpl.getSourceNamespace(), MappingsUtilsImpl.getTargetNamespace()));
         }
 
         MRAApplyVisitor preApplyVisitor = new MRAApplyVisitor();
@@ -553,7 +554,7 @@ public class RemapUtil {
         TinyRemapper remapper = builder.build();
 
         try {
-            MappingsUtils.addMinecraftJar(remapper);
+            MinecraftRemapper.addMinecraftJar(remapper);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -588,7 +589,7 @@ public class RemapUtil {
         List<OutputConsumerPath.ResourceRemapper> resourceRemappers = new ArrayList<>(NonClassCopyMode.FIX_META_INF.remappers);
         resourceRemappers.add(new RefmapRemapper());
 
-        applyRemapper(remapper, paths, outputConsumerPaths, resourceRemappers, true, MappingsUtilsImpl.getSourceNamespace(), MappingsUtils.getTargetNamespace());
+        applyRemapper(remapper, paths, outputConsumerPaths, resourceRemappers, true, MappingsUtilsImpl.getSourceNamespace(), MappingsUtilsImpl.getTargetNamespace());
     }
 
     @ApiStatus.Internal
@@ -662,6 +663,6 @@ public class RemapUtil {
 
     @Deprecated
     public static String getNativeNamespace() {
-        return MappingsUtils.getNativeNamespace();
+        return MappingsUtilsImpl.getNativeNamespace();
     }
 }
