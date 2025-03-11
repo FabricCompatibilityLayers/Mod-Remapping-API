@@ -1,9 +1,15 @@
 package io.github.fabriccompatibiltylayers.modremappingapi.impl.utils;
 
+import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.RemapLibrary;
 import net.fabricmc.loader.api.FabricLoader;
 import org.jetbrains.annotations.ApiStatus;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collection;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @ApiStatus.Internal
 public class CacheUtils {
@@ -19,6 +25,23 @@ public class CacheUtils {
 
     public static Path getLibraryPath(String pathName) {
         return LIBRARY_FOLDER.resolve(pathName);
+    }
+
+    @ApiStatus.Internal
+    public static Map<Path, Path> computeLibraryPaths(Collection<Path> sourcePaths, String target) {
+        return sourcePaths.stream().collect(Collectors.toMap(p -> p,
+                p -> CacheUtils.getLibraryPath(target).resolve(p.toFile().getName())));
+    }
+
+    @ApiStatus.Internal
+    public static Map<RemapLibrary, Path> computeExtraLibraryPaths(Collection<RemapLibrary> sourcePaths, String target) {
+        return sourcePaths.stream()
+                .collect(Collectors.toMap(p -> p,
+                p -> CacheUtils.getLibraryPath(target).resolve(p.fileName)))
+                .entrySet()
+                .stream()
+                .filter(entry -> !Files.exists(entry.getValue()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     static {

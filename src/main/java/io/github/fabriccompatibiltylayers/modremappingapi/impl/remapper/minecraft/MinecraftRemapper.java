@@ -5,6 +5,7 @@ import fr.catcore.modremapperapi.utils.Constants;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingsUtilsImpl;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.RemapUtils;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.CacheUtils;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.FileUtils;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.tinyremapper.NonClassCopyMode;
 import net.fabricmc.tinyremapper.OutputConsumerPath;
@@ -15,7 +16,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @ApiStatus.Internal
 public class MinecraftRemapper {
@@ -26,11 +26,11 @@ public class MinecraftRemapper {
             Files.createDirectories(targetFolder);
         }
 
-        Map<Path, Path> paths = computeLibraryPaths(sourcePaths, target);
+        Map<Path, Path> paths = CacheUtils.computeLibraryPaths(sourcePaths, target);
 
-        if (exist(paths.values())) return paths.values();
+        if (FileUtils.exist(paths.values())) return paths.values();
 
-        delete(paths.values());
+        FileUtils.delete(paths.values());
 
         TinyRemapper.Builder builder = TinyRemapper
                 .newRemapper()
@@ -56,32 +56,6 @@ public class MinecraftRemapper {
         Constants.MAIN_LOGGER.info("MC jar remapped successfully!");
 
         return paths.values();
-    }
-
-    @ApiStatus.Internal
-    public static Map<Path, Path> computeLibraryPaths(Collection<Path> sourcePaths, String target) {
-        return sourcePaths.stream().collect(Collectors.toMap(p -> p,
-                p -> CacheUtils.getLibraryPath(target).resolve(p.toFile().getName())));
-    }
-
-    @ApiStatus.Internal
-    public static boolean exist(Collection<Path> paths) {
-        for (Path path : paths) {
-            if (!Files.exists(path)) return false;
-        }
-
-        return true;
-    }
-
-    @ApiStatus.Internal
-    public static void delete(Collection<Path> paths) {
-        for (Path path : paths) {
-            try {
-                Files.deleteIfExists(path);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     @ApiStatus.Internal

@@ -25,7 +25,6 @@ import net.fabricmc.tinyremapper.extension.mixin.MixinExtension;
 import org.jetbrains.annotations.ApiStatus;
 
 import java.io.*;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -49,8 +48,6 @@ public class RemapUtil {
     public static void init(List<io.github.fabriccompatibiltylayers.modremappingapi.api.v1.ModRemapper> modRemappers) {
         remappers = modRemappers;
 
-        downloadRemappingLibs();
-
         for (ModRemapper remapper : remappers) {
             Optional<String> pkg = remapper.getDefaultPackage();
 
@@ -64,6 +61,18 @@ public class RemapUtil {
 
             mappings.ifPresent(inputStreamSupplier -> MappingsUtilsImpl.loadExtraMappings(inputStreamSupplier.get()));
         }
+
+        Path sourceLibraryPath = CacheUtils.getLibraryPath(MappingsUtilsImpl.getSourceNamespace());
+
+        if (!Files.exists(sourceLibraryPath)) {
+            try {
+                Files.createDirectories(sourceLibraryPath);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        downloadRemappingLibs();
 
         MINECRAFT_TREE = MappingsUtilsImpl.getMinecraftMappings();
 
@@ -95,37 +104,20 @@ public class RemapUtil {
 
                 remapper.addRemapLibraries(libraries, FabricLoader.getInstance().getEnvironmentType());
 
-                for (RemapLibrary library : libraries) {
-                    File libPath = CacheUtils.getLibraryPath(library.fileName).toFile();
+                Map<RemapLibrary, Path> libraryPaths = CacheUtils.computeExtraLibraryPaths(libraries, MappingsUtilsImpl.getSourceNamespace());
 
-                    if (!libPath.exists() && !library.url.isEmpty()) {
+                for (Map.Entry<RemapLibrary, Path> entry : libraryPaths.entrySet()) {
+                    RemapLibrary library = entry.getKey();
+                    Path path = entry.getValue();
+
+                    if (!library.url.isEmpty()) {
                         Constants.MAIN_LOGGER.info("Downloading remapping library '" + library.fileName + "' from url '" + library.url + "'");
-                        try (BufferedInputStream inputStream = new BufferedInputStream(new URL(library.url).openStream())) {
-                            try (BufferedOutputStream outputStream = new BufferedOutputStream(Files.newOutputStream(libPath.toPath()))) {
-                                byte[] buffer = new byte[2048];
-
-                                // Increments file size
-                                int length;
-                                int downloaded = 0;
-
-                                // Looping until server finishes
-                                while ((length = inputStream.read(buffer)) != -1) {
-                                    // Writing data
-                                    outputStream.write(buffer, 0, length);
-                                    downloaded += length;
-//                                    Constants.MAIN_LOGGER.debug("Download Status: " + (downloaded * 100) / (contentLength * 1.0) + "%");
-                                }
-
-                                outputStream.close();
-                                inputStream.close();
-                            }
-                        }
-
-                        FileUtils.excludeFromZipFile(libPath, library.toExclude);
+                        io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.FileUtils.downloadFile(library.url, path);
+                        FileUtils.excludeFromZipFile(path.toFile(), library.toExclude);
                         Constants.MAIN_LOGGER.info("Remapping library ready for use.");
-                    } else if (!libPath.exists() && library.path != null) {
+                    } else if (library.path != null) {
                         Constants.MAIN_LOGGER.info("Extracting remapping library '" + library.fileName + "' from mod jar.");
-                        FileUtils.copyFile(library.path, libPath.toPath());
+                        io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.FileUtils.copyZipFile(library.path, path);
                         Constants.MAIN_LOGGER.info("Remapping library ready for use.");
                     }
                 }
@@ -346,7 +338,7 @@ public class RemapUtil {
                 "io.github.fabriccompatibiltylayers.modremappingapi.impl.ModDiscoverer",
                 "io.github.fabriccompatibiltylayers.modremappingapi.impl.ModDiscoverer$1",
                 "io.github.fabriccompatibiltylayers.modremappingapi.impl.ModEntry",
-                "fr.catcore.modremapperapi.utils.RefmapJson",
+                "io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.resource.RefmapJson",
                 "fr.catcore.modremapperapi.remapping.MapEntryType",
                 "fr.catcore.modremapperapi.remapping.MappingBuilder",
                 "fr.catcore.modremapperapi.remapping.MappingBuilder$Entry",

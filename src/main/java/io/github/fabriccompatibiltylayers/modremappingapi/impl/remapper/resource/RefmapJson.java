@@ -1,6 +1,5 @@
-package fr.catcore.modremapperapi.utils;
+package io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.resource;
 
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.resource.RefmapRemapper;
 import net.fabricmc.tinyremapper.TinyRemapper;
 
 import java.util.HashMap;

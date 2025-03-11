@@ -13,7 +13,7 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 public class FileUtils {
-
+    @Deprecated
     public static void writeTextFile(Collection<String> lines, File file) {
         file.getParentFile().mkdirs();
         try {
@@ -30,6 +30,7 @@ public class FileUtils {
         }
     }
 
+    @Deprecated
     public static List<String> readTextSource(String path) {
         List<String> result = new ArrayList<>();
         try {
@@ -90,32 +91,8 @@ public class FileUtils {
         tempFile.delete();
     }
 
+    @Deprecated
     public static void copyFile(Path original, Path copy) throws IOException {
-        copy.toFile().delete();
-
-        ZipInputStream zin = new ZipInputStream(Files.newInputStream(original));
-        ZipOutputStream zout = new ZipOutputStream(Files.newOutputStream(copy));
-
-        ZipEntry entry = zin.getNextEntry();
-        byte[] buf = new byte[1024];
-
-        while (entry != null) {
-            String zipEntryName = entry.getName();
-
-            zout.putNextEntry(new ZipEntry(zipEntryName));
-            // Transfer bytes from the ZIP file to the output file
-            int len;
-            while ((len = zin.read(buf)) > 0) {
-                zout.write(buf, 0, len);
-            }
-
-            entry = zin.getNextEntry();
-        }
-
-        // Close the streams
-        zin.close();
-        // Compress the files
-        // Complete the ZIP file
-        zout.close();
+        io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.FileUtils.copyZipFile(original, copy);
     }
 }
