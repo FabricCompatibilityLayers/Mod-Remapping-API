@@ -1,7 +1,6 @@
 package fr.catcore.modremapperapi.remapping;
 
 import fr.catcore.modremapperapi.utils.Constants;
-import fr.catcore.modremapperapi.utils.FileUtils;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.MappingUtils;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.ModRemapper;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.RemapLibrary;
@@ -13,6 +12,7 @@ import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.resource
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.visitor.MRAApplyVisitor;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.visitor.MixinPostApplyVisitor;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.CacheUtils;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.FileUtils;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.mappingio.MappingVisitor;
@@ -25,12 +25,11 @@ import net.fabricmc.tinyremapper.extension.mixin.MixinExtension;
 import org.jetbrains.annotations.ApiStatus;
 
 import java.io.*;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Supplier;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 public class RemapUtil {
     private static List<ModRemapper> remappers;
@@ -43,8 +42,10 @@ public class RemapUtil {
 
     private static String defaultPackage = "";
 
+    @ApiStatus.Internal
     public static final List<String> MC_CLASS_NAMES = new ArrayList<>();
 
+    @ApiStatus.Internal
     public static void init(List<io.github.fabriccompatibiltylayers.modremappingapi.api.v1.ModRemapper> modRemappers) {
         remappers = modRemappers;
 
@@ -85,7 +86,7 @@ public class RemapUtil {
             String className = classView.getName(MappingsUtilsImpl.getSourceNamespace());
 
             if (className != null) {
-                MC_CLASS_NAMES.add(className);
+                MC_CLASS_NAMES.add("/" + className + ".class");
             }
         }
 
@@ -112,21 +113,22 @@ public class RemapUtil {
 
                     if (!library.url.isEmpty()) {
                         Constants.MAIN_LOGGER.info("Downloading remapping library '" + library.fileName + "' from url '" + library.url + "'");
-                        io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.FileUtils.downloadFile(library.url, path);
-                        FileUtils.excludeFromZipFile(path.toFile(), library.toExclude);
+                        FileUtils.downloadFile(library.url, path);
+                        FileUtils.removeEntriesFromZip(path, library.toExclude);
                         Constants.MAIN_LOGGER.info("Remapping library ready for use.");
                     } else if (library.path != null) {
                         Constants.MAIN_LOGGER.info("Extracting remapping library '" + library.fileName + "' from mod jar.");
-                        io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.FileUtils.copyZipFile(library.path, path);
+                        FileUtils.copyZipFile(library.path, path);
                         Constants.MAIN_LOGGER.info("Remapping library ready for use.");
                     }
                 }
             }
-        } catch (IOException e) {
+        } catch (IOException | URISyntaxException e) {
             throw new RuntimeException(e);
         }
     }
 
+    @ApiStatus.Internal
     public static void remapMods(Map<Path, Path> pathMap) {
         Constants.MAIN_LOGGER.debug("Starting jar remapping!");
         preloadClasses();
@@ -138,32 +140,19 @@ public class RemapUtil {
         MappingsUtilsImpl.writeFullMappings();
     }
 
+    @ApiStatus.Internal
     public static List<String> makeModMappings(Path modPath) {
         File path = modPath.toFile();
         List<String> files = new ArrayList<>();
+
         if (path.isFile()) {
             try {
-                FileInputStream fileinputstream = new FileInputStream(path);
-                ZipInputStream zipinputstream = new ZipInputStream(fileinputstream);
-
-                while (true) {
-                    ZipEntry zipentry = zipinputstream.getNextEntry();
-                    if (zipentry == null) {
-                        zipinputstream.close();
-                        fileinputstream.close();
-                        break;
-                    }
-
-                    String s1 = zipentry.getName();
-                    if (!zipentry.isDirectory()) {
-                        files.add(s1.replace("\\", "/"));
-                    }
-                }
+                files.addAll(FileUtils.listZipContent(modPath));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         } else if (path.isDirectory()) {
-            files.addAll(generateFolderMappings(path.listFiles()));
+            files.addAll(FileUtils.listDirectoryContent(path.listFiles()));
         }
 
         List<String> classes = new ArrayList<>();
@@ -182,6 +171,7 @@ public class RemapUtil {
         return files;
     }
 
+    @ApiStatus.Internal
     public static void generateModMappings() {
         try {
             MODS_TREE.visitEnd();
@@ -195,6 +185,7 @@ public class RemapUtil {
         MappingsUtilsImpl.addMappingsToContext(MODS_TREE);
     }
 
+    @ApiStatus.Internal
     public static void writeMcMappings() {
         try {
             MappingWriter writer = MappingWriter.create(Constants.MC_MAPPINGS_FILE.toPath(), MappingFormat.TINY_2_FILE);
@@ -202,23 +193,6 @@ public class RemapUtil {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private static List<String> generateFolderMappings(File[] files) {
-        List<String> list = new ArrayList<>();
-
-        for (File file : files) {
-            if (file.isFile()) list.add(file.getName());
-            else if (file.isDirectory()) {
-                String name = file.getName();
-
-                for (String fileName : generateFolderMappings(file.listFiles())) {
-                    list.add(name + "/" + fileName);
-                }
-            }
-        }
-
-        return list;
     }
 
     @Deprecated
