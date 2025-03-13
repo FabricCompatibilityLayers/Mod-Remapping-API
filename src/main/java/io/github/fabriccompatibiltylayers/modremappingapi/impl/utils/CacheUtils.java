@@ -17,7 +17,7 @@ public class CacheUtils {
     public static final Path MAIN_FOLDER = BASE_FOLDER
             .resolve(VersionHelper.MINECRAFT_VERSION)
             .resolve(VersionHelper.MOD_VERSION);
-    public static final Path LIBRARY_FOLDER = BASE_FOLDER.resolve("libs");
+    public static final Path LIBRARY_FOLDER = MAIN_FOLDER.resolve("libs");
 
     public static Path getCachePath(String pathName) {
         return MAIN_FOLDER.resolve(pathName);

@@ -311,7 +311,6 @@ public class RemapUtil {
                 "io.github.fabriccompatibiltylayers.modremappingapi.impl.ModDiscoverer$1",
                 "io.github.fabriccompatibiltylayers.modremappingapi.impl.ModEntry",
                 "io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.resource.RefmapJson",
-                "fr.catcore.modremapperapi.remapping.MapEntryType",
                 "fr.catcore.modremapperapi.remapping.MappingBuilder",
                 "fr.catcore.modremapperapi.remapping.MappingBuilder$Entry",
                 "fr.catcore.modremapperapi.remapping.MappingBuilder$Type",
@@ -529,7 +528,7 @@ public class RemapUtil {
             modRemapper.addRemapLibraries(libraries, FabricLoader.getInstance().getEnvironmentType());
 
             for (RemapLibrary library : libraries) {
-                Path libPath = CacheUtils.getLibraryPath(library.fileName);
+                Path libPath = CacheUtils.getLibraryPath(MappingsUtilsImpl.getSourceNamespace()).resolve(library.fileName);
 
                 if (Files.exists(libPath)) {
                     remapper.readClassPathAsync(libPath);

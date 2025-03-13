@@ -53,17 +53,19 @@ public class ModDiscoverer {
 
         if (Files.exists(mainTempDir)) {
             FileUtils.emptyDir(mainTempDir);
-        } else {
-            try {
-                Files.createDirectory(mainTempDir);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+        }
+
+        try {
+            Files.createDirectory(mainTempDir);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
 
         Map<Path, Path> modPaths = mods.stream()
                 .filter(entry -> Files.exists(entry.original))
-                .collect(Collectors.toMap(entry -> entry.original, entry -> entry.file));
+                .collect(Collectors.groupingBy(entry -> entry.modId))
+                .entrySet().stream()
+                .collect(Collectors.toMap(entry -> entry.getValue().get(0).original, entry -> entry.getValue().get(0).file));
 
         if (!remapClassEdits) {
             modPaths = excludeClassEdits(modPaths, mainTempDir);
@@ -145,8 +147,8 @@ public class ModDiscoverer {
             return Optional.of(
                     new DefaultModEntry(
                             name,
-                            folder,
-                            destination
+                            destination,
+                            folder
                     )
             );
         }
@@ -160,18 +162,24 @@ public class ModDiscoverer {
 
         List<String> entries = FileUtils.listZipContent(file);
 
+        boolean found = false;
+
         for (String entry : entries) {
-            if (Objects.equals(entry, "/fabric.mod.json")) break;
+            if (entry.contains("fabric.mod.json")) return Optional.empty();
 
             if (entry.endsWith(".class")) {
-                return Optional.of(
-                        new DefaultModEntry(
-                                modName,
-                                file,
-                                destinationFolder.resolve(fileName)
-                        )
-                );
+                found = true;
             }
+        }
+
+        if (found) {
+            return Optional.of(
+                    new DefaultModEntry(
+                            modName,
+                            destinationFolder.resolve(fileName),
+                            file
+                    )
+            );
         }
 
         return Optional.empty();
