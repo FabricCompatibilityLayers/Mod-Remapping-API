@@ -1,6 +1,5 @@
 package io.github.fabriccompatibiltylayers.modremappingapi.impl;
 
-import fr.catcore.modremapperapi.ModRemappingAPI;
 import fr.catcore.modremapperapi.utils.Constants;
 import fr.catcore.wfvaio.WhichFabricVariantAmIOn;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.MappingUtils;
@@ -32,10 +31,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.*;
@@ -80,7 +77,7 @@ public class MappingsUtilsImpl {
     @ApiStatus.Internal
     public static void loadExtraMappings(InputStream stream) {
         try {
-            EXTRA_MAPPINGS = loadMappings(stream);
+            EXTRA_MAPPINGS = MappingTreeHelper.readMappings(stream);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -95,40 +92,11 @@ public class MappingsUtilsImpl {
     }
 
     public static String getNativeNamespace() {
-        if (ModRemappingAPI.BABRIC) {
+        if (ModRemappingAPIImpl.BABRIC) {
             return FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT ? "client" : "server";
         }
 
         return "official";
-    }
-
-    @ApiStatus.Internal
-    public static MemoryMappingTree loadMappings(InputStream stream) throws IOException {
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream))) {
-            long time = System.currentTimeMillis();
-            MemoryMappingTree mappingTree = new MemoryMappingTree();
-
-            // We will only ever need to read tiny here
-            // so to strip the other formats from the included copy of mapping IO, don't use MappingReader.read()
-            reader.mark(4096);
-            final MappingFormat format = MappingReader.detectFormat(reader);
-            reader.reset();
-
-            switch (format) {
-                case TINY_FILE:
-                    Tiny1FileReader.read(reader, mappingTree);
-                    break;
-                case TINY_2_FILE:
-                    Tiny2FileReader.read(reader, mappingTree);
-                    break;
-                default:
-                    throw new UnsupportedOperationException("Unsupported mapping format: " + format);
-            }
-
-            Log.debug(LogCategory.MAPPINGS, "Loading mappings took %d ms", System.currentTimeMillis() - time);
-
-            return mappingTree;
-        }
     }
 
     private static void loadMappings() {
@@ -140,7 +108,7 @@ public class MappingsUtilsImpl {
             try {
                 URLConnection connection = url.openConnection();
 
-                VANILLA_MAPPINGS = loadMappings(connection.getInputStream());
+                VANILLA_MAPPINGS = MappingTreeHelper.readMappings(connection.getInputStream());
             } catch (IOException | ZipError e) {
                 throw new RuntimeException("Error reading "+url, e);
             }
@@ -228,26 +196,6 @@ public class MappingsUtilsImpl {
 
         visitor = new MappingNsRenamer(visitor, renames);
         return visitor;
-    }
-
-    @ApiStatus.Internal
-    public static IMappingProvider createProvider(MappingTree mappings, String from, String to) {
-        return TinyUtils.createMappingProvider(mappings, from, to);
-    }
-
-    @ApiStatus.Internal
-    public static void initializeMappingTree(MappingVisitor mappingVisitor) throws IOException {
-        initializeMappingTree(mappingVisitor, getSourceNamespace(), getTargetNamespace());
-    }
-
-    @ApiStatus.Internal
-    public static void initializeMappingTree(MappingVisitor mappingVisitor, String src, String target) throws IOException {
-        mappingVisitor.visitHeader();
-
-        List<String> namespaces = new ArrayList<>();
-        namespaces.add(target);
-
-        mappingVisitor.visitNamespaces(src, namespaces);
     }
 
     @ApiStatus.Internal
@@ -385,8 +333,7 @@ public class MappingsUtilsImpl {
 
     public static void writeFullMappings() {
         try {
-            MappingWriter writer = MappingWriter.create(Constants.FULL_MAPPINGS_FILE.toPath(), MappingFormat.TINY_2_FILE);
-            FULL_MAPPINGS.accept(writer);
+            MappingTreeHelper.exportMappings(FULL_MAPPINGS, Constants.FULL_MAPPINGS_FILE.toPath());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -4,6 +4,7 @@ import fr.catcore.modremapperapi.remapping.RemapUtil;
 import fr.catcore.modremapperapi.utils.Constants;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingsUtilsImpl;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.RemapUtils;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingTreeHelper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.CacheUtils;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.FileUtils;
 import net.fabricmc.loader.api.FabricLoader;
@@ -40,7 +41,7 @@ public class MinecraftRemapper {
                 .ignoreConflicts(true)
                 .fixPackageAccess(true)
                 .withMappings(
-                        MappingsUtilsImpl.createProvider(MappingsUtilsImpl.getMinecraftMappings(), src, target)
+                        MappingTreeHelper.createMappingProvider(MappingsUtilsImpl.getMinecraftMappings(), src, target)
                 );
 
         TinyRemapper remapper = builder.build();

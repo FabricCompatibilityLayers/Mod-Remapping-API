@@ -7,6 +7,7 @@ import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.RemapLibrary;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingBuilderImpl;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingsUtilsImpl;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.VisitorInfosImpl;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingTreeHelper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.minecraft.MinecraftRemapper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.resource.RefmapRemapper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.visitor.MRAApplyVisitor;
@@ -91,8 +92,7 @@ public class RemapUtil {
         }
 
         try {
-            MODS_TREE = new MemoryMappingTree();
-            MappingsUtilsImpl.initializeMappingTree(MODS_TREE);
+            MODS_TREE = MappingTreeHelper.createMappingTree();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -176,8 +176,7 @@ public class RemapUtil {
         try {
             MODS_TREE.visitEnd();
 
-            MappingWriter writer = MappingWriter.create(Constants.REMAPPED_MAPPINGS_FILE.toPath(), MappingFormat.TINY_2_FILE);
-            MODS_TREE.accept(writer);
+            MappingTreeHelper.exportMappings(MODS_TREE, Constants.REMAPPED_MAPPINGS_FILE.toPath());
         } catch (IOException e) {
             throw new RuntimeException("Error while generating mods mappings", e);
         }
@@ -188,8 +187,7 @@ public class RemapUtil {
     @ApiStatus.Internal
     public static void writeMcMappings() {
         try {
-            MappingWriter writer = MappingWriter.create(Constants.MC_MAPPINGS_FILE.toPath(), MappingFormat.TINY_2_FILE);
-            MINECRAFT_TREE.accept(writer);
+            MappingTreeHelper.exportMappings(MINECRAFT_TREE, Constants.MC_MAPPINGS_FILE.toPath());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -222,10 +220,10 @@ public class RemapUtil {
     }
 
     private static MappingTree generateMappings() {
-        MemoryMappingTree mappingTree = new MemoryMappingTree();
+        MemoryMappingTree mappingTree;
 
         try {
-            MappingsUtilsImpl.initializeMappingTree(mappingTree);
+            mappingTree = MappingTreeHelper.createMappingTree();
 
             io.github.fabriccompatibiltylayers.modremappingapi.api.v1.MappingBuilder builder = new MappingBuilderImpl(mappingTree);
 
@@ -493,7 +491,7 @@ public class RemapUtil {
         }
 
         for (MappingTree tree : trees) {
-            builder.withMappings(MappingsUtilsImpl.createProvider(tree, MappingsUtilsImpl.getSourceNamespace(), MappingsUtilsImpl.getTargetNamespace()));
+            builder.withMappings(MappingTreeHelper.createMappingProvider(tree, MappingsUtilsImpl.getSourceNamespace(), MappingsUtilsImpl.getTargetNamespace()));
         }
 
         MRAApplyVisitor preApplyVisitor = new MRAApplyVisitor();

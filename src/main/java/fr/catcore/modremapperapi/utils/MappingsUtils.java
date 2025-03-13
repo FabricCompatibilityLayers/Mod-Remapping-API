@@ -1,6 +1,7 @@
 package fr.catcore.modremapperapi.utils;
 
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingsUtilsImpl;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingTreeHelper;
 import net.fabricmc.mappingio.tree.MappingTree;
 import net.fabricmc.tinyremapper.*;
 
@@ -23,6 +24,6 @@ public class MappingsUtils {
 
     @Deprecated
     public static IMappingProvider createProvider(MappingTree mappings) {
-        return MappingsUtilsImpl.createProvider(mappings, getNativeNamespace(), getTargetNamespace());
+        return MappingTreeHelper.createMappingProvider(mappings, getNativeNamespace(), getTargetNamespace());
     }
 }
