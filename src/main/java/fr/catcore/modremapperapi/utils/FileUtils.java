@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+@Deprecated
 public class FileUtils {
     @Deprecated
     public static void writeTextFile(Collection<String> lines, File file) {

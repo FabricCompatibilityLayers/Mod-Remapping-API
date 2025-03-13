@@ -11,7 +11,6 @@ import net.fabricmc.loader.impl.launch.FabricLauncherBase;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.include.com.google.common.collect.ImmutableList;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.*;
@@ -41,7 +40,7 @@ public class ModDiscoverer {
                 try {
                     if (!Files.exists(mcSubFolder)) Files.createDirectories(mcSubFolder);
                     if (!Files.exists(cacheFolder)) Files.createDirectories(cacheFolder);
-                    else io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.FileUtils.emptyDir(cacheFolder);
+                    else FileUtils.emptyDir(cacheFolder);
 
                     mods.addAll(discoverModsInFolder(mcSubFolder, cacheFolder));
                 } catch (IOException | URISyntaxException e) {
@@ -50,17 +49,24 @@ public class ModDiscoverer {
             }
         }
 
-        File mainTempDir = CacheUtils.getCachePath("temp").toFile();
-        if (mainTempDir.exists()) {
-            io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.FileUtils.emptyDir(mainTempDir.toPath());
+        Path mainTempDir = CacheUtils.getCachePath("temp");
+
+        if (Files.exists(mainTempDir)) {
+            FileUtils.emptyDir(mainTempDir);
+        } else {
+            try {
+                Files.createDirectory(mainTempDir);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         Map<Path, Path> modPaths = mods.stream()
-                .filter(entry -> entry.original != null)
-                .collect(Collectors.toMap(entry -> entry.original.toPath(), entry -> entry.file.toPath()));
+                .filter(entry -> Files.exists(entry.original))
+                .collect(Collectors.toMap(entry -> entry.original, entry -> entry.file));
 
         if (!remapClassEdits) {
-            modPaths = excludeClassEdits(modPaths);
+            modPaths = excludeClassEdits(modPaths, mainTempDir);
         }
 
         for (Path path : modPaths.keySet()) {
@@ -74,21 +80,25 @@ public class ModDiscoverer {
         modPaths.values().forEach(FabricLauncherBase.getLauncher()::addToClassPath);
     }
 
-    private static Map<Path, Path> excludeClassEdits(Map<Path, Path> modPaths) {
+    private static Map<Path, Path> excludeClassEdits(Map<Path, Path> modPaths, Path tempFolder) {
         Map<Path, Path> map = new HashMap<>();
         Map<Path, Path> convertMap = new HashMap<>();
 
-        File mainTempDir = CacheUtils.getCachePath("temp").toFile();
-        mainTempDir.mkdirs();
-
-
         for (Map.Entry<Path, Path> entry : modPaths.entrySet()) {
-            File tempDir = new File(mainTempDir, entry.getValue().toFile().getParentFile().getName());
-            if (!tempDir.exists()) tempDir.mkdir();
+            Path tempDir = tempFolder.resolve(entry.getValue().getParent().getFileName().toString());
 
-            File tempFile = new File(tempDir, entry.getValue().toFile().getName());
-            map.put(tempFile.toPath(), entry.getValue());
-            convertMap.put(entry.getKey(), tempFile.toPath());
+            if (!Files.exists(tempDir)) {
+                try {
+                    Files.createDirectory(tempDir);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    continue;
+                }
+            }
+
+            Path tempFile = tempDir.resolve(entry.getValue().getFileName().toString());
+            map.put(tempFile, entry.getValue());
+            convertMap.put(entry.getKey(), tempFile);
         }
 
         List<Path> errored = new ArrayList<>();
@@ -135,8 +145,8 @@ public class ModDiscoverer {
             return Optional.of(
                     new DefaultModEntry(
                             name,
-                            folder.toFile(),
-                            destination.toFile()
+                            folder,
+                            destination
                     )
             );
         }
@@ -157,8 +167,8 @@ public class ModDiscoverer {
                 return Optional.of(
                         new DefaultModEntry(
                                 modName,
-                                file.toFile(),
-                                destinationFolder.resolve(fileName).toFile()
+                                file,
+                                destinationFolder.resolve(fileName)
                         )
                 );
             }
@@ -188,14 +198,14 @@ public class ModDiscoverer {
 
         for (ModEntry modEntry : mods) {
             if (EXCLUDED.containsKey(modEntry.modId)) {
-                if (Files.isDirectory(modEntry.file.toPath())) {
+                if (Files.isDirectory(modEntry.file)) {
                     for (String excluded : EXCLUDED.get(modEntry.modId)) {
-                        if (Files.deleteIfExists(modEntry.file.toPath().resolve(excluded))) {
-                            Constants.MAIN_LOGGER.debug("File deleted: " + modEntry.file.toPath().resolve(excluded));
+                        if (Files.deleteIfExists(modEntry.file.resolve(excluded))) {
+                            Constants.MAIN_LOGGER.debug("File deleted: " + modEntry.file.resolve(excluded));
                         }
                     }
                 } else {
-                    FileUtils.removeEntriesFromZip(modEntry.file.toPath(), EXCLUDED.get(modEntry.modId));
+                    FileUtils.removeEntriesFromZip(modEntry.file, EXCLUDED.get(modEntry.modId));
                 }
             }
         }
