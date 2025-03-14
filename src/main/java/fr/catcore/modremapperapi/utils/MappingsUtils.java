@@ -2,6 +2,7 @@ package fr.catcore.modremapperapi.utils;
 
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingsUtilsImpl;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingTreeHelper;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingsRegistry;
 import net.fabricmc.mappingio.tree.MappingTree;
 import net.fabricmc.tinyremapper.*;
 
@@ -19,7 +20,7 @@ public class MappingsUtils {
 
     @Deprecated
     public static MappingTree getMinecraftMappings() {
-        return MappingsUtilsImpl.getVanillaMappings();
+        return MappingsRegistry.VANILLA;
     }
 
     @Deprecated

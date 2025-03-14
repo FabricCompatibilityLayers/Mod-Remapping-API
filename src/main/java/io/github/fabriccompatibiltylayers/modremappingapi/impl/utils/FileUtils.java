@@ -131,6 +131,19 @@ public class FileUtils {
     }
 
     @ApiStatus.Internal
+    public static List<String> listPathContent(Path path) throws IOException {
+        File file = path.toFile();
+
+        if (file.isDirectory()) {
+            return listDirectoryContent(file.listFiles());
+        } else if (file.isFile()) {
+            return listZipContent(path);
+        }
+
+        return new ArrayList<>();
+    }
+
+    @ApiStatus.Internal
     public static void emptyDir(Path dir) {
         try {
             Files.walkFileTree(dir, new FileVisitor<Path>() {

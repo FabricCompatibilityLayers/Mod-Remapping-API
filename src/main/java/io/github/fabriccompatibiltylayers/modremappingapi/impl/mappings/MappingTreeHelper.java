@@ -1,12 +1,14 @@
 package io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings;
 
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingsUtilsImpl;
+import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.impl.util.log.Log;
 import net.fabricmc.loader.impl.util.log.LogCategory;
 import net.fabricmc.mappingio.MappingReader;
 import net.fabricmc.mappingio.MappingVisitor;
 import net.fabricmc.mappingio.MappingWriter;
 import net.fabricmc.mappingio.adapter.MappingDstNsReorder;
+import net.fabricmc.mappingio.adapter.MappingNsRenamer;
 import net.fabricmc.mappingio.adapter.MappingSourceNsSwitch;
 import net.fabricmc.mappingio.format.MappingFormat;
 import net.fabricmc.mappingio.format.tiny.Tiny1FileReader;
@@ -15,6 +17,7 @@ import net.fabricmc.mappingio.tree.*;
 import net.fabricmc.tinyremapper.IMappingProvider;
 import net.fabricmc.tinyremapper.TinyUtils;
 import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -23,6 +26,7 @@ import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @ApiStatus.Internal
@@ -140,5 +144,27 @@ public class MappingTreeHelper {
         try (MappingWriter writer = MappingWriter.create(outputPath, MappingFormat.TINY_2_FILE)) {
             mappingTreeView.accept(writer);
         }
+    }
+
+    public static @NotNull MappingVisitor getNsReorderingVisitor(MemoryMappingTree tempTree, boolean switchNamespace, Map<String, String> renames) {
+        List<String> targetNamespace = new ArrayList<>();
+        targetNamespace.add("intermediary");
+
+        if (FabricLoader.getInstance().getMappingResolver().getNamespaces().contains("named")) targetNamespace.add("named");
+
+        MappingVisitor visitor = tempTree;
+
+        if (switchNamespace) {
+            visitor = new MappingSourceNsSwitch(
+                    new MappingDstNsReorder(
+                            visitor,
+                            targetNamespace
+                    ),
+                    "official"
+            );
+        }
+
+        visitor = new MappingNsRenamer(visitor, renames);
+        return visitor;
     }
 }

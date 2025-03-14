@@ -4,7 +4,6 @@ import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.RemapLibrary;
 import net.fabricmc.loader.api.FabricLoader;
 import org.jetbrains.annotations.ApiStatus;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;

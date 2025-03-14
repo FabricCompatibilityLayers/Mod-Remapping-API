@@ -4,6 +4,7 @@ import fr.catcore.modremapperapi.utils.Constants;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.ModRemapper;
 import fr.catcore.modremapperapi.remapping.RemapUtil;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.compatibility.V0ModRemapper;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingsRegistry;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.CacheUtils;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.FileUtils;
 import net.fabricmc.loader.api.FabricLoader;
@@ -72,10 +73,10 @@ public class ModDiscoverer {
         }
 
         for (Path path : modPaths.keySet()) {
-            RemapUtil.makeModMappings(path);
+            MappingsRegistry.addModMappings(path);
         }
 
-        RemapUtil.generateModMappings();
+        MappingsRegistry.generateModMappings();
 
         RemapUtil.remapMods(modPaths);
 

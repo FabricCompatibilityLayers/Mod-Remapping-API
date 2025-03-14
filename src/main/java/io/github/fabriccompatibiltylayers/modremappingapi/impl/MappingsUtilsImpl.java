@@ -1,28 +1,13 @@
 package io.github.fabriccompatibiltylayers.modremappingapi.impl;
 
 import fr.catcore.modremapperapi.utils.Constants;
-import fr.catcore.wfvaio.WhichFabricVariantAmIOn;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.MappingUtils;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingTreeHelper;
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.VersionHelper;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingsRegistry;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.loader.impl.launch.MappingConfiguration;
-import net.fabricmc.loader.impl.util.log.Log;
-import net.fabricmc.loader.impl.util.log.LogCategory;
 import net.fabricmc.mappingio.MappedElementKind;
-import net.fabricmc.mappingio.MappingReader;
-import net.fabricmc.mappingio.MappingVisitor;
-import net.fabricmc.mappingio.MappingWriter;
-import net.fabricmc.mappingio.adapter.MappingDstNsReorder;
-import net.fabricmc.mappingio.adapter.MappingNsRenamer;
-import net.fabricmc.mappingio.adapter.MappingSourceNsSwitch;
-import net.fabricmc.mappingio.format.MappingFormat;
-import net.fabricmc.mappingio.format.tiny.Tiny1FileReader;
-import net.fabricmc.mappingio.format.tiny.Tiny2FileReader;
 import net.fabricmc.mappingio.tree.*;
-import net.fabricmc.tinyremapper.IMappingProvider;
-import net.fabricmc.tinyremapper.TinyUtils;
 import net.fabricmc.tinyremapper.api.TrClass;
 import net.fabricmc.tinyremapper.api.TrEnvironment;
 import net.fabricmc.tinyremapper.api.TrMethod;
@@ -32,37 +17,12 @@ import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.zip.ZipError;
 
 @ApiStatus.Internal
 public class MappingsUtilsImpl {
-    private static boolean initialized = false;
-    private static MappingTree VANILLA_MAPPINGS;
-    private static VisitableMappingTree MINECRAFT_MAPPINGS;
-    private static VisitableMappingTree FULL_MAPPINGS = new MemoryMappingTree();
-
     private static String sourceNamespace = "official";
-
-    private static MappingTree EXTRA_MAPPINGS;
-
-    @ApiStatus.Internal
-    public static MappingTree getVanillaMappings() {
-        loadMappings();
-
-        return VANILLA_MAPPINGS;
-    }
-
-    @ApiStatus.Internal
-    public static MappingTree getMinecraftMappings() {
-        loadMappings();
-
-        return MINECRAFT_MAPPINGS;
-    }
 
     @ApiStatus.Internal
     public static String getSourceNamespace() {
@@ -72,15 +32,6 @@ public class MappingsUtilsImpl {
     @ApiStatus.Internal
     public static void setSourceNamespace(String sourceNamespace) {
         MappingsUtilsImpl.sourceNamespace = sourceNamespace;
-    }
-
-    @ApiStatus.Internal
-    public static void loadExtraMappings(InputStream stream) {
-        try {
-            EXTRA_MAPPINGS = MappingTreeHelper.readMappings(stream);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     public static boolean isSourceNamespaceObf() {
@@ -99,121 +50,22 @@ public class MappingsUtilsImpl {
         return "official";
     }
 
-    private static void loadMappings() {
-        if (initialized) return;
-
-        URL url = MappingConfiguration.class.getClassLoader().getResource("mappings/mappings.tiny");
-
-        if (url != null) {
-            try {
-                URLConnection connection = url.openConnection();
-
-                VANILLA_MAPPINGS = MappingTreeHelper.readMappings(connection.getInputStream());
-            } catch (IOException | ZipError e) {
-                throw new RuntimeException("Error reading "+url, e);
-            }
-        }
-
-        adaptVanillaMappings();
-
-        if (VANILLA_MAPPINGS == null) {
-            Log.info(LogCategory.MAPPINGS, "Mappings not present!");
-            VANILLA_MAPPINGS = new MemoryMappingTree();
-        }
-
-        try {
-            MINECRAFT_MAPPINGS.accept(FULL_MAPPINGS);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        initialized = true;
-    }
-
-    private static void adaptVanillaMappings() {
-        MINECRAFT_MAPPINGS = new MemoryMappingTree();
-
-        if (VANILLA_MAPPINGS == null) {
-            return;
-        }
-
-        Map<String, String> renames = new HashMap<>();
-        boolean switchNamespace = false;
-
-        switch (WhichFabricVariantAmIOn.getVariant()) {
-            case BABRIC:
-                renames.put(FabricLoader.getInstance().getEnvironmentType().name().toLowerCase(Locale.ENGLISH), "official");
-                switchNamespace = true;
-                break;
-            case ORNITHE_V2:
-                Boolean merged = VersionHelper.predicate(">=1.3");
-                if (merged != null && !merged) {
-                    renames.put(FabricLoader.getInstance().getEnvironmentType().name().toLowerCase(Locale.ENGLISH) + "Official", "official");
-                    switchNamespace = true;
-                }
-                break;
-            case BABRIC_NEW_FORMAT:
-                renames.put(FabricLoader.getInstance().getEnvironmentType().name().toLowerCase(Locale.ENGLISH) + "Official", "official");
-                switchNamespace = true;
-                break;
-            default:
-                break;
-        }
-
-        MemoryMappingTree tempTree = new MemoryMappingTree();
-        MappingVisitor visitor = getMappingVisitor(tempTree, switchNamespace, renames);
-
-        try {
-            VANILLA_MAPPINGS.accept(visitor);
-
-            if (EXTRA_MAPPINGS == null) {
-                tempTree.accept(MINECRAFT_MAPPINGS);
-            } else {
-                MappingTreeHelper.mergeIntoNew(MINECRAFT_MAPPINGS, tempTree, EXTRA_MAPPINGS);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private static @NotNull MappingVisitor getMappingVisitor(MemoryMappingTree tempTree, boolean switchNamespace, Map<String, String> renames) {
-        List<String> targetNamespace = new ArrayList<>();
-        targetNamespace.add("intermediary");
-
-        if (VANILLA_MAPPINGS.getDstNamespaces().contains("named")) targetNamespace.add("named");
-
-        MappingVisitor visitor = tempTree;
-
-        if (switchNamespace) {
-            visitor = new MappingSourceNsSwitch(
-                    new MappingDstNsReorder(
-                            visitor,
-                            targetNamespace
-                    ),
-                    "official"
-            );
-        }
-
-        visitor = new MappingNsRenamer(visitor, renames);
-        return visitor;
-    }
-
     @ApiStatus.Internal
     public static void addMappingsToContext(MappingTree mappingTreeView) {
         try {
-            MappingTreeHelper.merge(FULL_MAPPINGS, mappingTreeView);
+            MappingTreeHelper.merge(MappingsRegistry.FULL, mappingTreeView);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     public static void completeMappingsFromTr(TrEnvironment trEnvironment, String src) {
-        int srcNamespace = FULL_MAPPINGS.getNamespaceId(src);
-        int trueSrcNamespace = FULL_MAPPINGS.getNamespaceId(FULL_MAPPINGS.getSrcNamespace());
+        int srcNamespace = MappingsRegistry.FULL.getNamespaceId(src);
+        int trueSrcNamespace = MappingsRegistry.FULL.getNamespaceId(MappingsRegistry.FULL.getSrcNamespace());
 
         Map<ExtendedClassMember, List<String>> classMembers = new HashMap<>();
 
-        for (MappingTree.ClassMapping classMapping : FULL_MAPPINGS.getClasses()) {
+        for (MappingTree.ClassMapping classMapping : MappingsRegistry.FULL.getClasses()) {
             String className = classMapping.getName(srcNamespace);
 
             TrClass trClass = trEnvironment.getClass(className);
@@ -243,9 +95,9 @@ public class MappingsUtilsImpl {
         int propagated = 0;
 
         try {
-            FULL_MAPPINGS.visitHeader();
-            FULL_MAPPINGS.visitNamespaces(FULL_MAPPINGS.getSrcNamespace(), FULL_MAPPINGS.getDstNamespaces());
-            FULL_MAPPINGS.visitContent();
+            MappingsRegistry.FULL.visitHeader();
+            MappingsRegistry.FULL.visitNamespaces(MappingsRegistry.FULL.getSrcNamespace(), MappingsRegistry.FULL.getDstNamespaces());
+            MappingsRegistry.FULL.visitContent();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -258,17 +110,13 @@ public class MappingsUtilsImpl {
                 TrClass trClass = trEnvironment.getClass(child);
                 if (trClass == null) continue;
 
-                try {
-                    if (srcNamespace == trueSrcNamespace) {
-                        FULL_MAPPINGS.visitClass(child);
-                    } else {
-                        FULL_MAPPINGS.visitClass(FULL_MAPPINGS.mapClassName(child, srcNamespace, trueSrcNamespace));
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
+                if (srcNamespace == trueSrcNamespace) {
+                    MappingsRegistry.FULL.visitClass(child);
+                } else {
+                    MappingsRegistry.FULL.visitClass(MappingsRegistry.FULL.mapClassName(child, srcNamespace, trueSrcNamespace));
                 }
 
-                MappingTree.ClassMapping classMapping = FULL_MAPPINGS.getClass(child, srcNamespace);
+                MappingTree.ClassMapping classMapping = MappingsRegistry.FULL.getClass(child, srcNamespace);
 
                 if (classMapping == null) continue;
 
@@ -277,26 +125,26 @@ public class MappingsUtilsImpl {
 
                 try {
                     if (srcNamespace == trueSrcNamespace) {
-                        FULL_MAPPINGS.visitMethod(member.name, member.desc);
+                        MappingsRegistry.FULL.visitMethod(member.name, member.desc);
                     } else {
-                        MappingTree.MemberMapping memberMapping = FULL_MAPPINGS.getMethod(member.owner, member.name, member.desc, srcNamespace);
+                        MappingTree.MemberMapping memberMapping = MappingsRegistry.FULL.getMethod(member.owner, member.name, member.desc, srcNamespace);
                         if (memberMapping == null) continue;
 
-                        FULL_MAPPINGS.visitMethod(memberMapping.getSrcName(), memberMapping.getSrcDesc());
+                        MappingsRegistry.FULL.visitMethod(memberMapping.getSrcName(), memberMapping.getSrcDesc());
 
-                        FULL_MAPPINGS.visitDstName(MappedElementKind.METHOD, srcNamespace, member.name);
-                        FULL_MAPPINGS.visitDstDesc(MappedElementKind.METHOD, srcNamespace, member.desc);
+                        MappingsRegistry.FULL.visitDstName(MappedElementKind.METHOD, srcNamespace, member.name);
+                        MappingsRegistry.FULL.visitDstDesc(MappedElementKind.METHOD, srcNamespace, member.desc);
                     }
 
-                    MappingTree.MethodMapping methodMapping = FULL_MAPPINGS.getMethod(member.owner, member.name, member.desc, srcNamespace);
+                    MappingTree.MethodMapping methodMapping = MappingsRegistry.FULL.getMethod(member.owner, member.name, member.desc, srcNamespace);
                     if (methodMapping == null) continue;
 
                     MappingTree.MethodMapping newMethodMapping = classMapping.getMethod(member.name, member.desc, srcNamespace);
 
                     boolean actualPropagated = false;
 
-                    for (String namespace : FULL_MAPPINGS.getDstNamespaces()) {
-                        int targetNamespace = FULL_MAPPINGS.getNamespaceId(namespace);
+                    for (String namespace : MappingsRegistry.FULL.getDstNamespaces()) {
+                        int targetNamespace = MappingsRegistry.FULL.getNamespaceId(namespace);
 
                         if (targetNamespace == srcNamespace) continue;
 
@@ -304,7 +152,7 @@ public class MappingsUtilsImpl {
                             String targetName = methodMapping.getName(targetNamespace);
 
                             if (targetName != null) {
-                                FULL_MAPPINGS.visitDstName(MappedElementKind.METHOD, targetNamespace, targetName);
+                                MappingsRegistry.FULL.visitDstName(MappedElementKind.METHOD, targetNamespace, targetName);
                                 actualPropagated = true;
                             }
                         }
@@ -313,7 +161,7 @@ public class MappingsUtilsImpl {
                             String targetDesc = methodMapping.getDesc(targetNamespace);
 
                             if (targetDesc != null) {
-                                FULL_MAPPINGS.visitDstDesc(MappedElementKind.METHOD, targetNamespace, targetDesc);
+                                MappingsRegistry.FULL.visitDstDesc(MappedElementKind.METHOD, targetNamespace, targetDesc);
                                 actualPropagated = true;
                             }
                         }
@@ -333,7 +181,7 @@ public class MappingsUtilsImpl {
 
     public static void writeFullMappings() {
         try {
-            MappingTreeHelper.exportMappings(FULL_MAPPINGS, Constants.FULL_MAPPINGS_FILE.toPath());
+            MappingTreeHelper.exportMappings(MappingsRegistry.FULL, Constants.FULL_MAPPINGS_FILE.toPath());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -368,33 +216,33 @@ public class MappingsUtilsImpl {
     }
 
     public static String mapClass(String className) {
-        int srcNamespace = FULL_MAPPINGS.getNamespaceId(getSourceNamespace());
-        int targetNamespace = FULL_MAPPINGS.getNamespaceId(getTargetNamespace());
+        int srcNamespace = MappingsRegistry.FULL.getNamespaceId(getSourceNamespace());
+        int targetNamespace = MappingsRegistry.FULL.getNamespaceId(getTargetNamespace());
 
-        return FULL_MAPPINGS.mapClassName(className, srcNamespace, targetNamespace);
+        return MappingsRegistry.FULL.mapClassName(className, srcNamespace, targetNamespace);
     }
 
     public static String unmapClass(String className) {
-        int srcNamespace = FULL_MAPPINGS.getNamespaceId(getTargetNamespace());
-        int targetNamespace = FULL_MAPPINGS.getNamespaceId(getSourceNamespace());
+        int srcNamespace = MappingsRegistry.FULL.getNamespaceId(getTargetNamespace());
+        int targetNamespace = MappingsRegistry.FULL.getNamespaceId(getSourceNamespace());
 
-        return FULL_MAPPINGS.mapClassName(className, srcNamespace, targetNamespace);
+        return MappingsRegistry.FULL.mapClassName(className, srcNamespace, targetNamespace);
     }
 
     public static MappingUtils.ClassMember mapField(String className, String fieldName, @Nullable String fieldDesc) {
-        int srcNamespace = FULL_MAPPINGS.getNamespaceId(getSourceNamespace());
-        int targetNamespace = FULL_MAPPINGS.getNamespaceId(getTargetNamespace());
+        int srcNamespace = MappingsRegistry.FULL.getNamespaceId(getSourceNamespace());
+        int targetNamespace = MappingsRegistry.FULL.getNamespaceId(getTargetNamespace());
 
-        MappingTree.FieldMapping fieldMapping = FULL_MAPPINGS.getField(className, fieldName, fieldDesc, srcNamespace);
+        MappingTree.FieldMapping fieldMapping = MappingsRegistry.FULL.getField(className, fieldName, fieldDesc, srcNamespace);
 
         return mapMember(fieldName, fieldDesc, targetNamespace, fieldMapping);
     }
 
     public static MappingUtils.ClassMember mapFieldFromRemappedClass(String className, String fieldName, @Nullable String fieldDesc) {
-        int srcNamespace = FULL_MAPPINGS.getNamespaceId(getSourceNamespace());
-        int targetNamespace = FULL_MAPPINGS.getNamespaceId(getTargetNamespace());
+        int srcNamespace = MappingsRegistry.FULL.getNamespaceId(getSourceNamespace());
+        int targetNamespace = MappingsRegistry.FULL.getNamespaceId(getTargetNamespace());
 
-        MappingTree.ClassMapping classMapping = FULL_MAPPINGS.getClass(className, targetNamespace);
+        MappingTree.ClassMapping classMapping = MappingsRegistry.FULL.getClass(className, targetNamespace);
         if (classMapping == null) return new MappingUtils.ClassMember(fieldName, fieldDesc);
 
         MappingTree.FieldMapping fieldMapping = classMapping.getField(fieldName, fieldDesc, srcNamespace);
@@ -402,13 +250,13 @@ public class MappingsUtilsImpl {
     }
 
     public static MappingUtils.ClassMember mapMethod(String className, String methodName, String methodDesc) {
-        int srcNamespace = FULL_MAPPINGS.getNamespaceId(getSourceNamespace());
-        int targetNamespace = FULL_MAPPINGS.getNamespaceId(getTargetNamespace());
+        int srcNamespace = MappingsRegistry.FULL.getNamespaceId(getSourceNamespace());
+        int targetNamespace = MappingsRegistry.FULL.getNamespaceId(getTargetNamespace());
 
-        MappingTree.MethodMapping methodMapping = FULL_MAPPINGS.getMethod(className, methodName, methodDesc, srcNamespace);
+        MappingTree.MethodMapping methodMapping = MappingsRegistry.FULL.getMethod(className, methodName, methodDesc, srcNamespace);
 
         if (methodMapping == null) {
-            MappingTree.ClassMapping classMapping = FULL_MAPPINGS.getClass(className, srcNamespace);
+            MappingTree.ClassMapping classMapping = MappingsRegistry.FULL.getClass(className, srcNamespace);
             if (classMapping != null) methodMapping = mapMethodWithPartialDesc(classMapping, methodName, methodDesc, srcNamespace);
         }
 
@@ -416,10 +264,10 @@ public class MappingsUtilsImpl {
     }
 
     public static MappingUtils.ClassMember mapMethodFromRemappedClass(String className, String methodName, String methodDesc) {
-        int srcNamespace = FULL_MAPPINGS.getNamespaceId(getSourceNamespace());
-        int targetNamespace = FULL_MAPPINGS.getNamespaceId(getTargetNamespace());
+        int srcNamespace = MappingsRegistry.FULL.getNamespaceId(getSourceNamespace());
+        int targetNamespace = MappingsRegistry.FULL.getNamespaceId(getTargetNamespace());
 
-        MappingTree.ClassMapping classMapping = FULL_MAPPINGS.getClass(className, targetNamespace);
+        MappingTree.ClassMapping classMapping = MappingsRegistry.FULL.getClass(className, targetNamespace);
         if (classMapping == null) return new MappingUtils.ClassMember(methodName, methodDesc);
 
         MappingTree.MethodMapping methodMapping = classMapping.getMethod(methodName, methodDesc, srcNamespace);
@@ -456,9 +304,9 @@ public class MappingsUtilsImpl {
     }
 
     public static MappingUtils.ClassMember mapField(Class<?> owner, String fieldName) {
-        int srcNamespace = FULL_MAPPINGS.getNamespaceId(getSourceNamespace());
-        int targetNamespace = FULL_MAPPINGS.getNamespaceId(getTargetNamespace());
-        MappingTree.ClassMapping classMapping = FULL_MAPPINGS.getClass(owner.getName().replace(".", "/"), targetNamespace);
+        int srcNamespace = MappingsRegistry.FULL.getNamespaceId(getSourceNamespace());
+        int targetNamespace = MappingsRegistry.FULL.getNamespaceId(getTargetNamespace());
+        MappingTree.ClassMapping classMapping = MappingsRegistry.FULL.getClass(owner.getName().replace(".", "/"), targetNamespace);
 
         if (classMapping != null) {
             MappingTree.FieldMapping fieldMapping = classMapping.getField(fieldName, null, srcNamespace);
@@ -478,9 +326,9 @@ public class MappingsUtilsImpl {
     public static MappingUtils.ClassMember mapMethod(Class<?> owner, String methodName, Class<?>[] parameterTypes) {
         String argDesc = classTypeToDescriptor(parameterTypes);
 
-        int srcNamespace = FULL_MAPPINGS.getNamespaceId(getSourceNamespace());
-        int targetNamespace = FULL_MAPPINGS.getNamespaceId(getTargetNamespace());
-        MappingTree.ClassMapping classMapping = FULL_MAPPINGS.getClass(owner.getName().replace(".", "/"), targetNamespace);
+        int srcNamespace = MappingsRegistry.FULL.getNamespaceId(getSourceNamespace());
+        int targetNamespace = MappingsRegistry.FULL.getNamespaceId(getTargetNamespace());
+        MappingTree.ClassMapping classMapping = MappingsRegistry.FULL.getClass(owner.getName().replace(".", "/"), targetNamespace);
 
         if (classMapping != null) {
             for (MappingTree.MethodMapping methodDef : classMapping.getMethods()) {
@@ -517,9 +365,9 @@ public class MappingsUtilsImpl {
     }
 
     public static String mapDescriptor(String desc) {
-        int srcNamespace = FULL_MAPPINGS.getNamespaceId(getSourceNamespace());
-        int targetNamespace = FULL_MAPPINGS.getNamespaceId(getTargetNamespace());
+        int srcNamespace = MappingsRegistry.FULL.getNamespaceId(getSourceNamespace());
+        int targetNamespace = MappingsRegistry.FULL.getNamespaceId(getTargetNamespace());
 
-        return FULL_MAPPINGS.mapDesc(desc, srcNamespace, targetNamespace);
+        return MappingsRegistry.FULL.mapDesc(desc, srcNamespace, targetNamespace);
     }
 }
