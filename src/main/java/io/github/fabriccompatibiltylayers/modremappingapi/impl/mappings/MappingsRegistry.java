@@ -3,6 +3,7 @@ package io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings;
 import fr.catcore.modremapperapi.utils.Constants;
 import fr.catcore.wfvaio.WhichFabricVariantAmIOn;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.MappingBuilder;
+import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.ModRemapper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingBuilderImpl;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingsUtilsImpl;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.FileUtils;
@@ -20,24 +21,26 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 import java.util.zip.ZipError;
 
 import static fr.catcore.modremapperapi.remapping.RemapUtil.defaultPackage;
 
 @ApiStatus.Internal
 public class MappingsRegistry {
+    public static List<String> VANILLA_CLASS_LIST = new ArrayList<>();
+
     public static final MemoryMappingTree VANILLA;
     public static MemoryMappingTree FORMATTED = new MemoryMappingTree();
     public static boolean generated = false;
 
     public static MemoryMappingTree MODS;
+    public static MemoryMappingTree ADDITIONAL;
 
     static {
         try {
             MODS = MappingTreeHelper.createMappingTree();
+            ADDITIONAL = MappingTreeHelper.createMappingTree();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -105,6 +108,20 @@ public class MappingsRegistry {
         }
 
         FORMATTED.accept(FULL);
+
+        for (MappingTree.ClassMapping classView : FORMATTED.getClasses()) {
+            String className = classView.getName(MappingsUtilsImpl.getSourceNamespace());
+
+            if (className != null) {
+                VANILLA_CLASS_LIST.add("/" + className + ".class");
+            }
+        }
+
+        try {
+            MappingTreeHelper.exportMappings(MappingsRegistry.FORMATTED, Constants.MC_MAPPINGS_FILE.toPath());
+        } catch (IOException e) {
+            throw new RuntimeException("Error while writing formatted mappings", e);
+        }
     }
 
     public static void addModMappings(Path path) {
@@ -131,5 +148,23 @@ public class MappingsRegistry {
         }
 
         MappingsUtilsImpl.addMappingsToContext(MODS);
+    }
+
+    public static void registerAdditionalMappings(List<ModRemapper> remappers) {
+        MappingBuilder builder = new MappingBuilderImpl(ADDITIONAL);
+
+        for (ModRemapper remapper : remappers) {
+            remapper.registerMappings(builder);
+        }
+
+        ADDITIONAL.visitEnd();
+
+        try {
+            MappingTreeHelper.exportMappings(ADDITIONAL, Constants.EXTRA_MAPPINGS_FILE.toPath());
+        } catch (IOException e) {
+            throw new RuntimeException("Error while generating remappers mappings", e);
+        }
+
+        MappingsUtilsImpl.addMappingsToContext(ADDITIONAL);
     }
 }

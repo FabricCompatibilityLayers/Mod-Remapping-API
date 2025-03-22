@@ -3,8 +3,7 @@ package fr.catcore.modremapperapi.remapping;
 import fr.catcore.modremapperapi.utils.Constants;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.MappingUtils;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.ModRemapper;
-import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.RemapLibrary;
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingBuilderImpl;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.LibraryHandler;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingsUtilsImpl;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.VisitorInfosImpl;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingTreeHelper;
@@ -15,18 +14,15 @@ import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.resource
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.visitor.MRAApplyVisitor;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.visitor.MixinPostApplyVisitor;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.CacheUtils;
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.FileUtils;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.mappingio.MappingVisitor;
 import net.fabricmc.mappingio.tree.MappingTree;
-import net.fabricmc.mappingio.tree.MemoryMappingTree;
 import net.fabricmc.tinyremapper.*;
 import net.fabricmc.tinyremapper.extension.mixin.MixinExtension;
 import org.jetbrains.annotations.ApiStatus;
 
 import java.io.*;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -34,7 +30,6 @@ import java.util.function.Supplier;
 
 public class RemapUtil {
     private static List<ModRemapper> remappers;
-    private static MappingTree LOADER_TREE;
 
     @ApiStatus.Internal
     public static final Map<String, List<String>> MIXINED = new HashMap<>();
@@ -42,8 +37,8 @@ public class RemapUtil {
     @ApiStatus.Internal
     public static String defaultPackage = "";
 
-    @ApiStatus.Internal
-    public static final List<String> MC_CLASS_NAMES = new ArrayList<>();
+    @Deprecated
+    public static final List<String> MC_CLASS_NAMES = MappingsRegistry.VANILLA_CLASS_LIST;
 
     @ApiStatus.Internal
     public static void init(List<io.github.fabriccompatibiltylayers.modremappingapi.api.v1.ModRemapper> modRemappers) {
@@ -87,71 +82,21 @@ public class RemapUtil {
             }
         }
 
-        downloadRemappingLibs();
+        LibraryHandler.gatherRemapLibraries(remappers);
 
-        writeMcMappings();
-
-        LOADER_TREE = generateMappings();
-        MappingsUtilsImpl.addMappingsToContext(LOADER_TREE);
-
-        for (MappingTree.ClassMapping classView : MappingsRegistry.FORMATTED.getClasses()) {
-            String className = classView.getName(MappingsUtilsImpl.getSourceNamespace());
-
-            if (className != null) {
-                MC_CLASS_NAMES.add("/" + className + ".class");
-            }
-        }
-    }
-
-    private static void downloadRemappingLibs() {
-        try {
-            for (ModRemapper remapper : remappers) {
-                List<RemapLibrary> libraries = new ArrayList<>();
-
-                remapper.addRemapLibraries(libraries, FabricLoader.getInstance().getEnvironmentType());
-
-                Map<RemapLibrary, Path> libraryPaths = CacheUtils.computeExtraLibraryPaths(libraries, MappingsUtilsImpl.getSourceNamespace());
-
-                for (Map.Entry<RemapLibrary, Path> entry : libraryPaths.entrySet()) {
-                    RemapLibrary library = entry.getKey();
-                    Path path = entry.getValue();
-
-                    if (!library.url.isEmpty()) {
-                        Constants.MAIN_LOGGER.info("Downloading remapping library '" + library.fileName + "' from url '" + library.url + "'");
-                        FileUtils.downloadFile(library.url, path);
-                        FileUtils.removeEntriesFromZip(path, library.toExclude);
-                        Constants.MAIN_LOGGER.info("Remapping library ready for use.");
-                    } else if (library.path != null) {
-                        Constants.MAIN_LOGGER.info("Extracting remapping library '" + library.fileName + "' from mod jar.");
-                        FileUtils.copyZipFile(library.path, path);
-                        Constants.MAIN_LOGGER.info("Remapping library ready for use.");
-                    }
-                }
-            }
-        } catch (IOException | URISyntaxException e) {
-            throw new RuntimeException(e);
-        }
+        MappingsRegistry.registerAdditionalMappings(remappers);
     }
 
     @ApiStatus.Internal
     public static void remapMods(Map<Path, Path> pathMap) {
         Constants.MAIN_LOGGER.debug("Starting jar remapping!");
         SoftLockFixer.preloadClasses();
-        TinyRemapper remapper = makeRemapper(MappingsRegistry.FORMATTED, LOADER_TREE, MappingsRegistry.MODS);
+        TinyRemapper remapper = makeRemapper(MappingsRegistry.FORMATTED, MappingsRegistry.ADDITIONAL, MappingsRegistry.MODS);
         Constants.MAIN_LOGGER.debug("Remapper created!");
         remapFiles(remapper, pathMap);
         Constants.MAIN_LOGGER.debug("Jar remapping done!");
 
         MappingsUtilsImpl.writeFullMappings();
-    }
-
-    @ApiStatus.Internal
-    public static void writeMcMappings() {
-        try {
-            MappingTreeHelper.exportMappings(MappingsRegistry.FORMATTED, Constants.MC_MAPPINGS_FILE.toPath());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     @Deprecated
@@ -178,28 +123,6 @@ public class RemapUtil {
         public void accept(MappingVisitor visitor) throws IOException {
             for (MappingBuilder builder : this) builder.accept(visitor);
         }
-    }
-
-    private static MappingTree generateMappings() {
-        MemoryMappingTree mappingTree;
-
-        try {
-            mappingTree = MappingTreeHelper.createMappingTree();
-
-            io.github.fabriccompatibiltylayers.modremappingapi.api.v1.MappingBuilder builder = new MappingBuilderImpl(mappingTree);
-
-            for (ModRemapper remapper : remappers) {
-                remapper.registerMappings(builder);
-            }
-
-            mappingTree.visitEnd();
-
-            MappingTreeHelper.exportMappings(mappingTree, Constants.EXTRA_MAPPINGS_FILE.toPath());
-        } catch (IOException e) {
-            throw new RuntimeException("Error while generating remappers mappings", e);
-        }
-
-        return mappingTree;
     }
 
     /**
@@ -250,21 +173,7 @@ public class RemapUtil {
             throw new RuntimeException(e);
         }
 
-        for (ModRemapper modRemapper : remappers) {
-            List<RemapLibrary> libraries = new ArrayList<>();
-
-            modRemapper.addRemapLibraries(libraries, FabricLoader.getInstance().getEnvironmentType());
-
-            for (RemapLibrary library : libraries) {
-                Path libPath = CacheUtils.getLibraryPath(MappingsUtilsImpl.getSourceNamespace()).resolve(library.fileName);
-
-                if (Files.exists(libPath)) {
-                    remapper.readClassPathAsync(libPath);
-                } else {
-                    Constants.MAIN_LOGGER.info("Library " + libPath + " does not exist.");
-                }
-            }
-        }
+        LibraryHandler.addLibrariesToRemapClasspath(remapper);
 
         return remapper;
     }

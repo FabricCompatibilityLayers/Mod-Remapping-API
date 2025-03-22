@@ -114,7 +114,7 @@ public class ModDiscoverer {
                     Files.copy(entry.getKey(), entry.getValue(), StandardCopyOption.REPLACE_EXISTING);
                 }
 
-                FileUtils.removeEntriesFromZip(entry.getValue(), RemapUtil.MC_CLASS_NAMES);
+                FileUtils.removeEntriesFromZip(entry.getValue(), MappingsRegistry.VANILLA_CLASS_LIST);
             } catch (IOException | URISyntaxException e) {
                 e.printStackTrace();
                 errored.add(entry.getValue());
