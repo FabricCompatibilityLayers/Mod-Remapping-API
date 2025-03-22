@@ -24,8 +24,6 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.zip.ZipError;
 
-import static fr.catcore.modremapperapi.remapping.RemapUtil.defaultPackage;
-
 @ApiStatus.Internal
 public class MappingsRegistry {
     public static List<String> VANILLA_CLASS_LIST = new ArrayList<>();
@@ -132,7 +130,7 @@ public class MappingsRegistry {
                     .stream()
                     .filter(file -> file.endsWith(".class"))
                     .map(file -> file.replace(".class", ""))
-                    .forEach(cl -> mappingBuilder.addMapping(cl, (cl.contains("/") ? "" : defaultPackage) + cl));
+                    .forEach(cl -> mappingBuilder.addMapping(cl, (cl.contains("/") ? "" : MappingsUtilsImpl.getDefaultPackage()) + cl));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

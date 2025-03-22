@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 @ApiStatus.Internal
 public class MappingsUtilsImpl {
     private static String sourceNamespace = "official";
+    private static String defaultPackage = "";
 
     @ApiStatus.Internal
     public static String getSourceNamespace() {
@@ -32,6 +33,14 @@ public class MappingsUtilsImpl {
     @ApiStatus.Internal
     public static void setSourceNamespace(String sourceNamespace) {
         MappingsUtilsImpl.sourceNamespace = sourceNamespace;
+    }
+
+    public static String getDefaultPackage() {
+        return defaultPackage;
+    }
+
+    public static void setDefaultPackage(String defaultPackage) {
+        MappingsUtilsImpl.defaultPackage = defaultPackage;
     }
 
     public static boolean isSourceNamespaceObf() {

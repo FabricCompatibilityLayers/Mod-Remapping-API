@@ -2,7 +2,6 @@ package io.github.fabriccompatibiltylayers.modremappingapi.impl;
 
 import fr.catcore.modremapperapi.utils.Constants;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.ModRemapper;
-import fr.catcore.modremapperapi.remapping.RemapUtil;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.compatibility.V0ModRemapper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingsRegistry;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.CacheUtils;
@@ -23,7 +22,9 @@ public class ModDiscoverer {
     private static final Map<String, List<String>> EXCLUDED = new HashMap<>();
 
     protected static void init(List<ModRemapper> modRemappers, boolean remapClassEdits) {
-        RemapUtil.init(modRemappers);
+        ModRemapperContext context = new ModRemapperContext(modRemappers);
+
+        context.init();
 
         List<ModEntry> mods = new ArrayList<>();
 
@@ -78,7 +79,7 @@ public class ModDiscoverer {
 
         MappingsRegistry.generateModMappings();
 
-        RemapUtil.remapMods(modPaths);
+        context.remapMods(modPaths);
 
         modPaths.values().forEach(FabricLauncherBase.getLauncher()::addToClassPath);
     }

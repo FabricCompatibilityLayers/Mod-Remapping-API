@@ -6,6 +6,7 @@ import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingsUtilsImpl
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.RemapUtils;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingTreeHelper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingsRegistry;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.TrRemapperHelper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.CacheUtils;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.FileUtils;
 import net.fabricmc.loader.api.FabricLoader;
@@ -53,7 +54,7 @@ public class MinecraftRemapper {
 
         List<OutputConsumerPath.ResourceRemapper> resourceRemappers = new ArrayList<>(NonClassCopyMode.FIX_META_INF.remappers);
 
-        RemapUtil.applyRemapper(remapper, paths, outputConsumerPaths, resourceRemappers, true, src, target);
+        TrRemapperHelper.applyRemapper(remapper, paths, outputConsumerPaths, resourceRemappers, true, src, target);
 
         Constants.MAIN_LOGGER.info("MC jar remapped successfully!");
 
