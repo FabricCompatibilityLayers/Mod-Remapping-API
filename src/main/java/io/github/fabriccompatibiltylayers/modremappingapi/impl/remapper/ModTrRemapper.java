@@ -3,6 +3,7 @@ package io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.ModRemapper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.LibraryHandler;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingsUtilsImpl;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.ModRemappingAPIImpl;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.VisitorInfosImpl;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingTreeHelper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingsRegistry;
@@ -25,7 +26,11 @@ import java.util.*;
 @ApiStatus.Internal
 public class ModTrRemapper {
     public static TinyRemapper makeRemapper(List<ModRemapper> remappers) {
-        List<MappingTree> trees = Arrays.asList(MappingsRegistry.FORMATTED, MappingsRegistry.ADDITIONAL, MappingsRegistry.MODS);
+        MappingsRegistry mappingsRegistry = ModRemappingAPIImpl.getCurrentContext().getMappingsRegistry();
+
+        List<MappingTree> trees = Arrays.asList(
+                mappingsRegistry.getFormattedMappings(),
+                mappingsRegistry.getModsMappings(), mappingsRegistry.getAdditionalMappings());
 
         TinyRemapper.Builder builder = TinyRemapper
                 .newRemapper()

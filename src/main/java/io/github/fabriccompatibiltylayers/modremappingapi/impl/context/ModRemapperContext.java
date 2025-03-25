@@ -1,5 +1,7 @@
 package io.github.fabriccompatibiltylayers.modremappingapi.impl.context;
 
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingsRegistry;
+
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -11,4 +13,5 @@ public interface ModRemapperContext {
     void discoverMods(boolean remapClassEdits);
     void gatherRemappers();
     Map<String, List<String>> getMixin2TargetMap();
+    MappingsRegistry getMappingsRegistry();
 }

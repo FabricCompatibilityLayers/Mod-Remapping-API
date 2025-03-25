@@ -3,6 +3,7 @@ package io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.minecra
 import fr.catcore.modremapperapi.remapping.RemapUtil;
 import fr.catcore.modremapperapi.utils.Constants;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingsUtilsImpl;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.ModRemappingAPIImpl;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.RemapUtils;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingTreeHelper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingsRegistry;
@@ -43,7 +44,9 @@ public class MinecraftRemapper {
                 .ignoreConflicts(true)
                 .fixPackageAccess(true)
                 .withMappings(
-                        MappingTreeHelper.createMappingProvider(MappingsRegistry.FORMATTED, src, target)
+                        MappingTreeHelper.createMappingProvider(
+                                ModRemappingAPIImpl.getCurrentContext().getMappingsRegistry().getFormattedMappings(),
+                                src, target)
                 );
 
         TinyRemapper remapper = builder.build();

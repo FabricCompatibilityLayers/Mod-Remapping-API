@@ -3,7 +3,7 @@ package io.github.fabriccompatibiltylayers.modremappingapi.impl;
 import fr.catcore.modremapperapi.utils.Constants;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.ModRemapper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.compatibility.V0ModRemapper;
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.context.ModRemapperV1Context;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.context.v1.ModRemapperV1Context;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingsRegistry;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.CacheUtils;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.FileUtils;
@@ -71,10 +71,10 @@ public class ModDiscoverer {
         }
 
         for (Path path : modPaths.keySet()) {
-            MappingsRegistry.addModMappings(path);
+            context.getMappingsRegistry().addModMappings(path);
         }
 
-        MappingsRegistry.generateModMappings();
+        context.getMappingsRegistry().generateModMappings();
 
         context.remapMods(modPaths);
 
@@ -112,7 +112,7 @@ public class ModDiscoverer {
                     Files.copy(entry.getKey(), entry.getValue(), StandardCopyOption.REPLACE_EXISTING);
                 }
 
-                FileUtils.removeEntriesFromZip(entry.getValue(), MappingsRegistry.VANILLA_CLASS_LIST);
+                FileUtils.removeEntriesFromZip(entry.getValue(), ModRemappingAPIImpl.getCurrentContext().getMappingsRegistry().getVanillaClassNames());
             } catch (IOException | URISyntaxException e) {
                 e.printStackTrace();
                 errored.add(entry.getValue());

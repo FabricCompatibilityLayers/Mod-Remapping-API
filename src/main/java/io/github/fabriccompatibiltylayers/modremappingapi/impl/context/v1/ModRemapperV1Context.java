@@ -1,4 +1,4 @@
-package io.github.fabriccompatibiltylayers.modremappingapi.impl.context;
+package io.github.fabriccompatibiltylayers.modremappingapi.impl.context.v1;
 
 import fr.catcore.modremapperapi.utils.Constants;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.ModRemapper;
@@ -6,6 +6,8 @@ import io.github.fabriccompatibiltylayers.modremappingapi.impl.LibraryHandler;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingsUtilsImpl;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.ModDiscoverer;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.compatibility.V0ModRemapper;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.context.BaseModRemapperContext;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.context.MappingsRegistryInstance;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingsRegistry;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.ModTrRemapper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.SoftLockFixer;
@@ -20,17 +22,23 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Supplier;
 
-public class ModRemapperV1Context implements ModRemapperContext {
+public class ModRemapperV1Context extends BaseModRemapperContext {
     private final List<ModRemapper> remappers = new ArrayList<>();
     private final Map<String, List<String>> mixin2TargetMap = new HashMap<>();
+    private final MappingsRegistryInstance mappingsRegistry = new MappingsRegistryInstance();
 
-    public ModRemapperV1Context() {}
+    public static ModRemapperV1Context INSTANCE;
+
+    public ModRemapperV1Context() {
+        super("mod-remapping-api:v1");
+        INSTANCE = this;
+    }
 
     public void init() {
         for (ModRemapper remapper : remappers) {
             Optional<String> pkg = remapper.getDefaultPackage();
 
-            pkg.ifPresent(MappingsUtilsImpl::setDefaultPackage);
+            pkg.ifPresent(this.mappingsRegistry::setDefaultPackage);
 
             Optional<String> sourceNamespace = remapper.getSourceNamespace();
 
@@ -40,19 +48,17 @@ public class ModRemapperV1Context implements ModRemapperContext {
 
             mappings.ifPresent(inputStreamSupplier -> {
                 try {
-                    MappingsRegistry.generateFormattedMappings(inputStreamSupplier.get());
+                    this.mappingsRegistry.addToFormattedMappings(inputStreamSupplier.get());
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             });
         }
 
-        if (!MappingsRegistry.generated) {
-            try {
-                MappingsRegistry.generateFormattedMappings(null);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+        try {
+            this.mappingsRegistry.completeFormattedMappings();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
 
         Path sourceLibraryPath = CacheUtils.getLibraryPath(MappingsUtilsImpl.getSourceNamespace());
@@ -108,5 +114,10 @@ public class ModRemapperV1Context implements ModRemapperContext {
     @Override
     public Map<String, List<String>> getMixin2TargetMap() {
         return mixin2TargetMap;
+    }
+
+    @Override
+    public MappingsRegistry getMappingsRegistry() {
+        return this.mappingsRegistry;
     }
 }

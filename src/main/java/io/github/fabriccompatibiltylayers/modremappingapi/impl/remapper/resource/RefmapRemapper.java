@@ -2,7 +2,6 @@ package io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.resourc
 
 import com.google.gson.Gson;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.ModRemappingAPIImpl;
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.MixinRemappingHelper;
 import net.fabricmc.tinyremapper.OutputConsumerPath;
 import net.fabricmc.tinyremapper.TinyRemapper;
 import net.fabricmc.tinyremapper.api.TrRemapper;

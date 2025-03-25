@@ -3,7 +3,7 @@ package io.github.fabriccompatibiltylayers.modremappingapi.impl;
 import fr.catcore.wfvaio.FabricVariants;
 import fr.catcore.wfvaio.WhichFabricVariantAmIOn;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.context.ModRemapperContext;
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.context.ModRemapperV1Context;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.context.v1.ModRemapperV1Context;
 import net.fabricmc.loader.api.FabricLoader;
 
 import java.io.File;
