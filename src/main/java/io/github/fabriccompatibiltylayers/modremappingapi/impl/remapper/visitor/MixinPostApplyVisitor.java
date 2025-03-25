@@ -1,6 +1,7 @@
 package io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.visitor;
 
 import fr.catcore.modremapperapi.utils.Constants;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.ModRemappingAPIImpl;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.MixinRemappingHelper;
 import net.fabricmc.tinyremapper.TinyRemapper;
 import net.fabricmc.tinyremapper.api.TrClass;
@@ -54,7 +55,7 @@ public class MixinPostApplyVisitor implements TinyRemapper.ApplyVisitorProvider 
             });
         }
 
-        MixinRemappingHelper.MIXIN2TARGETMAP.put(cls.getName().replace(".", "/"), supers);
+        ModRemappingAPIImpl.getCurrentContext().getMixin2TargetMap().put(cls.getName().replace(".", "/"), supers);
 
         return next;
     }

@@ -3,6 +3,7 @@ package io.github.fabriccompatibiltylayers.modremappingapi.impl;
 import fr.catcore.modremapperapi.utils.Constants;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.ModRemapper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.compatibility.V0ModRemapper;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.context.ModRemapperV1Context;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingsRegistry;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.CacheUtils;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.FileUtils;
@@ -21,11 +22,7 @@ import java.util.stream.Collectors;
 public class ModDiscoverer {
     private static final Map<String, List<String>> EXCLUDED = new HashMap<>();
 
-    protected static void init(List<ModRemapper> modRemappers, boolean remapClassEdits) {
-        ModRemapperContext context = new ModRemapperContext(modRemappers);
-
-        context.init();
-
+    public static void init(List<ModRemapper> modRemappers, boolean remapClassEdits, ModRemapperV1Context context) {
         List<ModEntry> mods = new ArrayList<>();
 
         for (ModRemapper remapper : modRemappers) {
