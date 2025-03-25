@@ -13,11 +13,12 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class LibraryHandler {
-    private static Map<RemapLibrary, Path> remapLibraries;
+    private static final Map<RemapLibrary, Path> remapLibraries = new HashMap<>();
 
     public static void gatherRemapLibraries(List<ModRemapper> remappers) {
         try {
@@ -26,11 +27,13 @@ public class LibraryHandler {
 
                 remapper.addRemapLibraries(libraries, FabricLoader.getInstance().getEnvironmentType());
 
-                remapLibraries = CacheUtils.computeExtraLibraryPaths(libraries, MappingsUtilsImpl.getSourceNamespace());
+                Map<RemapLibrary, Path> temp = CacheUtils.computeExtraLibraryPaths(libraries, MappingsUtilsImpl.getSourceNamespace());
 
-                for (Map.Entry<RemapLibrary, Path> entry : remapLibraries.entrySet()) {
+                for (Map.Entry<RemapLibrary, Path> entry : temp.entrySet()) {
                     RemapLibrary library = entry.getKey();
                     Path path = entry.getValue();
+
+                    if (Files.exists(path)) continue;
 
                     if (!library.url.isEmpty()) {
                         Constants.MAIN_LOGGER.info("Downloading remapping library '" + library.fileName + "' from url '" + library.url + "'");
@@ -43,6 +46,8 @@ public class LibraryHandler {
                         Constants.MAIN_LOGGER.info("Remapping library ready for use.");
                     }
                 }
+
+                remapLibraries.putAll(temp);
             }
         } catch (IOException | URISyntaxException e) {
             throw new RuntimeException(e);

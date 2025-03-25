@@ -36,11 +36,7 @@ public class CacheUtils {
     public static Map<RemapLibrary, Path> computeExtraLibraryPaths(Collection<RemapLibrary> sourcePaths, String target) {
         return sourcePaths.stream()
                 .collect(Collectors.toMap(p -> p,
-                p -> CacheUtils.getLibraryPath(target).resolve(p.fileName)))
-                .entrySet()
-                .stream()
-                .filter(entry -> !Files.exists(entry.getValue()))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                p -> CacheUtils.getLibraryPath(target).resolve(p.fileName)));
     }
 
     static {
