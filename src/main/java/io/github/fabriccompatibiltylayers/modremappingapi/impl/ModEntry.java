@@ -1,15 +1,15 @@
 package io.github.fabriccompatibiltylayers.modremappingapi.impl;
 
-import java.io.File;
+import java.nio.file.Path;
 
 public abstract class ModEntry {
     public final String modName;
     public final String modId;
 
-    public final File file;
-    public final File original;
+    public final Path file;
+    public final Path original;
 
-    protected ModEntry(String modName, String modId, File file, File original) {
+    protected ModEntry(String modName, String modId, Path file, Path original) {
         this.modName = modName;
         this.modId = modId;
         this.file = file;

@@ -7,7 +7,7 @@ import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.MappingBuilder;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.ModRemapper;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.RemapLibrary;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.VisitorInfos;
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingsUtilsImpl;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingTreeHelper;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.mappingio.MappingVisitor;
 import net.fabricmc.mappingio.adapter.MappingSourceNsSwitch;
@@ -107,13 +107,13 @@ public class V0ModRemapper implements ModRemapper {
      * @return
      */
     private MemoryMappingTree convertMappingList(RemapUtil.MappingList mappingList) {
-        MemoryMappingTree mappingTree = new MemoryMappingTree();
+        MemoryMappingTree mappingTree;
 
         try {
             if (BABRIC) {
-                MappingsUtilsImpl.initializeMappingTree(mappingTree, "intermediary", "official");
+                mappingTree = MappingTreeHelper.createMappingTree("intermediary", "official");
             } else {
-                MappingsUtilsImpl.initializeMappingTree(mappingTree);
+                mappingTree = MappingTreeHelper.createMappingTree();
             }
 
             mappingList.accept(mappingTree);

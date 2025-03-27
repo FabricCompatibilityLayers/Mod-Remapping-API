@@ -1,6 +1,7 @@
-package fr.catcore.modremapperapi.remapping;
+package io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.visitor;
 
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.VisitorInfosImpl;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.asm.MRAClassVisitor;
 import net.fabricmc.tinyremapper.TinyRemapper;
 import net.fabricmc.tinyremapper.api.TrClass;
 import org.objectweb.asm.ClassVisitor;

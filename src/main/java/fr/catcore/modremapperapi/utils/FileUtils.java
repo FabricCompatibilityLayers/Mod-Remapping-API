@@ -3,17 +3,15 @@ package fr.catcore.modremapperapi.utils;
 import net.fabricmc.loader.impl.launch.FabricLauncherBase;
 
 import java.io.*;
-import java.nio.file.Files;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
 
+@Deprecated
 public class FileUtils {
-
+    @Deprecated
     public static void writeTextFile(Collection<String> lines, File file) {
         file.getParentFile().mkdirs();
         try {
@@ -30,6 +28,7 @@ public class FileUtils {
         }
     }
 
+    @Deprecated
     public static List<String> readTextSource(String path) {
         List<String> result = new ArrayList<>();
         try {
@@ -50,72 +49,17 @@ public class FileUtils {
         return result;
     }
 
+    @Deprecated
     public static void excludeFromZipFile(File file, List<String> excluded) throws IOException {
-        File tempFile = new File(file.getAbsolutePath() + ".tmp");
-        tempFile.delete();
-        tempFile.deleteOnExit();
-
-        boolean renameOk = file.renameTo(tempFile);
-        if (!renameOk) {
-            throw new RuntimeException("could not rename the file " + file.getAbsolutePath() + " to " + tempFile.getAbsolutePath());
+        try {
+            io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.FileUtils.removeEntriesFromZip(file.toPath(), excluded);
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
         }
-
-        ZipInputStream zin = new ZipInputStream(Files.newInputStream(tempFile.toPath()));
-        ZipOutputStream zout = new ZipOutputStream(Files.newOutputStream(file.toPath()));
-
-        ZipEntry entry = zin.getNextEntry();
-        byte[] buf = new byte[1024];
-
-        while (entry != null) {
-            String zipEntryName = entry.getName();
-            boolean toBeDeleted = excluded.contains(zipEntryName);
-
-            if (!toBeDeleted) {
-                zout.putNextEntry(new ZipEntry(zipEntryName));
-                // Transfer bytes from the ZIP file to the output file
-                int len;
-                while ((len = zin.read(buf)) > 0) {
-                    zout.write(buf, 0, len);
-                }
-            }
-
-            entry = zin.getNextEntry();
-        }
-
-        // Close the streams
-        zin.close();
-        // Compress the files
-        // Complete the ZIP file
-        zout.close();
-        tempFile.delete();
     }
 
+    @Deprecated
     public static void copyFile(Path original, Path copy) throws IOException {
-        copy.toFile().delete();
-
-        ZipInputStream zin = new ZipInputStream(Files.newInputStream(original));
-        ZipOutputStream zout = new ZipOutputStream(Files.newOutputStream(copy));
-
-        ZipEntry entry = zin.getNextEntry();
-        byte[] buf = new byte[1024];
-
-        while (entry != null) {
-            String zipEntryName = entry.getName();
-
-            zout.putNextEntry(new ZipEntry(zipEntryName));
-            // Transfer bytes from the ZIP file to the output file
-            int len;
-            while ((len = zin.read(buf)) > 0) {
-                zout.write(buf, 0, len);
-            }
-
-            entry = zin.getNextEntry();
-        }
-
-        // Close the streams
-        zin.close();
-        // Compress the files
-        // Complete the ZIP file
-        zout.close();
+        io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.FileUtils.copyZipFile(original, copy);
     }
 }
