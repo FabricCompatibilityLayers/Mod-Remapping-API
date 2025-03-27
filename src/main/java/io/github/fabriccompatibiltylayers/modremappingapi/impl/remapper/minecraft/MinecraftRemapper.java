@@ -3,6 +3,7 @@ package io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.minecra
 import fr.catcore.modremapperapi.remapping.RemapUtil;
 import fr.catcore.modremapperapi.utils.Constants;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingsUtilsImpl;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.ModRemappingAPIImpl;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.RemapUtils;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingTreeHelper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingsRegistry;
@@ -29,7 +30,7 @@ public class MinecraftRemapper {
             Files.createDirectories(targetFolder);
         }
 
-        Map<Path, Path> paths = CacheUtils.computeLibraryPaths(sourcePaths, target);
+        Map<Path, Path> paths = CacheUtils.computeLibraryPaths(new HashSet<>(sourcePaths), target);
 
         if (FileUtils.exist(paths.values())) return paths.values();
 
@@ -43,7 +44,9 @@ public class MinecraftRemapper {
                 .ignoreConflicts(true)
                 .fixPackageAccess(true)
                 .withMappings(
-                        MappingTreeHelper.createMappingProvider(MappingsRegistry.FORMATTED, src, target)
+                        MappingTreeHelper.createMappingProvider(
+                                ModRemappingAPIImpl.getCurrentContext().getMappingsRegistry().getFormattedMappings(),
+                                src, target)
                 );
 
         TinyRemapper remapper = builder.build();
@@ -63,18 +66,20 @@ public class MinecraftRemapper {
 
     @ApiStatus.Internal
     public static void addMinecraftJar(TinyRemapper remapper) throws IOException {
+        MappingsRegistry mappingsRegistry = ModRemappingAPIImpl.getCurrentContext().getMappingsRegistry();
+
         Collection<Path> classPath;
 
         if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
             try {
                 classPath = getMinecraftJar(
-                            getMinecraftJar(RemapUtils.getRemapClasspath(), MappingsUtilsImpl.getTargetNamespace(), "intermediary"),
+                            getMinecraftJar(RemapUtils.getRemapClasspath(), mappingsRegistry.getTargetNamespace(), "intermediary"),
                         "intermediary",
                         "official"
                 );
 
-                if (!MappingsUtilsImpl.isSourceNamespaceObf()) {
-                    classPath = getMinecraftJar(classPath, "official", MappingsUtilsImpl.getSourceNamespace());
+                if (!mappingsRegistry.isSourceNamespaceObf()) {
+                    classPath = getMinecraftJar(classPath, "official", mappingsRegistry.getSourceNamespace());
                 }
             } catch (IOException e) {
                 throw new RuntimeException("Failed to populate default remap classpath", e);
@@ -82,8 +87,8 @@ public class MinecraftRemapper {
         } else {
             classPath = RemapUtils.getClassPathFromObjectShare();
 
-            if (!MappingsUtilsImpl.isSourceNamespaceObf()) {
-                classPath = getMinecraftJar(classPath, "official", MappingsUtilsImpl.getSourceNamespace());
+            if (!mappingsRegistry.isSourceNamespaceObf()) {
+                classPath = getMinecraftJar(classPath, "official", mappingsRegistry.getSourceNamespace());
             }
         }
 

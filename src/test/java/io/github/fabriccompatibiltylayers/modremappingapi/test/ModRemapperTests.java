@@ -1,6 +1,6 @@
 package io.github.fabriccompatibiltylayers.modremappingapi.test;
 
-import io.github.fabriccompatibiltylayers.modremappingapi.api.MappingUtils;
+import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.MappingUtils;
 import net.fabricmc.loader.api.FabricLoader;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;

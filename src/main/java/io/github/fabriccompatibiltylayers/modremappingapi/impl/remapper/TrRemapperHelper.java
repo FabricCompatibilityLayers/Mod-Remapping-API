@@ -1,7 +1,7 @@
 package io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper;
 
 import fr.catcore.modremapperapi.utils.Constants;
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingsUtilsImpl;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.ModRemappingAPIImpl;
 import net.fabricmc.tinyremapper.InputTag;
 import net.fabricmc.tinyremapper.OutputConsumerPath;
 import net.fabricmc.tinyremapper.TinyRemapper;
@@ -42,7 +42,7 @@ public class TrRemapperHelper {
                 Constants.MAIN_LOGGER.debug("Done 1!");
             }
 
-            if (analyzeMapping) MappingsUtilsImpl.completeMappingsFromTr(remapper.getEnvironment(), srcNamespace);
+            if (analyzeMapping) ModRemappingAPIImpl.getCurrentContext().getMappingsRegistry().completeMappingsFromTr(remapper.getEnvironment(), srcNamespace);
         } catch (Exception e) {
             remapper.finish();
             outputConsumerPaths.forEach(o -> {

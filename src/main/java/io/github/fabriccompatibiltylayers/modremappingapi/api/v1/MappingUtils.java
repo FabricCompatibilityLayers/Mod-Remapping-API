@@ -11,7 +11,7 @@ public interface MappingUtils {
      * @return remapped class name
      */
     static String mapClass(String className) {
-        return MappingsUtilsImpl.mapClass(className);
+        return MappingsUtilsImpl.mapClass(MappingsUtilsImpl.getV1Registry(), className);
     }
 
     /**
@@ -20,7 +20,7 @@ public interface MappingUtils {
      * @return original class name
      */
     static String unmapClass(String className) {
-        return MappingsUtilsImpl.unmapClass(className);
+        return MappingsUtilsImpl.unmapClass(MappingsUtilsImpl.getV1Registry(), className);
     }
 
     /**
@@ -31,7 +31,7 @@ public interface MappingUtils {
      * @return
      */
     static ClassMember mapField(String className, String fieldName, @Nullable String fieldDesc) {
-        return MappingsUtilsImpl.mapField(className, fieldName, fieldDesc);
+        return MappingsUtilsImpl.mapField(MappingsUtilsImpl.getV1Registry(), className, fieldName, fieldDesc);
     }
 
     /**
@@ -42,7 +42,7 @@ public interface MappingUtils {
      * @return
      */
     static ClassMember mapFieldFromRemappedClass(String className, String fieldName, @Nullable String fieldDesc) {
-        return MappingsUtilsImpl.mapFieldFromRemappedClass(className, fieldName, fieldDesc);
+        return MappingsUtilsImpl.mapFieldFromRemappedClass(MappingsUtilsImpl.getV1Registry(), className, fieldName, fieldDesc);
     }
 
     /**
@@ -53,7 +53,7 @@ public interface MappingUtils {
      * @return
      */
     static ClassMember mapMethod(String className, String methodName, String methodDesc) {
-        return MappingsUtilsImpl.mapMethod(className, methodName, methodDesc);
+        return MappingsUtilsImpl.mapMethod(MappingsUtilsImpl.getV1Registry(), className, methodName, methodDesc);
     }
 
     /**
@@ -64,15 +64,15 @@ public interface MappingUtils {
      * @return
      */
     static ClassMember mapMethodFromRemappedClass(String className, String methodName, String methodDesc) {
-        return MappingsUtilsImpl.mapMethodFromRemappedClass(className, methodName, methodDesc);
+        return MappingsUtilsImpl.mapMethodFromRemappedClass(MappingsUtilsImpl.getV1Registry(), className, methodName, methodDesc);
     }
 
     static ClassMember mapField(Class<?> owner, String fieldName) {
-        return MappingsUtilsImpl.mapField(owner, fieldName);
+        return MappingsUtilsImpl.mapField(MappingsUtilsImpl.getV1Registry(), owner, fieldName);
     }
 
     static ClassMember mapMethod(Class<?> owner, String methodName, Class<?>[] parameterTypes) {
-        return MappingsUtilsImpl.mapMethod(owner, methodName, parameterTypes);
+        return MappingsUtilsImpl.mapMethod(MappingsUtilsImpl.getV1Registry(), owner, methodName, parameterTypes);
     }
 
     /**
@@ -81,7 +81,7 @@ public interface MappingUtils {
      * @return remapped descriptor
      */
     static String mapDescriptor(String desc) {
-        return MappingsUtilsImpl.mapDescriptor(desc);
+        return MappingsUtilsImpl.mapDescriptor(MappingsUtilsImpl.getV1Registry(), desc);
     }
 
     class ClassMember {

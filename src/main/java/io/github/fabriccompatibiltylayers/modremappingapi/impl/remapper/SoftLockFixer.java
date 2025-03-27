@@ -81,7 +81,6 @@ public class SoftLockFixer {
                 "io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.resource.RefmapRemapper",
                 "io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingsRegistry",
                 "io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingTreeHelper",
-                "io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.MixinRemappingHelper",
                 "io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.ModTrRemapper",
                 "io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.TrRemapperHelper",
 
