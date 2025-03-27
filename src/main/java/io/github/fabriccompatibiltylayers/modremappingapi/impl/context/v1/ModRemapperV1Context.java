@@ -3,16 +3,14 @@ package io.github.fabriccompatibiltylayers.modremappingapi.impl.context.v1;
 import fr.catcore.modremapperapi.utils.Constants;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.MappingBuilder;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.ModRemapper;
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.LibraryHandler;
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingBuilderImpl;
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingsUtilsImpl;
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.ModDiscoverer;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.*;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.compatibility.V0ModRemapper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.context.BaseModRemapperContext;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.context.MappingsRegistryInstance;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingsRegistry;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.ModTrRemapper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.SoftLockFixer;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.visitor.MRAApplyVisitor;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.CacheUtils;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.tinyremapper.TinyRemapper;
@@ -82,9 +80,9 @@ public class ModRemapperV1Context extends BaseModRemapperContext {
     public void remapMods(Map<Path, Path> pathMap) {
         Constants.MAIN_LOGGER.debug("Starting jar remapping!");
         SoftLockFixer.preloadClasses();
-        TinyRemapper remapper = ModTrRemapper.makeRemapper(remappers);
+        TinyRemapper remapper = ModTrRemapper.makeRemapper(this);
         Constants.MAIN_LOGGER.debug("Remapper created!");
-        ModTrRemapper.remapMods(remapper, pathMap);
+        ModTrRemapper.remapMods(remapper, pathMap, this.mappingsRegistry);
         Constants.MAIN_LOGGER.debug("Jar remapping done!");
 
         this.mappingsRegistry.writeFullMappings();
@@ -130,5 +128,19 @@ public class ModRemapperV1Context extends BaseModRemapperContext {
         for (ModRemapper remapper : remappers) {
             remapper.registerMappings(builder);
         }
+    }
+
+    @Override
+    public void addToRemapperBuilder(TinyRemapper.Builder builder) {
+        VisitorInfosImpl preInfos = new VisitorInfosImpl();
+        VisitorInfosImpl postInfos = new VisitorInfosImpl();
+
+        for (ModRemapper modRemapper : remappers) {
+            modRemapper.registerPreVisitors(preInfos);
+            modRemapper.registerPostVisitors(postInfos);
+        }
+
+        builder.extraPreApplyVisitor(new MRAApplyVisitor(preInfos));
+        builder.extraPostApplyVisitor(new MRAApplyVisitor(postInfos));
     }
 }

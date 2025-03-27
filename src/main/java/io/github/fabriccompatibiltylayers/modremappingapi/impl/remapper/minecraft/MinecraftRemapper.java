@@ -30,7 +30,7 @@ public class MinecraftRemapper {
             Files.createDirectories(targetFolder);
         }
 
-        Map<Path, Path> paths = CacheUtils.computeLibraryPaths(sourcePaths, target);
+        Map<Path, Path> paths = CacheUtils.computeLibraryPaths(new HashSet<>(sourcePaths), target);
 
         if (FileUtils.exist(paths.values())) return paths.values();
 

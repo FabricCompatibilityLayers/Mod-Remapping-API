@@ -1,6 +1,7 @@
 package io.github.fabriccompatibiltylayers.modremappingapi.impl.context;
 
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingsRegistry;
+import net.fabricmc.tinyremapper.TinyRemapper;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -14,4 +15,5 @@ public interface ModRemapperContext {
     void gatherRemappers();
     Map<String, List<String>> getMixin2TargetMap();
     MappingsRegistry getMappingsRegistry();
+    void addToRemapperBuilder(TinyRemapper.Builder builder);
 }

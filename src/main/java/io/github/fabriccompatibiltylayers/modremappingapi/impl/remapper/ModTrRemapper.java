@@ -5,6 +5,7 @@ import io.github.fabriccompatibiltylayers.modremappingapi.impl.LibraryHandler;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingsUtilsImpl;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.ModRemappingAPIImpl;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.VisitorInfosImpl;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.context.ModRemapperContext;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingTreeHelper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingsRegistry;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.minecraft.MinecraftRemapper;
@@ -25,7 +26,7 @@ import java.util.*;
 
 @ApiStatus.Internal
 public class ModTrRemapper {
-    public static TinyRemapper makeRemapper(List<ModRemapper> remappers) {
+    public static TinyRemapper makeRemapper(ModRemapperContext context) {
         MappingsRegistry mappingsRegistry = ModRemappingAPIImpl.getCurrentContext().getMappingsRegistry();
 
         List<MappingTree> trees = Arrays.asList(
@@ -44,28 +45,13 @@ public class ModTrRemapper {
         }
 
         for (MappingTree tree : trees) {
-            builder.withMappings(MappingTreeHelper.createMappingProvider(tree, MappingsUtilsImpl.getSourceNamespace(), MappingsUtilsImpl.getTargetNamespace()));
+            builder.withMappings(MappingTreeHelper.createMappingProvider(tree, context.getMappingsRegistry().getSourceNamespace(), context.getMappingsRegistry().getTargetNamespace()));
         }
 
-        MRAApplyVisitor preApplyVisitor = new MRAApplyVisitor();
-        MRAApplyVisitor postApplyVisitor = new MRAApplyVisitor();
+        context.addToRemapperBuilder(builder);
+
         MixinPostApplyVisitor mixinPostApplyVisitor = new MixinPostApplyVisitor();
-
-        VisitorInfosImpl preInfos = new VisitorInfosImpl();
-        VisitorInfosImpl postInfos = new VisitorInfosImpl();
-
-        for (ModRemapper modRemapper : remappers) {
-            modRemapper.registerPreVisitors(preInfos);
-            modRemapper.registerPostVisitors(postInfos);
-        }
-
-        preApplyVisitor.setInfos(preInfos);
-        postApplyVisitor.setInfos(postInfos);
-
-        builder.extraPreApplyVisitor(preApplyVisitor);
-        builder.extraPostApplyVisitor(postApplyVisitor);
         builder.extraPostApplyVisitor(mixinPostApplyVisitor);
-
         builder.extension(new MixinExtension(EnumSet.of(MixinExtension.AnnotationTarget.HARD)));
 
         TinyRemapper remapper = builder.build();
@@ -81,12 +67,12 @@ public class ModTrRemapper {
         return remapper;
     }
 
-    public static void remapMods(TinyRemapper remapper, Map<Path, Path> paths) {
+    public static void remapMods(TinyRemapper remapper, Map<Path, Path> paths, MappingsRegistry mappingsRegistry) {
         List<OutputConsumerPath> outputConsumerPaths = new ArrayList<>();
 
         List<OutputConsumerPath.ResourceRemapper> resourceRemappers = new ArrayList<>(NonClassCopyMode.FIX_META_INF.remappers);
         resourceRemappers.add(new RefmapRemapper());
 
-        TrRemapperHelper.applyRemapper(remapper, paths, outputConsumerPaths, resourceRemappers, true, MappingsUtilsImpl.getSourceNamespace(), MappingsUtilsImpl.getTargetNamespace());
+        TrRemapperHelper.applyRemapper(remapper, paths, outputConsumerPaths, resourceRemappers, true, mappingsRegistry.getSourceNamespace(), mappingsRegistry.getTargetNamespace());
     }
 }

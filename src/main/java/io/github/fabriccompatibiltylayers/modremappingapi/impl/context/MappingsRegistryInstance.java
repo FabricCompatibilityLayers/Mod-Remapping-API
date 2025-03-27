@@ -21,8 +21,8 @@ import java.util.*;
 
 public class MappingsRegistryInstance extends MappingsRegistry {
     public List<String> vanillaClassNames = new ArrayList<>();
-    private final MemoryMappingTree formatted = new MemoryMappingTree();
-    private final MemoryMappingTree mods, additional;
+    private MemoryMappingTree formatted = new MemoryMappingTree();
+    private MemoryMappingTree mods, additional;
     private final MemoryMappingTree full = new MemoryMappingTree();
 
     private String defaultPackage = "";
@@ -33,8 +33,8 @@ public class MappingsRegistryInstance extends MappingsRegistry {
 
         try {
             this.formatVanillaMappings();
-            mods = MappingTreeHelper.createMappingTree();
-            additional = MappingTreeHelper.createMappingTree();
+            mods = MappingTreeHelper.createMappingTree(this.sourceNamespace, getTargetNamespace());
+            additional = MappingTreeHelper.createMappingTree(this.sourceNamespace, getTargetNamespace());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -83,7 +83,7 @@ public class MappingsRegistryInstance extends MappingsRegistry {
     public void addToFormattedMappings(InputStream stream) throws IOException {
         MappingTree extra = MappingTreeHelper.readMappings(stream);
 
-        MappingTreeHelper.merge(formatted, extra);
+        formatted = MappingTreeHelper.mergeIntoNew(formatted, extra);
     }
 
     @Override
@@ -91,7 +91,7 @@ public class MappingsRegistryInstance extends MappingsRegistry {
         formatted.accept(full);
 
         for (MappingTree.ClassMapping classView : formatted.getClasses()) {
-            String className = classView.getName(MappingsUtilsImpl.getSourceNamespace());
+            String className = classView.getName(this.getSourceNamespace());
 
             if (className != null) {
                 vanillaClassNames.add("/" + className + ".class");
@@ -172,6 +172,13 @@ public class MappingsRegistryInstance extends MappingsRegistry {
 
     public void setSourceNamespace(String sourceNamespace) {
         this.sourceNamespace = sourceNamespace;
+
+        try {
+            mods = MappingTreeHelper.createMappingTree(this.sourceNamespace, getTargetNamespace());
+            additional = MappingTreeHelper.createMappingTree(this.sourceNamespace, getTargetNamespace());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

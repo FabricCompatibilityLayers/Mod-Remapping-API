@@ -15,13 +15,6 @@ import java.util.*;
 
 @ApiStatus.Internal
 public class MappingsUtilsImpl {
-    private static String sourceNamespace = "official";
-
-    @ApiStatus.Internal
-    public static String getSourceNamespace() {
-        return sourceNamespace;
-    }
-
     public static String getTargetNamespace() {
         return FabricLoader.getInstance().getMappingResolver().getCurrentRuntimeNamespace();
     }
