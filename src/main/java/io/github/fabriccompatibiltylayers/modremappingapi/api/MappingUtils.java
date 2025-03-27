@@ -38,7 +38,7 @@ public interface MappingUtils {
      */
     @Deprecated
     static MappingUtils.ClassMember mapField(String className, String fieldName, @Nullable String fieldDesc) {
-        return MappingsUtilsImpl.mapField(className, fieldName, fieldDesc);
+        return MappingsUtilsImpl.mapField(MappingsUtilsImpl.getV1Registry(), className, fieldName, fieldDesc);
     }
 
     /**
@@ -50,7 +50,7 @@ public interface MappingUtils {
      */
     @Deprecated
     static MappingUtils.ClassMember mapFieldFromRemappedClass(String className, String fieldName, @Nullable String fieldDesc) {
-        return MappingsUtilsImpl.mapFieldFromRemappedClass(className, fieldName, fieldDesc);
+        return MappingsUtilsImpl.mapFieldFromRemappedClass(MappingsUtilsImpl.getV1Registry(), className, fieldName, fieldDesc);
     }
 
     /**
@@ -62,7 +62,7 @@ public interface MappingUtils {
      */
     @Deprecated
     static MappingUtils.ClassMember mapMethod(String className, String methodName, String methodDesc) {
-        return MappingsUtilsImpl.mapMethod(className, methodName, methodDesc);
+        return MappingsUtilsImpl.mapMethod(MappingsUtilsImpl.getV1Registry(), className, methodName, methodDesc);
     }
 
     /**
@@ -74,7 +74,7 @@ public interface MappingUtils {
      */
     @Deprecated
     static MappingUtils.ClassMember mapMethodFromRemappedClass(String className, String methodName, String methodDesc) {
-        return MappingsUtilsImpl.mapMethodFromRemappedClass(className, methodName, methodDesc);
+        return MappingsUtilsImpl.mapMethodFromRemappedClass(MappingsUtilsImpl.getV1Registry(), className, methodName, methodDesc);
     }
 
     /**
@@ -85,7 +85,7 @@ public interface MappingUtils {
      */
     @Deprecated
     static MappingUtils.ClassMember mapField(Class<?> owner, String fieldName) {
-        return MappingsUtilsImpl.mapField(owner, fieldName);
+        return MappingsUtilsImpl.mapField(MappingsUtilsImpl.getV1Registry(), owner, fieldName);
     }
 
     /**
@@ -97,7 +97,7 @@ public interface MappingUtils {
      */
     @Deprecated
     static MappingUtils.ClassMember mapMethod(Class<?> owner, String methodName, Class<?>[] parameterTypes) {
-        return MappingsUtilsImpl.mapMethod(owner, methodName, parameterTypes);
+        return MappingsUtilsImpl.mapMethod(MappingsUtilsImpl.getV1Registry(), owner, methodName, parameterTypes);
     }
 
     /**

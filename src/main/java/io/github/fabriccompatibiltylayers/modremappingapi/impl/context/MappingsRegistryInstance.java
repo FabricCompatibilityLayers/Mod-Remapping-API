@@ -23,8 +23,10 @@ public class MappingsRegistryInstance extends MappingsRegistry {
     public List<String> vanillaClassNames = new ArrayList<>();
     private final MemoryMappingTree formatted = new MemoryMappingTree();
     private final MemoryMappingTree mods, additional;
+    private final MemoryMappingTree full = new MemoryMappingTree();
 
     private String defaultPackage = "";
+    private String sourceNamespace = "official";
 
     public MappingsRegistryInstance() {
         super();
@@ -86,7 +88,7 @@ public class MappingsRegistryInstance extends MappingsRegistry {
 
     @Override
     public void completeFormattedMappings() throws IOException {
-        formatted.accept(FULL);
+        formatted.accept(full);
 
         for (MappingTree.ClassMapping classView : formatted.getClasses()) {
             String className = classView.getName(MappingsUtilsImpl.getSourceNamespace());
@@ -132,7 +134,7 @@ public class MappingsRegistryInstance extends MappingsRegistry {
             throw new RuntimeException("Error while generating mods mappings", e);
         }
 
-        MappingsUtilsImpl.addMappingsToContext(mods);
+        this.addToFullMappings(mods);
     }
 
     @Override
@@ -142,6 +144,47 @@ public class MappingsRegistryInstance extends MappingsRegistry {
 
     @Override
     public MemoryMappingTree getAdditionalMappings() {
-        return ADDITIONAL;
+        return additional;
+    }
+
+    @Override
+    public void generateAdditionalMappings() {
+        additional.visitEnd();
+
+        try {
+            MappingTreeHelper.exportMappings(additional, Constants.EXTRA_MAPPINGS_FILE.toPath());
+        } catch (IOException e) {
+            throw new RuntimeException("Error while generating remappers mappings", e);
+        }
+
+        this.addToFullMappings(additional);
+    }
+
+    @Override
+    public MemoryMappingTree getFullMappings() {
+        return full;
+    }
+
+    @Override
+    public String getSourceNamespace() {
+        return sourceNamespace;
+    }
+
+    public void setSourceNamespace(String sourceNamespace) {
+        this.sourceNamespace = sourceNamespace;
+    }
+
+    @Override
+    public String getTargetNamespace() {
+        return FabricLoader.getInstance().getMappingResolver().getCurrentRuntimeNamespace();
+    }
+
+    @Override
+    public void writeFullMappings() {
+        try {
+            MappingTreeHelper.exportMappings(full, Constants.FULL_MAPPINGS_FILE.toPath());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

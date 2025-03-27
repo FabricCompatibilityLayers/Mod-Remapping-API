@@ -1,8 +1,10 @@
 package io.github.fabriccompatibiltylayers.modremappingapi.impl.context.v1;
 
 import fr.catcore.modremapperapi.utils.Constants;
+import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.MappingBuilder;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.ModRemapper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.LibraryHandler;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingBuilderImpl;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingsUtilsImpl;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.ModDiscoverer;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.compatibility.V0ModRemapper;
@@ -42,7 +44,7 @@ public class ModRemapperV1Context extends BaseModRemapperContext {
 
             Optional<String> sourceNamespace = remapper.getSourceNamespace();
 
-            sourceNamespace.ifPresent(MappingsUtilsImpl::setSourceNamespace);
+            sourceNamespace.ifPresent(this.mappingsRegistry::setSourceNamespace);
 
             Optional<Supplier<InputStream>> mappings = remapper.getExtraMapping();
 
@@ -61,7 +63,7 @@ public class ModRemapperV1Context extends BaseModRemapperContext {
             throw new RuntimeException(e);
         }
 
-        Path sourceLibraryPath = CacheUtils.getLibraryPath(MappingsUtilsImpl.getSourceNamespace());
+        Path sourceLibraryPath = CacheUtils.getLibraryPath(this.mappingsRegistry.getSourceNamespace());
 
         if (!Files.exists(sourceLibraryPath)) {
             try {
@@ -71,9 +73,10 @@ public class ModRemapperV1Context extends BaseModRemapperContext {
             }
         }
 
-        LibraryHandler.gatherRemapLibraries(remappers);
+        LibraryHandler.gatherRemapLibraries(remappers, this.mappingsRegistry.getSourceNamespace());
 
-        MappingsRegistry.registerAdditionalMappings(remappers);
+        this.registerAdditionalMappings();
+        this.mappingsRegistry.generateAdditionalMappings();
     }
 
     public void remapMods(Map<Path, Path> pathMap) {
@@ -84,7 +87,7 @@ public class ModRemapperV1Context extends BaseModRemapperContext {
         ModTrRemapper.remapMods(remapper, pathMap);
         Constants.MAIN_LOGGER.debug("Jar remapping done!");
 
-        MappingsUtilsImpl.writeFullMappings();
+        this.mappingsRegistry.writeFullMappings();
     }
 
     @Override
@@ -119,5 +122,13 @@ public class ModRemapperV1Context extends BaseModRemapperContext {
     @Override
     public MappingsRegistry getMappingsRegistry() {
         return this.mappingsRegistry;
+    }
+
+    private void registerAdditionalMappings() {
+        MappingBuilder builder = new MappingBuilderImpl(mappingsRegistry.getAdditionalMappings());
+
+        for (ModRemapper remapper : remappers) {
+            remapper.registerMappings(builder);
+        }
     }
 }

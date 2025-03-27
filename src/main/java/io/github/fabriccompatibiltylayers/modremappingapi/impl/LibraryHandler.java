@@ -20,14 +20,14 @@ import java.util.Map;
 public class LibraryHandler {
     private static final Map<RemapLibrary, Path> remapLibraries = new HashMap<>();
 
-    public static void gatherRemapLibraries(List<ModRemapper> remappers) {
+    public static void gatherRemapLibraries(List<ModRemapper> remappers, String sourceNamespace) {
         try {
             for (ModRemapper remapper : remappers) {
                 List<RemapLibrary> libraries = new ArrayList<>();
 
                 remapper.addRemapLibraries(libraries, FabricLoader.getInstance().getEnvironmentType());
 
-                Map<RemapLibrary, Path> temp = CacheUtils.computeExtraLibraryPaths(libraries, MappingsUtilsImpl.getSourceNamespace());
+                Map<RemapLibrary, Path> temp = CacheUtils.computeExtraLibraryPaths(libraries, sourceNamespace);
 
                 for (Map.Entry<RemapLibrary, Path> entry : temp.entrySet()) {
                     RemapLibrary library = entry.getKey();

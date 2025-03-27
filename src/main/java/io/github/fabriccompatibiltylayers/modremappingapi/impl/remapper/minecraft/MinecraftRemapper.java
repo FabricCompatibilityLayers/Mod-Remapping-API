@@ -66,18 +66,20 @@ public class MinecraftRemapper {
 
     @ApiStatus.Internal
     public static void addMinecraftJar(TinyRemapper remapper) throws IOException {
+        MappingsRegistry mappingsRegistry = ModRemappingAPIImpl.getCurrentContext().getMappingsRegistry();
+
         Collection<Path> classPath;
 
         if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
             try {
                 classPath = getMinecraftJar(
-                            getMinecraftJar(RemapUtils.getRemapClasspath(), MappingsUtilsImpl.getTargetNamespace(), "intermediary"),
+                            getMinecraftJar(RemapUtils.getRemapClasspath(), mappingsRegistry.getTargetNamespace(), "intermediary"),
                         "intermediary",
                         "official"
                 );
 
-                if (!MappingsUtilsImpl.isSourceNamespaceObf()) {
-                    classPath = getMinecraftJar(classPath, "official", MappingsUtilsImpl.getSourceNamespace());
+                if (!mappingsRegistry.isSourceNamespaceObf()) {
+                    classPath = getMinecraftJar(classPath, "official", mappingsRegistry.getSourceNamespace());
                 }
             } catch (IOException e) {
                 throw new RuntimeException("Failed to populate default remap classpath", e);
@@ -85,8 +87,8 @@ public class MinecraftRemapper {
         } else {
             classPath = RemapUtils.getClassPathFromObjectShare();
 
-            if (!MappingsUtilsImpl.isSourceNamespaceObf()) {
-                classPath = getMinecraftJar(classPath, "official", MappingsUtilsImpl.getSourceNamespace());
+            if (!mappingsRegistry.isSourceNamespaceObf()) {
+                classPath = getMinecraftJar(classPath, "official", mappingsRegistry.getSourceNamespace());
             }
         }
 
