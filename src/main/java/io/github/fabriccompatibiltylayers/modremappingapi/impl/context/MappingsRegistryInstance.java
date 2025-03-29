@@ -194,4 +194,13 @@ public class MappingsRegistryInstance extends MappingsRegistry {
             throw new RuntimeException(e);
         }
     }
+
+    @Override
+    public List<MappingTree> getRemappingMappings() {
+        return Arrays.asList(
+                this.getFormattedMappings(),
+                this.getModsMappings(),
+                this.getAdditionalMappings()
+        );
+    }
 }

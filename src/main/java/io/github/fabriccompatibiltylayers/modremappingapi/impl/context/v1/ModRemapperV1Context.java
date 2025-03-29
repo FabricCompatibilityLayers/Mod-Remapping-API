@@ -9,28 +9,30 @@ import io.github.fabriccompatibiltylayers.modremappingapi.impl.context.BaseModRe
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.context.MappingsRegistryInstance;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingsRegistry;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.ModTrRemapper;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.RemappingFlags;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.SoftLockFixer;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.visitor.MRAApplyVisitor;
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.CacheUtils;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.tinyremapper.TinyRemapper;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Supplier;
 
 public class ModRemapperV1Context extends BaseModRemapperContext {
+    private final Set<RemappingFlags> remapFlags = new HashSet<>();
     private final List<ModRemapper> remappers = new ArrayList<>();
     private final Map<String, List<String>> mixin2TargetMap = new HashMap<>();
     private final MappingsRegistryInstance mappingsRegistry = new MappingsRegistryInstance();
+    private final LibraryHandler libraryHandler = new LibraryHandler();
+    private final V1ModDiscoverer modDiscoverer = new V1ModDiscoverer();
 
     public static ModRemapperV1Context INSTANCE;
 
     public ModRemapperV1Context() {
-        super("mod-remapping-api:v1");
+        super("mod-remapping-api_v1");
         INSTANCE = this;
     }
 
@@ -53,6 +55,10 @@ public class ModRemapperV1Context extends BaseModRemapperContext {
                     throw new RuntimeException(e);
                 }
             });
+
+            if (remapper.remapMixins()) {
+                remapFlags.add(RemappingFlags.MIXIN);
+            }
         }
 
         try {
@@ -61,17 +67,9 @@ public class ModRemapperV1Context extends BaseModRemapperContext {
             throw new RuntimeException(e);
         }
 
-        Path sourceLibraryPath = CacheUtils.getLibraryPath(this.mappingsRegistry.getSourceNamespace());
+        libraryHandler.init(this.mappingsRegistry.getSourceNamespace());
 
-        if (!Files.exists(sourceLibraryPath)) {
-            try {
-                Files.createDirectories(sourceLibraryPath);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        LibraryHandler.gatherRemapLibraries(remappers, this.mappingsRegistry.getSourceNamespace());
+        libraryHandler.gatherRemapLibraries(remappers);
 
         this.registerAdditionalMappings();
         this.mappingsRegistry.generateAdditionalMappings();
@@ -95,7 +93,7 @@ public class ModRemapperV1Context extends BaseModRemapperContext {
 
     @Override
     public void discoverMods(boolean remapClassEdits) {
-        ModDiscoverer.init(remappers, remapClassEdits, this);
+        this.modDiscoverer.init(remappers, remapClassEdits, this);
     }
 
     private static final String v0EntrypointName = "mod-remapper-api:modremapper";
@@ -142,5 +140,15 @@ public class ModRemapperV1Context extends BaseModRemapperContext {
 
         builder.extraPreApplyVisitor(new MRAApplyVisitor(preInfos));
         builder.extraPostApplyVisitor(new MRAApplyVisitor(postInfos));
+    }
+
+    @Override
+    public Set<RemappingFlags> getRemappingFlags() {
+        return remapFlags;
+    }
+
+    @Override
+    public LibraryHandler getLibraryHandler() {
+        return libraryHandler;
     }
 }

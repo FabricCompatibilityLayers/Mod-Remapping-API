@@ -1,16 +1,10 @@
 package io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper;
 
-import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.ModRemapper;
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.LibraryHandler;
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingsUtilsImpl;
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.ModRemappingAPIImpl;
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.VisitorInfosImpl;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.context.ModRemapperContext;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingTreeHelper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingsRegistry;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.minecraft.MinecraftRemapper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.resource.RefmapRemapper;
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.visitor.MRAApplyVisitor;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.visitor.MixinPostApplyVisitor;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.mappingio.tree.MappingTree;
@@ -27,11 +21,9 @@ import java.util.*;
 @ApiStatus.Internal
 public class ModTrRemapper {
     public static TinyRemapper makeRemapper(ModRemapperContext context) {
-        MappingsRegistry mappingsRegistry = ModRemappingAPIImpl.getCurrentContext().getMappingsRegistry();
+        MappingsRegistry mappingsRegistry = context.getMappingsRegistry();
 
-        List<MappingTree> trees = Arrays.asList(
-                mappingsRegistry.getFormattedMappings(),
-                mappingsRegistry.getModsMappings(), mappingsRegistry.getAdditionalMappings());
+        List<MappingTree> trees = mappingsRegistry.getRemappingMappings();
 
         TinyRemapper.Builder builder = TinyRemapper
                 .newRemapper()
@@ -45,24 +37,26 @@ public class ModTrRemapper {
         }
 
         for (MappingTree tree : trees) {
-            builder.withMappings(MappingTreeHelper.createMappingProvider(tree, context.getMappingsRegistry().getSourceNamespace(), context.getMappingsRegistry().getTargetNamespace()));
+            builder.withMappings(MappingTreeHelper.createMappingProvider(tree, mappingsRegistry.getSourceNamespace(), mappingsRegistry.getTargetNamespace()));
         }
 
         context.addToRemapperBuilder(builder);
 
-        MixinPostApplyVisitor mixinPostApplyVisitor = new MixinPostApplyVisitor();
-        builder.extraPostApplyVisitor(mixinPostApplyVisitor);
-        builder.extension(new MixinExtension(EnumSet.of(MixinExtension.AnnotationTarget.HARD)));
+        if (context.getRemappingFlags().contains(RemappingFlags.MIXIN)) {
+            MixinPostApplyVisitor mixinPostApplyVisitor = new MixinPostApplyVisitor();
+            builder.extraPostApplyVisitor(mixinPostApplyVisitor);
+            builder.extension(new MixinExtension(EnumSet.of(MixinExtension.AnnotationTarget.HARD)));
+        }
 
         TinyRemapper remapper = builder.build();
 
         try {
-            MinecraftRemapper.addMinecraftJar(remapper);
+            MinecraftRemapper.addMinecraftJar(remapper, mappingsRegistry);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
-        LibraryHandler.addLibrariesToRemapClasspath(remapper);
+        context.getLibraryHandler().addLibrariesToRemapClasspath(remapper);
 
         return remapper;
     }

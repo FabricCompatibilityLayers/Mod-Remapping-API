@@ -33,4 +33,9 @@ public class DefaultModRemapper implements ModRemapper {
     public void registerPostVisitors(VisitorInfos infos) {
 
     }
+
+    @Override
+    public boolean remapMixins() {
+        return false;
+    }
 }

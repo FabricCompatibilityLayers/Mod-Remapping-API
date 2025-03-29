@@ -30,4 +30,12 @@ public interface ModRemapper {
     default Optional<Supplier<InputStream>> getExtraMapping() {
         return Optional.empty();
     }
+
+    /**
+     * Whether to enable mixin remapping. Enabled by default for compatibility purposes.
+     * @return true - enabled <br> false - disabled
+     */
+    default boolean remapMixins() {
+        return true;
+    }
 }

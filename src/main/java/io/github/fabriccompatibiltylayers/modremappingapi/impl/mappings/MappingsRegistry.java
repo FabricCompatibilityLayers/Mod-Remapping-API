@@ -54,6 +54,7 @@ public abstract class MappingsRegistry {
     public abstract String getSourceNamespace();
     public abstract String getTargetNamespace();
     public abstract void writeFullMappings();
+    public abstract List<MappingTree> getRemappingMappings();
 
     public void addToFullMappings(MappingTree mappingTreeView) {
         try {
