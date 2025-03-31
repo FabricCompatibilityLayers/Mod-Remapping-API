@@ -11,11 +11,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public interface ModRemapperContext {
+public interface ModRemapperContext<T> {
     void init();
     void remapMods(Map<ModCandidate, Path> pathMap);
     void afterRemap();
-    void discoverMods(boolean remapClassEdits);
+    List<T> discoverMods(boolean remapClassEdits);
     void gatherRemappers();
     Map<String, List<String>> getMixin2TargetMap();
     MappingsRegistry getMappingsRegistry();

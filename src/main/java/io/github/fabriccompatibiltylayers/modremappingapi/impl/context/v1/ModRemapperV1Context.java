@@ -7,6 +7,7 @@ import io.github.fabriccompatibiltylayers.modremappingapi.impl.*;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.compatibility.V0ModRemapper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.context.BaseModRemapperContext;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.context.MappingsRegistryInstance;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.context.ModRemapperContext;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingsRegistry;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.ModTrRemapper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.RemappingFlags;
@@ -22,7 +23,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Supplier;
 
-public class ModRemapperV1Context extends BaseModRemapperContext {
+public class ModRemapperV1Context extends BaseModRemapperContext<ModRemapper> {
     private final Set<RemappingFlags> remapFlags = new HashSet<>();
     private final List<ModRemapper> remappers = new ArrayList<>();
     private final Map<String, List<String>> mixin2TargetMap = new HashMap<>();
@@ -93,7 +94,7 @@ public class ModRemapperV1Context extends BaseModRemapperContext {
     }
 
     @Override
-    public void discoverMods(boolean remapClassEdits) {
+    public List<ModRemapper> discoverMods(boolean remapClassEdits) {
         Map<ModCandidate, Path> modPaths = this.modDiscoverer.init(remappers, remapClassEdits, this);
 
         for (ModCandidate candidate : modPaths.keySet()) {
@@ -105,6 +106,8 @@ public class ModRemapperV1Context extends BaseModRemapperContext {
         this.remapMods(modPaths);
 
         modPaths.values().forEach(FabricLauncherBase.getLauncher()::addToClassPath);
+
+        return new ArrayList<>();
     }
 
     private static final String v0EntrypointName = "mod-remapper-api:modremapper";
