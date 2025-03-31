@@ -76,12 +76,12 @@ public class ModRemapperV1Context extends BaseModRemapperContext {
         this.mappingsRegistry.generateAdditionalMappings();
     }
 
-    public void remapMods(Map<Path, Path> pathMap) {
+    public void remapMods(Map<ModCandidate, Path> pathMap) {
         Constants.MAIN_LOGGER.debug("Starting jar remapping!");
         SoftLockFixer.preloadClasses();
         TinyRemapper remapper = ModTrRemapper.makeRemapper(this);
         Constants.MAIN_LOGGER.debug("Remapper created!");
-        ModTrRemapper.remapMods(remapper, pathMap, this.mappingsRegistry);
+        ModTrRemapper.remapMods(remapper, pathMap, this);
         Constants.MAIN_LOGGER.debug("Jar remapping done!");
 
         this.mappingsRegistry.writeFullMappings();
@@ -94,10 +94,10 @@ public class ModRemapperV1Context extends BaseModRemapperContext {
 
     @Override
     public void discoverMods(boolean remapClassEdits) {
-        Map<Path, Path> modPaths = this.modDiscoverer.init(remappers, remapClassEdits, this);
+        Map<ModCandidate, Path> modPaths = this.modDiscoverer.init(remappers, remapClassEdits, this);
 
-        for (Path path : modPaths.keySet()) {
-            mappingsRegistry.addModMappings(path);
+        for (ModCandidate candidate : modPaths.keySet()) {
+            mappingsRegistry.addModMappings(candidate.original);
         }
 
         mappingsRegistry.generateModMappings();
