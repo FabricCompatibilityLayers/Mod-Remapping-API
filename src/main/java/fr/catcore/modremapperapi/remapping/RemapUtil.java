@@ -2,7 +2,7 @@ package fr.catcore.modremapperapi.remapping;
 
 import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.MappingUtils;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingsUtilsImpl;
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingsRegistry;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.context.v1.ModRemapperV1Context;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.mappingio.MappingVisitor;
@@ -14,7 +14,7 @@ import java.util.*;
 @Deprecated
 public class RemapUtil {
     @Deprecated
-    public static final List<String> MC_CLASS_NAMES = MappingsRegistry.VANILLA_CLASS_LIST;
+    public static final List<String> MC_CLASS_NAMES = ModRemapperV1Context.INSTANCE.getMappingsRegistry().getVanillaClassNames();
 
     @Deprecated
     public static class MappingList extends ArrayList<MappingBuilder> {

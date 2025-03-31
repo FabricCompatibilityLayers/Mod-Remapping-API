@@ -1,6 +1,6 @@
 package io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings;
 
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingsUtilsImpl;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.ModRemappingAPIImpl;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.impl.util.log.Log;
 import net.fabricmc.loader.impl.util.log.LogCategory;
@@ -33,7 +33,9 @@ import java.util.Objects;
 public class MappingTreeHelper {
 
     @ApiStatus.Internal
-    public static void mergeIntoNew(VisitableMappingTree result, MappingTree left, MappingTree right) throws IOException {
+    public static MemoryMappingTree mergeIntoNew(MappingTree left, MappingTree right) throws IOException {
+        MemoryMappingTree result = new MemoryMappingTree();
+
         if (!Objects.equals(left.getSrcNamespace(), right.getSrcNamespace())) {
             throw new RuntimeException("Source namespace mismatch!");
         }
@@ -58,6 +60,8 @@ public class MappingTreeHelper {
 
         reorderedLeft.accept(result, VisitOrder.createByName());
         reorderedRight.accept(result, VisitOrder.createByName());
+
+        return result;
     }
 
     @ApiStatus.Internal
@@ -71,7 +75,7 @@ public class MappingTreeHelper {
                 List<String> dstNamespaces = new ArrayList<>(additional.getDstNamespaces());
                 dstNamespaces.add(main.getSrcNamespace());
 
-                visitor = new MappingDstNsReorder(reorder, dstNamespaces);
+                visitor = new MappingDstNsReorder(visitor, dstNamespaces);
             }
 
             additional.accept(visitor);
@@ -122,7 +126,9 @@ public class MappingTreeHelper {
 
     @ApiStatus.Internal
     public static MemoryMappingTree createMappingTree() throws IOException {
-        return createMappingTree(MappingsUtilsImpl.getSourceNamespace(), MappingsUtilsImpl.getTargetNamespace());
+        MappingsRegistry registry = ModRemappingAPIImpl.getCurrentContext().getMappingsRegistry();
+
+        return createMappingTree(registry.getSourceNamespace(), registry.getTargetNamespace());
     }
 
     @ApiStatus.Internal

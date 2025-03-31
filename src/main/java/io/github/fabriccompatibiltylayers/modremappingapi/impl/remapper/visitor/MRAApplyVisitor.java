@@ -7,15 +7,15 @@ import net.fabricmc.tinyremapper.api.TrClass;
 import org.objectweb.asm.ClassVisitor;
 
 public class MRAApplyVisitor implements TinyRemapper.ApplyVisitorProvider {
-    private VisitorInfosImpl infos;
+    private final VisitorInfosImpl infos;
+
+    public MRAApplyVisitor(VisitorInfosImpl infos) {
+        this.infos = infos;
+    }
 
     @Override
     public ClassVisitor insertApplyVisitor(TrClass cls, ClassVisitor next) {
         final String className = cls.getName();
         return new MRAClassVisitor(next, infos, className);
-    }
-
-    public void setInfos(VisitorInfosImpl infos) {
-        this.infos = infos;
     }
 }

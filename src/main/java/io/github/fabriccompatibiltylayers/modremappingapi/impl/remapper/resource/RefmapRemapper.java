@@ -1,7 +1,7 @@
 package io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.resource;
 
 import com.google.gson.Gson;
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.MixinRemappingHelper;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.ModRemappingAPIImpl;
 import net.fabricmc.tinyremapper.OutputConsumerPath;
 import net.fabricmc.tinyremapper.TinyRemapper;
 import net.fabricmc.tinyremapper.api.TrRemapper;
@@ -40,7 +40,7 @@ public class RefmapRemapper implements OutputConsumerPath.ResourceRemapper {
 
     public String mapRefMapEntry(String mixinClass, String old, TinyRemapper remapper) {
         TrRemapper trRemapper = remapper.getEnvironment().getRemapper();
-        List<String> supers = MixinRemappingHelper.MIXIN2TARGETMAP.get(mixinClass);
+        List<String> supers = ModRemappingAPIImpl.getCurrentContext().getMixin2TargetMap().get(mixinClass);
         // format is:
         // owner + name + quantifier + (desc == null || desc.startsWith("(") ? "" : ":") + desc + (tail != null ? " -> " : "") + tail
         String owner; // can be ""
