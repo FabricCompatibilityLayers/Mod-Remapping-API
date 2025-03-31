@@ -2,14 +2,13 @@ package io.github.fabriccompatibiltylayers.modremappingapi.impl.context.v1;
 
 import fr.catcore.modremapperapi.utils.Constants;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.ModRemapper;
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.DefaultModEntry;
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.ModEntry;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.DefaultModCandidate;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.ModCandidate;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.compatibility.V0ModRemapper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.discover.BaseModDiscoverer;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.CacheUtils;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.FileUtils;
 import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.loader.impl.launch.FabricLauncherBase;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -36,7 +35,7 @@ public class V1ModDiscoverer extends BaseModDiscoverer {
             }
         }
 
-        List<ModEntry> mods = new ArrayList<>();
+        List<ModCandidate> mods = new ArrayList<>();
 
         for (String jarFolder : modFolders) {
             Path mcSubFolder = FabricLoader.getInstance().getGameDir().resolve(jarFolder);
@@ -77,30 +76,20 @@ public class V1ModDiscoverer extends BaseModDiscoverer {
             modPaths = excludeClassEdits(modPaths, mainTempDir, context.getMappingsRegistry());
         }
 
-        for (Path path : modPaths.keySet()) {
-            context.getMappingsRegistry().addModMappings(path);
-        }
-
-        context.getMappingsRegistry().generateModMappings();
-
-        context.remapMods(modPaths);
-
-        modPaths.values().forEach(FabricLauncherBase.getLauncher()::addToClassPath);
-
         return modPaths;
     }
 
-    private void handleV0Excluded(List<ModEntry> mods) throws IOException, URISyntaxException {
-        for (ModEntry modEntry : mods) {
-            if (excluded.containsKey(modEntry.modId)) {
-                if (Files.isDirectory(modEntry.file)) {
-                    for (String excluded : excluded.get(modEntry.modId)) {
-                        if (Files.deleteIfExists(modEntry.file.resolve(excluded))) {
-                            Constants.MAIN_LOGGER.debug("File deleted: " + modEntry.file.resolve(excluded));
+    private void handleV0Excluded(List<ModCandidate> mods) throws IOException, URISyntaxException {
+        for (ModCandidate modCandidate : mods) {
+            if (excluded.containsKey(modCandidate.modId)) {
+                if (Files.isDirectory(modCandidate.file)) {
+                    for (String excluded : excluded.get(modCandidate.modId)) {
+                        if (Files.deleteIfExists(modCandidate.file.resolve(excluded))) {
+                            Constants.MAIN_LOGGER.debug("File deleted: " + modCandidate.file.resolve(excluded));
                         }
                     }
                 } else {
-                    FileUtils.removeEntriesFromZip(modEntry.file, excluded.get(modEntry.modId));
+                    FileUtils.removeEntriesFromZip(modCandidate.file, excluded.get(modCandidate.modId));
                 }
             }
         }
@@ -112,12 +101,22 @@ public class V1ModDiscoverer extends BaseModDiscoverer {
     }
 
     @Override
-    public boolean allowDirectories() {
+    public boolean allowDirectoryMods() {
         return true;
     }
 
     @Override
-    public Optional<ModEntry> discoverFolderMod(Path folder, Path destinationFolder) throws IOException {
+    public boolean searchRecursively() {
+        return false;
+    }
+
+    @Override
+    public boolean isValidDirectoryName(String directoryName) {
+        return false;
+    }
+
+    @Override
+    public Optional<ModCandidate> discoverFolderMod(Path folder, Path destinationFolder) throws IOException {
         String name = folder.getFileName().toString().replace(" ", "_");
         Path destination = destinationFolder.resolve(name + ".zip");
 
@@ -137,7 +136,7 @@ public class V1ModDiscoverer extends BaseModDiscoverer {
 
         if (hasClasses[0]) {
             return Optional.of(
-                    new DefaultModEntry(
+                    new DefaultModCandidate(
                             name,
                             destination,
                             folder
@@ -149,7 +148,7 @@ public class V1ModDiscoverer extends BaseModDiscoverer {
     }
 
     @Override
-    public Optional<ModEntry> discoverFileMod(Path file, Path destinationFolder) throws IOException {
+    public Optional<ModCandidate> discoverFileMod(Path file, Path destinationFolder) throws IOException {
         String fileName = file.getFileName().toString().replace(" ", "_");
         String modName = fileName.replace(".jar", "").replace(".zip", "");
 
@@ -167,7 +166,7 @@ public class V1ModDiscoverer extends BaseModDiscoverer {
 
         if (found) {
             return Optional.of(
-                    new DefaultModEntry(
+                    new DefaultModCandidate(
                             modName,
                             destinationFolder.resolve(fileName),
                             file

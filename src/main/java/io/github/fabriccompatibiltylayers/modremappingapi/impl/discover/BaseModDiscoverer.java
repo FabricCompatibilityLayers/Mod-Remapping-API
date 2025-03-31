@@ -1,6 +1,6 @@
 package io.github.fabriccompatibiltylayers.modremappingapi.impl.discover;
 
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.ModEntry;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.ModCandidate;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingsRegistry;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.FileUtils;
 import org.spongepowered.include.com.google.common.collect.ImmutableList;
@@ -15,12 +15,14 @@ import java.util.*;
 
 public abstract class BaseModDiscoverer {
     public abstract boolean isValidFileName(String fileName);
-    public abstract boolean allowDirectories();
-    public abstract Optional<ModEntry> discoverFolderMod(Path folder, Path destinationFolder) throws IOException;
-    public abstract Optional<ModEntry> discoverFileMod(Path file, Path destinationFolder) throws IOException;
+    public abstract boolean allowDirectoryMods();
+    public abstract boolean searchRecursively();
+    public abstract boolean isValidDirectoryName(String directoryName);
+    public abstract Optional<ModCandidate> discoverFolderMod(Path folder, Path destinationFolder) throws IOException;
+    public abstract Optional<ModCandidate> discoverFileMod(Path file, Path destinationFolder) throws IOException;
 
-    public List<ModEntry> discoverMods(Path folder, Path destination) throws IOException {
-        List<ModEntry> mods = new ArrayList<>();
+    public List<ModCandidate> discoverMods(Path folder, Path destination) throws IOException {
+        List<ModCandidate> mods = new ArrayList<>();
 
         if (!Files.isDirectory(folder)) return ImmutableList.of();
 
@@ -28,9 +30,13 @@ public abstract class BaseModDiscoverer {
             for (Path path : stream) {
                 String name = path.getFileName().toString();
 
-                if (Files.isDirectory(path) && allowDirectories()) {
-                    discoverFolderMod(path, destination)
-                            .ifPresent(mods::add);
+                if (Files.isDirectory(path)) {
+                    if (searchRecursively() && isValidDirectoryName(name)) {
+                        mods.addAll(discoverMods(folder.resolve(name), destination.resolve(name)));
+                    } else if (allowDirectoryMods()) {
+                        discoverFolderMod(path, destination)
+                                .ifPresent(mods::add);
+                    }
                 } else if (Files.exists(path) && isValidFileName(name)) {
                     discoverFileMod(path, destination)
                             .ifPresent(mods::add);

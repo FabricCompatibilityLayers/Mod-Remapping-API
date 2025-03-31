@@ -13,6 +13,7 @@ import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.Remappin
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.SoftLockFixer;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.visitor.MRAApplyVisitor;
 import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.impl.launch.FabricLauncherBase;
 import net.fabricmc.tinyremapper.TinyRemapper;
 
 import java.io.IOException;
@@ -93,7 +94,17 @@ public class ModRemapperV1Context extends BaseModRemapperContext {
 
     @Override
     public void discoverMods(boolean remapClassEdits) {
-        this.modDiscoverer.init(remappers, remapClassEdits, this);
+        Map<Path, Path> modPaths = this.modDiscoverer.init(remappers, remapClassEdits, this);
+
+        for (Path path : modPaths.keySet()) {
+            mappingsRegistry.addModMappings(path);
+        }
+
+        mappingsRegistry.generateModMappings();
+
+        this.remapMods(modPaths);
+
+        modPaths.values().forEach(FabricLauncherBase.getLauncher()::addToClassPath);
     }
 
     private static final String v0EntrypointName = "mod-remapper-api:modremapper";
