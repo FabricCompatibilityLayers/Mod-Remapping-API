@@ -4,5 +4,6 @@ import org.jetbrains.annotations.ApiStatus;
 
 @ApiStatus.Internal
 public enum RemappingFlags {
-    MIXIN
+    MIXIN,
+    ACCESS_WIDENER
 }

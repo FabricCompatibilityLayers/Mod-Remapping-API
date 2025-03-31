@@ -1,11 +1,16 @@
 package io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper;
 
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.ModCandidate;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.context.ModRemapperContext;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingTreeHelper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingsRegistry;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.minecraft.MinecraftRemapper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.resource.RefmapRemapper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.visitor.MixinPostApplyVisitor;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.FileUtils;
+import net.fabricmc.accesswidener.AccessWidenerReader;
+import net.fabricmc.accesswidener.AccessWidenerRemapper;
+import net.fabricmc.accesswidener.AccessWidenerWriter;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.mappingio.tree.MappingTree;
 import net.fabricmc.tinyremapper.NonClassCopyMode;
@@ -13,10 +18,16 @@ import net.fabricmc.tinyremapper.OutputConsumerPath;
 import net.fabricmc.tinyremapper.TinyRemapper;
 import net.fabricmc.tinyremapper.extension.mixin.MixinExtension;
 import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.Nullable;
+import org.objectweb.asm.commons.Remapper;
 
 import java.io.IOException;
+import java.nio.file.FileSystem;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 @ApiStatus.Internal
 public class ModTrRemapper {
@@ -61,12 +72,69 @@ public class ModTrRemapper {
         return remapper;
     }
 
-    public static void remapMods(TinyRemapper remapper, Map<Path, Path> paths, MappingsRegistry mappingsRegistry) {
+    public static void remapMods(TinyRemapper remapper, Map<ModCandidate, Path> paths, ModRemapperContext context) {
         List<OutputConsumerPath> outputConsumerPaths = new ArrayList<>();
 
         List<OutputConsumerPath.ResourceRemapper> resourceRemappers = new ArrayList<>(NonClassCopyMode.FIX_META_INF.remappers);
         resourceRemappers.add(new RefmapRemapper());
 
-        TrRemapperHelper.applyRemapper(remapper, paths, outputConsumerPaths, resourceRemappers, true, mappingsRegistry.getSourceNamespace(), mappingsRegistry.getTargetNamespace());
+        Consumer<TinyRemapper> consumer = getRemapperConsumer(paths, context);
+
+        TrRemapperHelper.applyRemapper(
+                remapper,
+                paths.entrySet().stream().collect(Collectors.toMap(entry -> entry.getKey().original, Map.Entry::getValue)),
+                outputConsumerPaths,
+                resourceRemappers,
+                true,
+                context.getMappingsRegistry().getSourceNamespace(),
+                context.getMappingsRegistry().getTargetNamespace(),
+                consumer
+        );
+
+        if (context.getRemappingFlags().contains(RemappingFlags.ACCESS_WIDENER)) {
+            for (Map.Entry<ModCandidate, Path> entry : paths.entrySet()) {
+                ModCandidate candidate = entry.getKey();
+                Path jarPath = entry.getValue();
+
+                if (candidate.accessWidenerName != null && candidate.accessWidener != null) {
+                    try (FileSystem fs = FileUtils.getJarFileSystem(jarPath)) {
+                        Files.delete(fs.getPath(candidate.accessWidenerName));
+                        Files.write(fs.getPath(candidate.accessWidenerName), candidate.accessWidener);
+                    } catch (Throwable t) {
+                        throw new RuntimeException("Error while writing remapped access widener for '" + candidate.modName + "'", t);
+                    }
+                }
+            }
+        }
+    }
+
+    private static @Nullable Consumer<TinyRemapper> getRemapperConsumer(Map<ModCandidate, Path> paths, ModRemapperContext context) {
+        Consumer<TinyRemapper> consumer = null;
+
+        if (context.getRemappingFlags().contains(RemappingFlags.ACCESS_WIDENER)) {
+            consumer = (currentRemapper) -> {
+                for (Map.Entry<ModCandidate, Path> entry : paths.entrySet()) {
+                    ModCandidate candidate = entry.getKey();
+
+                    if (candidate.accessWidenerName != null) {
+                        try (FileSystem jarFs = FileUtils.getJarFileSystem(candidate.original)) {
+                            candidate.accessWidener = remapAccessWidener(Files.readAllBytes(jarFs.getPath(candidate.accessWidenerName)), currentRemapper.getRemapper(), context.getMappingsRegistry().getTargetNamespace());
+                        } catch (Throwable t) {
+                            throw new RuntimeException("Error while remapping access widener for '" + candidate.modName + "'", t);
+                        }
+                    }
+                }
+            };
+        }
+
+        return consumer;
+    }
+
+    private static byte[] remapAccessWidener(byte[] data, Remapper remapper, String targetNamespace) {
+        AccessWidenerWriter writer = new AccessWidenerWriter();
+        AccessWidenerRemapper remappingDecorator = new AccessWidenerRemapper(writer, remapper, "intermediary", targetNamespace);
+        AccessWidenerReader accessWidenerReader = new AccessWidenerReader(remappingDecorator);
+        accessWidenerReader.read(data, "intermediary");
+        return writer.write();
     }
 }

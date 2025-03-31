@@ -1,6 +1,7 @@
 package io.github.fabriccompatibiltylayers.modremappingapi.impl.context;
 
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.LibraryHandler;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.ModCandidate;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingsRegistry;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.RemappingFlags;
 import net.fabricmc.tinyremapper.TinyRemapper;
@@ -12,7 +13,7 @@ import java.util.Set;
 
 public interface ModRemapperContext {
     void init();
-    void remapMods(Map<Path, Path> pathMap);
+    void remapMods(Map<ModCandidate, Path> pathMap);
     void afterRemap();
     void discoverMods(boolean remapClassEdits);
     void gatherRemappers();

@@ -2,7 +2,6 @@ package io.github.fabriccompatibiltylayers.modremappingapi.impl.context.v1;
 
 import fr.catcore.modremapperapi.utils.Constants;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.ModRemapper;
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.DefaultModCandidate;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.ModCandidate;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.compatibility.V0ModRemapper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.discover.BaseModDiscoverer;
@@ -24,7 +23,7 @@ import java.util.stream.Collectors;
 public class V1ModDiscoverer extends BaseModDiscoverer {
     private final Map<String, List<String>> excluded = new HashMap<>();
 
-    public Map<Path, Path> init(List<ModRemapper> modRemappers, boolean remapClassEdits, ModRemapperV1Context context) {
+    public Map<ModCandidate, Path> init(List<ModRemapper> modRemappers, boolean remapClassEdits, ModRemapperV1Context context) {
         Set<String> modFolders = new HashSet<>();
 
         for (ModRemapper remapper : modRemappers) {
@@ -66,11 +65,9 @@ public class V1ModDiscoverer extends BaseModDiscoverer {
             throw new RuntimeException(e);
         }
 
-        Map<Path, Path> modPaths = mods.stream()
+        Map<ModCandidate, Path> modPaths = mods.stream()
                 .filter(entry -> Files.exists(entry.original))
-                .collect(Collectors.groupingBy(entry -> entry.modId))
-                .entrySet().stream()
-                .collect(Collectors.toMap(entry -> entry.getValue().get(0).original, entry -> entry.getValue().get(0).file));
+                .collect(Collectors.toMap(entry -> entry, entry -> entry.file));
 
         if (!remapClassEdits) {
             modPaths = excludeClassEdits(modPaths, mainTempDir, context.getMappingsRegistry());
@@ -81,15 +78,15 @@ public class V1ModDiscoverer extends BaseModDiscoverer {
 
     private void handleV0Excluded(List<ModCandidate> mods) throws IOException, URISyntaxException {
         for (ModCandidate modCandidate : mods) {
-            if (excluded.containsKey(modCandidate.modId)) {
+            if (excluded.containsKey(modCandidate.modName)) {
                 if (Files.isDirectory(modCandidate.file)) {
-                    for (String excluded : excluded.get(modCandidate.modId)) {
+                    for (String excluded : excluded.get(modCandidate.modName)) {
                         if (Files.deleteIfExists(modCandidate.file.resolve(excluded))) {
                             Constants.MAIN_LOGGER.debug("File deleted: " + modCandidate.file.resolve(excluded));
                         }
                     }
                 } else {
-                    FileUtils.removeEntriesFromZip(modCandidate.file, excluded.get(modCandidate.modId));
+                    FileUtils.removeEntriesFromZip(modCandidate.file, excluded.get(modCandidate.modName));
                 }
             }
         }
@@ -136,7 +133,7 @@ public class V1ModDiscoverer extends BaseModDiscoverer {
 
         if (hasClasses[0]) {
             return Optional.of(
-                    new DefaultModCandidate(
+                    new ModCandidate(
                             name,
                             destination,
                             folder
@@ -166,7 +163,7 @@ public class V1ModDiscoverer extends BaseModDiscoverer {
 
         if (found) {
             return Optional.of(
-                    new DefaultModCandidate(
+                    new ModCandidate(
                             modName,
                             destinationFolder.resolve(fileName),
                             file

@@ -47,11 +47,12 @@ public abstract class BaseModDiscoverer {
         return mods;
     }
 
-    public Map<Path, Path> excludeClassEdits(Map<Path, Path> modPaths, Path tempFolder, MappingsRegistry mappingsRegistry) {
-        Map<Path, Path> map = new HashMap<>();
-        Map<Path, Path> convertMap = new HashMap<>();
+    public Map<ModCandidate, Path> excludeClassEdits(Map<ModCandidate, Path> modPaths, Path tempFolder, MappingsRegistry mappingsRegistry) {
+        Map<ModCandidate, Path> map = new HashMap<>();
+        Map<ModCandidate, Path> convertMap = new HashMap<>();
 
-        for (Map.Entry<Path, Path> entry : modPaths.entrySet()) {
+        for (Map.Entry<ModCandidate, Path> entry : modPaths.entrySet()) {
+            ModCandidate modCandidate = entry.getKey();
             Path tempDir = tempFolder.resolve(entry.getValue().getParent().getFileName().toString());
 
             if (!Files.exists(tempDir)) {
@@ -64,24 +65,30 @@ public abstract class BaseModDiscoverer {
             }
 
             Path tempFile = tempDir.resolve(entry.getValue().getFileName().toString());
-            map.put(tempFile, entry.getValue());
+            map.put(new ModCandidate(
+                    modCandidate.modName,
+                    modCandidate.accessWidenerName,
+                    modCandidate.file,
+                    tempFile
+            ), entry.getValue());
             convertMap.put(entry.getKey(), tempFile);
         }
 
-        List<Path> errored = new ArrayList<>();
+        List<ModCandidate> errored = new ArrayList<>();
 
-        for (Map.Entry<Path, Path> entry : convertMap.entrySet()) {
+        for (Map.Entry<ModCandidate, Path> entry : convertMap.entrySet()) {
+            ModCandidate modCandidate = entry.getKey();
             try {
-                if (Files.isDirectory(entry.getKey())) {
-                    FileUtils.zipFolder(entry.getKey(), entry.getValue());
+                if (Files.isDirectory(modCandidate.original)) {
+                    FileUtils.zipFolder(modCandidate.original, entry.getValue());
                 } else {
-                    Files.copy(entry.getKey(), entry.getValue(), StandardCopyOption.REPLACE_EXISTING);
+                    Files.copy(modCandidate.original, entry.getValue(), StandardCopyOption.REPLACE_EXISTING);
                 }
 
                 FileUtils.removeEntriesFromZip(entry.getValue(), mappingsRegistry.getVanillaClassNames());
             } catch (IOException | URISyntaxException e) {
                 e.printStackTrace();
-                errored.add(entry.getValue());
+                errored.add(modCandidate);
             }
         }
 

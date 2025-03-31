@@ -234,8 +234,13 @@ public class FileUtils {
     }
 
     @ApiStatus.Internal
+    public static FileSystem getJarFileSystem(Path path) throws URISyntaxException, IOException {
+        return FileSystems.newFileSystem(new URI("jar:" + path.toUri()), ZIP_PROPERTIES);
+    }
+
+    @ApiStatus.Internal
     public static void removeEntriesFromZip(Path zipPath, List<String> entries) throws IOException, URISyntaxException {
-        try (FileSystem zipfs = FileSystems.newFileSystem(new URI("jar:" + zipPath.toUri()), ZIP_PROPERTIES)) {
+        try (FileSystem zipfs = getJarFileSystem(zipPath)) {
             for (String entryName : entries) {
                 Path entryPath = zipfs.getPath(entryName);
 

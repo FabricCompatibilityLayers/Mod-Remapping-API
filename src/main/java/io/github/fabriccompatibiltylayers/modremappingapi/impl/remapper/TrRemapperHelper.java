@@ -6,16 +6,22 @@ import net.fabricmc.tinyremapper.InputTag;
 import net.fabricmc.tinyremapper.OutputConsumerPath;
 import net.fabricmc.tinyremapper.TinyRemapper;
 import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 @ApiStatus.Internal
 public class TrRemapperHelper {
     public static void applyRemapper(TinyRemapper remapper, Map<Path, Path> paths, List<OutputConsumerPath> outputConsumerPaths, List<OutputConsumerPath.ResourceRemapper> resourceRemappers, boolean analyzeMapping, String srcNamespace, String targetNamespace) {
+        applyRemapper(remapper, paths, outputConsumerPaths, resourceRemappers, analyzeMapping, srcNamespace, targetNamespace, null);
+    }
+
+    public static void applyRemapper(TinyRemapper remapper, Map<Path, Path> paths, List<OutputConsumerPath> outputConsumerPaths, List<OutputConsumerPath.ResourceRemapper> resourceRemappers, boolean analyzeMapping, String srcNamespace, String targetNamespace, @Nullable Consumer<TinyRemapper> action) {
         try {
             Map<Path, InputTag> tagMap = new HashMap<>();
 
@@ -43,6 +49,8 @@ public class TrRemapperHelper {
             }
 
             if (analyzeMapping) ModRemappingAPIImpl.getCurrentContext().getMappingsRegistry().completeMappingsFromTr(remapper.getEnvironment(), srcNamespace);
+
+            if (action != null) action.accept(remapper);
         } catch (Exception e) {
             remapper.finish();
             outputConsumerPaths.forEach(o -> {
