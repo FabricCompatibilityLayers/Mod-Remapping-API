@@ -154,8 +154,8 @@ modrinth {
 	token = System.getenv("MODRINTH_TOKEN")
 	projectId = "mod-remapping-api"
 	changelog = """
-Update mapping-io to 0.7.1.\
-Update tiny remapper to 0.11.0.
+Improvements to the remapping process.\\
+Now allow ModRemappers to disable mixin remapping which is enabled by default for backward compatibility.
 """
 	uploadFile = remapJar
 
