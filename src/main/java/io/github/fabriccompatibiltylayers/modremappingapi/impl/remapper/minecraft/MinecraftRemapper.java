@@ -5,12 +5,14 @@ import io.github.fabriccompatibiltylayers.modremappingapi.impl.RemapUtils;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingTreeHelper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingsRegistry;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.TrRemapperHelper;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.logger.RemapperLogger;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.CacheUtils;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.FileUtils;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.tinyremapper.NonClassCopyMode;
 import net.fabricmc.tinyremapper.OutputConsumerPath;
 import net.fabricmc.tinyremapper.TinyRemapper;
+import net.legacyfabric.fabric.api.logger.v1.Logger;
 import org.jetbrains.annotations.ApiStatus;
 
 import java.io.IOException;
@@ -20,6 +22,8 @@ import java.util.*;
 
 @ApiStatus.Internal
 public class MinecraftRemapper {
+    private static final Logger LOGGER = Logger.get("ModRemappingAPI", "MinecraftRemapper");
+
     private static Collection<Path> getMinecraftJar(Collection<Path> sourcePaths, String src, String target, MappingsRegistry mappingsRegistry) throws IOException {
         Path targetFolder = CacheUtils.getLibraryPath(target);
 
@@ -34,7 +38,7 @@ public class MinecraftRemapper {
         FileUtils.delete(paths.values());
 
         TinyRemapper.Builder builder = TinyRemapper
-                .newRemapper()
+                .newRemapper(new RemapperLogger(LOGGER))
                 .renameInvalidLocals(true)
                 .ignoreFieldDesc(false)
                 .propagatePrivate(true)
@@ -54,7 +58,7 @@ public class MinecraftRemapper {
 
         List<OutputConsumerPath.ResourceRemapper> resourceRemappers = new ArrayList<>(NonClassCopyMode.FIX_META_INF.remappers);
 
-        TrRemapperHelper.applyRemapper(remapper, paths, outputConsumerPaths, resourceRemappers, true, src, target);
+        TrRemapperHelper.applyRemapper(remapper, paths, outputConsumerPaths, resourceRemappers, true, src, target, null);
 
         Constants.MAIN_LOGGER.info("MC jar remapped successfully!");
 

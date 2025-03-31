@@ -4,6 +4,7 @@ import io.github.fabriccompatibiltylayers.modremappingapi.impl.ModCandidate;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.context.ModRemapperContext;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingTreeHelper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingsRegistry;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.logger.RemapperLogger;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.minecraft.MinecraftRemapper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.resource.RefmapRemapper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.visitor.MixinPostApplyVisitor;
@@ -17,6 +18,7 @@ import net.fabricmc.tinyremapper.NonClassCopyMode;
 import net.fabricmc.tinyremapper.OutputConsumerPath;
 import net.fabricmc.tinyremapper.TinyRemapper;
 import net.fabricmc.tinyremapper.extension.mixin.MixinExtension;
+import net.legacyfabric.fabric.api.logger.v1.Logger;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.commons.Remapper;
@@ -31,13 +33,15 @@ import java.util.stream.Collectors;
 
 @ApiStatus.Internal
 public class ModTrRemapper {
+    private static final Logger LOGGER = Logger.get("ModRemappingAPI", "ModRemapper");
+
     public static TinyRemapper makeRemapper(ModRemapperContext context) {
         MappingsRegistry mappingsRegistry = context.getMappingsRegistry();
 
         List<MappingTree> trees = mappingsRegistry.getRemappingMappings();
 
         TinyRemapper.Builder builder = TinyRemapper
-                .newRemapper()
+                .newRemapper(new RemapperLogger(LOGGER))
                 .renameInvalidLocals(true)
                 .ignoreFieldDesc(false)
                 .propagatePrivate(true)
