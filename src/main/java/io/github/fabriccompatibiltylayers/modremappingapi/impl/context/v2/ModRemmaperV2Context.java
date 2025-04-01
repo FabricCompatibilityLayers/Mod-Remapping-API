@@ -1,5 +1,6 @@
 package io.github.fabriccompatibiltylayers.modremappingapi.impl.context.v2;
 
+import io.github.fabriccompatibilitylayers.modremappingapi.api.v2.ModDiscovererConfig;
 import io.github.fabriccompatibilitylayers.modremappingapi.api.v2.ModRemapper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.LibraryHandler;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.ModCandidate;
@@ -42,9 +43,21 @@ public class ModRemmaperV2Context extends BaseModRemapperContext<ModRemapper> {
 
     @Override
     public List<ModRemapper> discoverMods(boolean remapClassEdits) {
-        for (ModRemapper remapper : remappers) {
+        List<ModRemapper> collected = new ArrayList<>();
+        List<io.github.fabriccompatibilitylayers.modremappingapi.api.v2.ModCandidate> candidates = new ArrayList<>();
 
+        for (ModRemapper remapper : remappers) {
+            for (ModDiscovererConfig config : remapper.getModDiscoverers()) {
+                V2ModDiscoverer discoverer = new V2ModDiscoverer(config);
+                candidates.addAll(discoverer.collect());
+            }
         }
+
+        for (ModRemapper remapper : remappers) {
+            collected.addAll(remapper.collectSubRemappers(candidates));
+        }
+
+        return collected;
     }
 
     @Override

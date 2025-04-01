@@ -63,7 +63,7 @@ public class ModRemappingAPIImpl {
         }
     }
 
-    public static ModRemapperContext getCurrentContext() {
+    public static ModRemapperContext<?> getCurrentContext() {
         return CURRENT_CONTEXT;
     }
 }

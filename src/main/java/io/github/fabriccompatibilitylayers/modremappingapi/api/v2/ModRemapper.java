@@ -5,5 +5,6 @@ import java.util.List;
 public interface ModRemapper {
     String getContextId();
 
-    List<ModDiscoverer> getModDiscoverers();
+    List<ModDiscovererConfig> getModDiscoverers();
+    List<ModRemapper> collectSubRemappers(List<ModCandidate> discoveredMods);
 }
