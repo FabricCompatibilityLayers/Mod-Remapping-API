@@ -163,3 +163,11 @@ Now allow ModRemappers to disable mixin remapping which is enabled by default fo
 		embedded.version "spasm", project.spasm_version
 	}
 }
+
+task testmodJar(type: Jar) {
+	from sourceSets.test.output
+	destinationDirectory = project.layout.buildDirectory.dir("libs")
+	archiveClassifier.set("testmod")
+}
+
+build.dependsOn testmodJar

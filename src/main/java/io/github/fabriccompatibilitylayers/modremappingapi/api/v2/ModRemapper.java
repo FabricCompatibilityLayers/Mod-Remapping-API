@@ -7,4 +7,7 @@ public interface ModRemapper {
 
     List<ModDiscovererConfig> getModDiscoverers();
     List<ModRemapper> collectSubRemappers(List<ModCandidate> discoveredMods);
+    MappingsConfig getMappingsConfig();
+    List<RemappingFlags> getRemappingFlags();
+    void afterRemapping();
 }

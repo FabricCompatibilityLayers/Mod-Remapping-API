@@ -7,10 +7,9 @@ import io.github.fabriccompatibiltylayers.modremappingapi.impl.*;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.compatibility.V0ModRemapper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.context.BaseModRemapperContext;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.context.MappingsRegistryInstance;
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.context.ModRemapperContext;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingsRegistry;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.ModTrRemapper;
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.RemappingFlags;
+import io.github.fabriccompatibilitylayers.modremappingapi.api.v2.RemappingFlags;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.SoftLockFixer;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.visitor.MRAApplyVisitor;
 import net.fabricmc.loader.api.FabricLoader;
@@ -52,7 +51,7 @@ public class ModRemapperV1Context extends BaseModRemapperContext<ModRemapper> {
 
             mappings.ifPresent(inputStreamSupplier -> {
                 try {
-                    this.mappingsRegistry.addToFormattedMappings(inputStreamSupplier.get());
+                    this.mappingsRegistry.addToFormattedMappings(inputStreamSupplier.get(), new HashMap<>());
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -77,7 +76,7 @@ public class ModRemapperV1Context extends BaseModRemapperContext<ModRemapper> {
         this.mappingsRegistry.generateAdditionalMappings();
     }
 
-    public void remapMods(Map<ModCandidate, Path> pathMap) {
+    public void remapMods(Map<io.github.fabriccompatibilitylayers.modremappingapi.api.v2.ModCandidate, Path> pathMap) {
         Constants.MAIN_LOGGER.debug("Starting jar remapping!");
         SoftLockFixer.preloadClasses();
         TinyRemapper remapper = ModTrRemapper.makeRemapper(this);
@@ -103,7 +102,7 @@ public class ModRemapperV1Context extends BaseModRemapperContext<ModRemapper> {
 
         mappingsRegistry.generateModMappings();
 
-        this.remapMods(modPaths);
+//        this.remapMods(modPaths);
 
         modPaths.values().forEach(FabricLauncherBase.getLauncher()::addToClassPath);
 

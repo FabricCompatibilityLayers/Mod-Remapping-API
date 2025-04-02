@@ -11,6 +11,7 @@ import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.FileUtils;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.VersionHelper;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.mappingio.MappingVisitor;
+import net.fabricmc.mappingio.adapter.MappingNsRenamer;
 import net.fabricmc.mappingio.tree.MappingTree;
 import net.fabricmc.mappingio.tree.MemoryMappingTree;
 
@@ -80,8 +81,18 @@ public class MappingsRegistryInstance extends MappingsRegistry {
     }
 
     @Override
-    public void addToFormattedMappings(InputStream stream) throws IOException {
+    public void addToFormattedMappings(InputStream stream, Map<String, String> renames) throws IOException {
         MappingTree extra = MappingTreeHelper.readMappings(stream);
+
+        if (!renames.isEmpty()) {
+            MemoryMappingTree renamed = new MemoryMappingTree();
+
+            MappingNsRenamer renamer = new MappingNsRenamer(renamed, renames);
+
+            extra.accept(renamer);
+
+            extra = renamed;
+        }
 
         formatted = MappingTreeHelper.mergeIntoNew(formatted, extra);
     }

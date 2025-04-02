@@ -19,13 +19,15 @@ public class ModDiscovererConfigImpl implements ModDiscovererConfig {
     private final boolean searchRecursively;
     private final Predicate<String> directoryFilter;
     private final @Nullable BiFunction<Path, List<String>, List<ModCandidate>> candidateCollector;
+    private final boolean exportToOriginalFolder;
 
-    private ModDiscovererConfigImpl(String folderName, Pattern fileNameMatcher, boolean searchRecursively, Predicate<String> directoryFilter, @Nullable BiFunction<Path, List<String>, List<ModCandidate>> candidateCollector) {
+    private ModDiscovererConfigImpl(String folderName, Pattern fileNameMatcher, boolean searchRecursively, Predicate<String> directoryFilter, @Nullable BiFunction<Path, List<String>, List<ModCandidate>> candidateCollector, boolean exportToOriginalFolder) {
         this.folderName = folderName;
         this.fileNameMatcher = fileNameMatcher;
         this.searchRecursively = searchRecursively;
         this.directoryFilter = directoryFilter;
         this.candidateCollector = candidateCollector;
+        this.exportToOriginalFolder = exportToOriginalFolder;
     }
 
     @Override
@@ -53,12 +55,17 @@ public class ModDiscovererConfigImpl implements ModDiscovererConfig {
         return this.candidateCollector == null ? this::defaultCandidateCollector : this.candidateCollector;
     }
 
+    @Override
+    public boolean getExportToOriginalFolder() {
+        return this.exportToOriginalFolder;
+    }
+
     private List<ModCandidate> defaultCandidateCollector(Path modPath, List<String> fileList) {
         List<ModCandidate> candidates = new ArrayList<>();
 
         for (String file : fileList) {
             if (file.endsWith(".class")) {
-                candidates.add(new DefaultModCandidate(modPath));
+                candidates.add(new DefaultModCandidate(modPath, this));
                 break;
             }
         }
@@ -72,6 +79,7 @@ public class ModDiscovererConfigImpl implements ModDiscovererConfig {
         private boolean searchRecursively = false;
         private Predicate<String> directoryFilter = s -> true;
         private BiFunction<Path, List<String>, List<ModCandidate>> candidateCollector;
+        private boolean exportToOriginalFolder = false;
 
         public BuilderImpl(String folderName) {
             this.folderName = folderName;
@@ -102,8 +110,14 @@ public class ModDiscovererConfigImpl implements ModDiscovererConfig {
         }
 
         @Override
+        public Builder exportToOriginalFolder(boolean exportToOriginalFolder) {
+            this.exportToOriginalFolder = exportToOriginalFolder;
+            return this;
+        }
+
+        @Override
         public ModDiscovererConfig build() {
-            return new ModDiscovererConfigImpl(folderName, Pattern.compile(fileNameMatcher), searchRecursively, directoryFilter, candidateCollector);
+            return new ModDiscovererConfigImpl(folderName, Pattern.compile(fileNameMatcher), searchRecursively, directoryFilter, candidateCollector, exportToOriginalFolder);
         }
     }
 }

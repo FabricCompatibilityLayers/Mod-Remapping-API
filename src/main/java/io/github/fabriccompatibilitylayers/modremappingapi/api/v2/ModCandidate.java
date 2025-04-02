@@ -10,4 +10,12 @@ public interface ModCandidate {
     String getType();
     @Nullable String getAccessWidenerPath();
     @Nullable ModCandidate getParent();
+    @Nullable String getVersion();
+    @Nullable String getParentSubPath();
+    String getDestinationName();
+    ModDiscovererConfig getDiscovererConfig();
+    void setAccessWidener(byte[] data);
+    byte @Nullable [] getAccessWidener();
+    void setDestination(Path destination);
+    @Nullable Path getDestination();
 }

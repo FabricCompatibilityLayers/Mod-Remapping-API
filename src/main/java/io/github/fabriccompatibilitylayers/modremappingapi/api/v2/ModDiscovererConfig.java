@@ -18,12 +18,14 @@ public interface ModDiscovererConfig {
     boolean searchRecursively();
     Predicate<String> getDirectoryFilter();
     BiFunction<Path, List<String>, List<ModCandidate>> getCandidateCollector();
+    boolean getExportToOriginalFolder();
 
     interface Builder {
         Builder fileNameMatcher(String pattern);
         Builder searchRecursively(boolean searchRecursively);
         Builder directoryFilter(Predicate<String> filter);
         Builder candidateCollector(BiFunction<Path, List<String>, List<ModCandidate>> collector);
+        Builder exportToOriginalFolder(boolean exportToOriginalFolder);
 
         ModDiscovererConfig build();
     }

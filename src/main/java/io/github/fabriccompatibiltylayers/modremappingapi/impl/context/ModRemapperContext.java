@@ -1,9 +1,9 @@
 package io.github.fabriccompatibiltylayers.modremappingapi.impl.context;
 
+import io.github.fabriccompatibilitylayers.modremappingapi.api.v2.ModCandidate;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.LibraryHandler;
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.ModCandidate;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingsRegistry;
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.RemappingFlags;
+import io.github.fabriccompatibilitylayers.modremappingapi.api.v2.RemappingFlags;
 import net.fabricmc.tinyremapper.TinyRemapper;
 
 import java.nio.file.Path;
@@ -22,4 +22,5 @@ public interface ModRemapperContext<T> {
     void addToRemapperBuilder(TinyRemapper.Builder builder);
     Set<RemappingFlags> getRemappingFlags();
     LibraryHandler getLibraryHandler();
+    String getId();
 }

@@ -45,9 +45,12 @@ public class ModRemappingAPIImpl {
 
             List<String> v2Keys = new ArrayList<>(v2Remappers.keySet());
 
-            for (String contextKey : v2Keys) {
+            while (!v2Keys.isEmpty()) {
+                String contextKey = v2Keys.remove(0);
                 ModRemmaperV2Context context = new ModRemmaperV2Context(contextKey, v2Remappers.get(contextKey));
                 CURRENT_CONTEXT = context;
+
+                CURRENT_CONTEXT.init();
 
                 Map<String, List<ModRemapper>> newRemappers = context.discoverMods(remapClassEdits)
                         .stream().collect(Collectors.groupingBy(ModRemapper::getContextId));
