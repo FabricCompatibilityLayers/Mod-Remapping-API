@@ -11,6 +11,7 @@ import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.ClassNode;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class MixinPostApplyVisitorProvider implements TinyRemapper.ApplyVisitorProvider {
@@ -20,6 +21,8 @@ public class MixinPostApplyVisitorProvider implements TinyRemapper.ApplyVisitorP
     public ClassVisitor insertApplyVisitor(TrClass cls, ClassVisitor next) {
         ClassNode node = new ClassNode();
         cls.accept(node, ClassReader.SKIP_FRAMES);
+
+        String className = cls.getName().replace(".", "/");
 
         List<String> supers = new ArrayList<>();
 
@@ -41,7 +44,8 @@ public class MixinPostApplyVisitorProvider implements TinyRemapper.ApplyVisitorP
                                 if (val instanceof Type) {
                                     theVal = ((Type) val).getInternalName();
                                 } else {
-                                    theVal = (String) val;
+                                    theVal = ModRemappingAPIImpl.getCurrentContext().getMixinData().getMixinRefmapData()
+                                            .getOrDefault(className, new HashMap<>()).getOrDefault((String) val, (String) val);
                                 }
 
                                 supers.add(theVal);
@@ -54,7 +58,7 @@ public class MixinPostApplyVisitorProvider implements TinyRemapper.ApplyVisitorP
             });
         }
 
-        ModRemappingAPIImpl.getCurrentContext().getMixinData().getMixin2TargetMap().put(cls.getName().replace(".", "/"), supers);
+        ModRemappingAPIImpl.getCurrentContext().getMixinData().getMixin2TargetMap().put(className, supers);
 
         return next;
     }
