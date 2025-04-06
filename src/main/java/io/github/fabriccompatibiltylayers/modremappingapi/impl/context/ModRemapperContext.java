@@ -17,10 +17,10 @@ public interface ModRemapperContext<T> {
     void afterRemap();
     List<T> discoverMods(boolean remapClassEdits);
     void gatherRemappers();
-    Map<String, List<String>> getMixin2TargetMap();
     MappingsRegistry getMappingsRegistry();
     void addToRemapperBuilder(TinyRemapper.Builder builder);
     Set<RemappingFlags> getRemappingFlags();
     LibraryHandler getLibraryHandler();
     String getId();
+    MixinData getMixinData();
 }

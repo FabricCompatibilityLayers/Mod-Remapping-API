@@ -2,7 +2,6 @@ package io.github.fabriccompatibilitylayers.modremappingapi.impl;
 
 import io.github.fabriccompatibilitylayers.modremappingapi.api.v2.MappingsConfig;
 
-import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -14,7 +13,7 @@ public class DefaultMappingsConfig implements MappingsConfig {
     }
 
     @Override
-    public Supplier<InputStream> getExtraMappings() {
+    public Supplier<String> getExtraMappings() {
         return null;
     }
 

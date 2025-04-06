@@ -12,6 +12,7 @@ import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.VersionHelp
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.mappingio.MappingVisitor;
 import net.fabricmc.mappingio.adapter.MappingNsRenamer;
+import net.fabricmc.mappingio.adapter.MappingSourceNsSwitch;
 import net.fabricmc.mappingio.tree.MappingTree;
 import net.fabricmc.mappingio.tree.MemoryMappingTree;
 
@@ -92,6 +93,16 @@ public class MappingsRegistryInstance extends MappingsRegistry {
             extra.accept(renamer);
 
             extra = renamed;
+        }
+
+        if (!Objects.equals(extra.getSrcNamespace(), formatted.getSrcNamespace()) && extra.getDstNamespaces().contains(formatted.getSrcNamespace())) {
+            MemoryMappingTree switched = new MemoryMappingTree();
+
+            MappingSourceNsSwitch switcher = new MappingSourceNsSwitch(switched, formatted.getSrcNamespace());
+
+            extra.accept(switcher);
+
+            extra = switched;
         }
 
         formatted = MappingTreeHelper.mergeIntoNew(formatted, extra);

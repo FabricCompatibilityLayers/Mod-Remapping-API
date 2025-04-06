@@ -5,12 +5,16 @@ import io.github.fabriccompatibilitylayers.modremappingapi.api.v2.*;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.LibraryHandler;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.context.BaseModRemapperContext;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.context.MappingsRegistryInstance;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.context.MixinData;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingsRegistry;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.ModTrRemapper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.SoftLockFixer;
 import net.fabricmc.tinyremapper.TinyRemapper;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -18,7 +22,7 @@ import java.util.stream.Collectors;
 public class ModRemmaperV2Context extends BaseModRemapperContext<ModRemapper> {
     private final List<ModRemapper> remappers;
     private final Set<RemappingFlags> remapFlags = new HashSet<>();
-    private final Map<String, List<String>> mixin2TargetMap = new HashMap<>();
+    private final MixinData mixinData = new MixinData();
     private final MappingsRegistryInstance mappingsRegistry = new MappingsRegistryInstance();
     private final LibraryHandler libraryHandler = new LibraryHandler();
 
@@ -38,7 +42,7 @@ public class ModRemmaperV2Context extends BaseModRemapperContext<ModRemapper> {
 
             if (mappings.getExtraMappings() != null) {
                 try {
-                    this.mappingsRegistry.addToFormattedMappings(mappings.getExtraMappings().get(), mappings.getRenamingMap());
+                    this.mappingsRegistry.addToFormattedMappings(new ByteArrayInputStream(mappings.getExtraMappings().get().getBytes(StandardCharsets.UTF_8)), mappings.getRenamingMap());
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -125,11 +129,6 @@ public class ModRemmaperV2Context extends BaseModRemapperContext<ModRemapper> {
     }
 
     @Override
-    public Map<String, List<String>> getMixin2TargetMap() {
-        return mixin2TargetMap;
-    }
-
-    @Override
     public MappingsRegistry getMappingsRegistry() {
         return mappingsRegistry;
     }
@@ -151,5 +150,10 @@ public class ModRemmaperV2Context extends BaseModRemapperContext<ModRemapper> {
 
     public List<ModRemapper> getRemappers() {
         return remappers;
+    }
+
+    @Override
+    public MixinData getMixinData() {
+        return mixinData;
     }
 }

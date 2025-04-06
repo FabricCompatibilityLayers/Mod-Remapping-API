@@ -70,9 +70,10 @@ public class SoftLockFixer {
                 "fr.catcore.modremapperapi.remapping.VisitorInfos$Type",
                 "io.github.fabriccompatibiltylayers.modremappingapi.impl.DefaultModRemapper",
                 "io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.resource.RefmapJson",
-                "io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.visitor.MixinPostApplyVisitor",
+                "io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.visitor.MixinPostApplyVisitorProvider",
                 "io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.asm.MRAClassVisitor",
                 "io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.asm.MRAMethodVisitor",
+                "io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.asm.mixin.RefmapBaseMixinExtension",
                 "io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.visitor.MRAApplyVisitor",
                 "io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.resource.RefmapRemapper",
                 "io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingsRegistry",
@@ -218,7 +219,10 @@ public class SoftLockFixer {
                 getLibClassName("mappingio", "MappingUtil"),
                 getLibClassName("mappingio", "MappingVisitor"),
                 getLibClassName("mappingio", "MappingWriter"),
-                getLibClassName("mappingio", "MappingWriter$1")
+                getLibClassName("mappingio", "MappingWriter$1"),
+
+                getLibClassName("tinyremapper", "extension.mixin.hard.ImprovedHardTargetMixinClassVisitor"),
+                getLibClassName("tinyremapper", "extension.mixin.hard.ImprovedMixinAnnotationVisitor"),
         }) {
             try {
                 Constants.MAIN_LOGGER.debug("Preloading class: " + clazz);

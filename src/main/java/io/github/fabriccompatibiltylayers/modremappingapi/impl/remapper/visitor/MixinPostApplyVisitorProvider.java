@@ -13,8 +13,8 @@ import org.objectweb.asm.tree.ClassNode;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MixinPostApplyVisitor implements TinyRemapper.ApplyVisitorProvider {
-    public MixinPostApplyVisitor() {}
+public class MixinPostApplyVisitorProvider implements TinyRemapper.ApplyVisitorProvider {
+    public MixinPostApplyVisitorProvider() {}
 
     @Override
     public ClassVisitor insertApplyVisitor(TrClass cls, ClassVisitor next) {
@@ -54,7 +54,7 @@ public class MixinPostApplyVisitor implements TinyRemapper.ApplyVisitorProvider 
             });
         }
 
-        ModRemappingAPIImpl.getCurrentContext().getMixin2TargetMap().put(cls.getName().replace(".", "/"), supers);
+        ModRemappingAPIImpl.getCurrentContext().getMixinData().getMixin2TargetMap().put(cls.getName().replace(".", "/"), supers);
 
         return next;
     }

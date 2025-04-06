@@ -7,6 +7,7 @@ import io.github.fabriccompatibiltylayers.modremappingapi.impl.*;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.compatibility.V0ModRemapper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.context.BaseModRemapperContext;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.context.MappingsRegistryInstance;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.context.MixinData;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingsRegistry;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.ModTrRemapper;
 import io.github.fabriccompatibilitylayers.modremappingapi.api.v2.RemappingFlags;
@@ -25,7 +26,7 @@ import java.util.function.Supplier;
 public class ModRemapperV1Context extends BaseModRemapperContext<ModRemapper> {
     private final Set<RemappingFlags> remapFlags = new HashSet<>();
     private final List<ModRemapper> remappers = new ArrayList<>();
-    private final Map<String, List<String>> mixin2TargetMap = new HashMap<>();
+    private final MixinData mixinData = new MixinData();
     private final MappingsRegistryInstance mappingsRegistry = new MappingsRegistryInstance();
     private final LibraryHandler libraryHandler = new LibraryHandler();
     private final V1ModDiscoverer modDiscoverer = new V1ModDiscoverer();
@@ -124,11 +125,6 @@ public class ModRemapperV1Context extends BaseModRemapperContext<ModRemapper> {
     }
 
     @Override
-    public Map<String, List<String>> getMixin2TargetMap() {
-        return mixin2TargetMap;
-    }
-
-    @Override
     public MappingsRegistry getMappingsRegistry() {
         return this.mappingsRegistry;
     }
@@ -163,5 +159,10 @@ public class ModRemapperV1Context extends BaseModRemapperContext<ModRemapper> {
     @Override
     public LibraryHandler getLibraryHandler() {
         return libraryHandler;
+    }
+
+    @Override
+    public MixinData getMixinData() {
+        return mixinData;
     }
 }
