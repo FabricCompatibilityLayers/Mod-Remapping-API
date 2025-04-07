@@ -46,7 +46,7 @@ public class V1CacheHandler implements InternalCacheHandler {
 
     @Override
     public Path resolveCache(String name) {
-        return null;
+        return this.resolveRoot(name);
     }
 
     @Override

@@ -17,16 +17,23 @@ public interface ModDiscovererConfig {
     Pattern getFileNameMatcher();
     boolean searchRecursively();
     Predicate<String> getDirectoryFilter();
-    BiFunction<Path, List<String>, List<ModCandidate>> getCandidateCollector();
+    Collector getCandidateCollector();
     boolean getExportToOriginalFolder();
+    boolean allowDirectoryMods();
 
     interface Builder {
         Builder fileNameMatcher(String pattern);
         Builder searchRecursively(boolean searchRecursively);
         Builder directoryFilter(Predicate<String> filter);
-        Builder candidateCollector(BiFunction<Path, List<String>, List<ModCandidate>> collector);
+        Builder candidateCollector(Collector collector);
         Builder exportToOriginalFolder(boolean exportToOriginalFolder);
+        Builder allowDirectoryMods(boolean allowDirectoryMods);
 
         ModDiscovererConfig build();
+    }
+
+    @FunctionalInterface
+    interface Collector {
+        List<ModCandidate> collect(ModDiscovererConfig config, Path modPath, List<String> entries);
     }
 }

@@ -7,15 +7,20 @@ import org.jetbrains.annotations.Nullable;
 import java.nio.file.Path;
 
 public class DefaultModCandidate implements ModCandidate {
-    private final String id;
-    private final Path path;
+    private String sanitizedFileName, id;
+    private Path path;
     private final ModDiscovererConfig discovererConfig;
     private Path destination;
 
     public DefaultModCandidate(Path path, ModDiscovererConfig discovererConfig) {
-        this.id = path.getFileName().toString().replace(".jar", "").replace(".zip", "").replace(" ", "_");
+        this.sanitizedFileName = path.getFileName().toString().replace(" ", "_");
+        this.id = this.sanitizedFileName.replace(".jar", "").replace(".zip", "");
         this.path = path;
         this.discovererConfig = discovererConfig;
+
+        if (!this.sanitizedFileName.endsWith(".jar") && !this.sanitizedFileName.endsWith(".zip")) {
+            this.sanitizedFileName += ".zip";
+        }
     }
 
     @Override
@@ -55,7 +60,7 @@ public class DefaultModCandidate implements ModCandidate {
 
     @Override
     public String getDestinationName() {
-        return this.path.getFileName().toString();
+        return this.sanitizedFileName;
     }
 
     @Override
@@ -82,4 +87,11 @@ public class DefaultModCandidate implements ModCandidate {
     public Path getDestination() {
         return this.destination;
     }
+
+    @Override
+    public void setPath(Path path) {
+        this.path = path;
+    }
+
+
 }

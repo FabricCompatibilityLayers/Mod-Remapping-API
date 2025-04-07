@@ -68,7 +68,6 @@ public class SoftLockFixer {
                 "fr.catcore.modremapperapi.remapping.VisitorInfos$MethodNamed",
                 "fr.catcore.modremapperapi.remapping.VisitorInfos$MethodValue",
                 "fr.catcore.modremapperapi.remapping.VisitorInfos$Type",
-                "io.github.fabriccompatibiltylayers.modremappingapi.impl.DefaultModRemapper",
                 "io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.resource.RefmapJson",
                 "io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.visitor.MixinPostApplyVisitorProvider",
                 "io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.asm.MRAClassVisitor",

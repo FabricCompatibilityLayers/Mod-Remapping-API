@@ -3,10 +3,12 @@ package io.github.fabriccompatibiltylayers.modremappingapi.impl.context.v2;
 import io.github.fabriccompatibilitylayers.modremappingapi.api.v2.ModCandidate;
 import io.github.fabriccompatibilitylayers.modremappingapi.api.v2.ModDiscovererConfig;
 import io.github.fabriccompatibilitylayers.modremappingapi.impl.InternalCacheHandler;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingsRegistry;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.FileUtils;
 import net.fabricmc.loader.api.FabricLoader;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -48,24 +50,55 @@ public class V2ModDiscoverer {
                 if (Files.isDirectory(path)) {
                     if (config.searchRecursively()) {
                         if (config.getDirectoryFilter().test(name)) searchDir(candidates, path);
-                    } else {
-                        // TODO Add directory mods support
+                    } else if (config.allowDirectoryMods()) {
+                        discoverMods(candidates, path);
                     }
                 } else if (Files.exists(path)) {
                     Matcher matcher = config.getFileNameMatcher().matcher(name);
 
                     if (matcher.matches()) {
-                        discoverFileMods(candidates, path);
+                        discoverMods(candidates, path);
                     }
                 }
             }
         }
     }
 
-    private void discoverFileMods(List<ModCandidate> candidates, Path modPath) throws IOException {
-        List<String> entries = FileUtils.listZipContent(modPath);
+    private void discoverMods(List<ModCandidate> candidates, Path modPath) throws IOException {
+        List<String> entries = FileUtils.listPathContent(modPath);
 
-        candidates.addAll(config.getCandidateCollector().apply(modPath, entries));
+        candidates.addAll(config.getCandidateCollector().collect(config, modPath, entries));
+    }
+
+    public void excludeClassEdits(List<ModCandidate> candidates, InternalCacheHandler cacheHandler, MappingsRegistry registry) throws IOException, URISyntaxException {
+        Path tempDirectory = cacheHandler.resolveTemp(this.config.getFolderName());
+
+        if (!Files.exists(tempDirectory)) {
+            try {
+                Files.createDirectories(tempDirectory);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            FileUtils.emptyDir(tempDirectory);
+        }
+
+        for (ModCandidate candidate : candidates) {
+            Path modPath = candidate.getPath();
+
+            String outputName = candidate.getDestinationName();
+            Path outputPath = tempDirectory.resolve(outputName);
+
+            if (Files.isDirectory(modPath)) {
+                FileUtils.zipFolder(modPath, outputPath);
+            } else {
+                Files.copy(modPath, outputPath);
+            }
+
+            FileUtils.removeEntriesFromZip(outputPath, registry.getVanillaClassNames());
+
+            candidate.setPath(outputPath);
+        }
     }
 
     public Map<ModCandidate, Path> computeDestinations(List<ModCandidate> candidates, InternalCacheHandler cacheHandler) {
@@ -94,6 +127,15 @@ public class V2ModDiscoverer {
                 candidate -> {
                     Path modDestination = finalDestination.resolve(candidate.getDestinationName());
                     candidate.setDestination(modDestination);
+
+                    if (Files.exists(modDestination)) {
+                        try {
+                            Files.delete(modDestination);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+
                     return modDestination;
                 }
         ));

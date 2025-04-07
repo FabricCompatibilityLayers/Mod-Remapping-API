@@ -18,4 +18,5 @@ public interface ModCandidate {
     byte @Nullable [] getAccessWidener();
     void setDestination(Path destination);
     @Nullable Path getDestination();
+    void setPath(Path path);
 }

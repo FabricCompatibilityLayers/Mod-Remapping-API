@@ -1,4 +1,4 @@
-package io.github.fabriccompatibiltylayers.modremappingapi.impl;
+package io.github.fabriccompatibiltylayers.modremappingapi.impl.compatibility;
 
 import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.MappingBuilder;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.ModRemapper;
@@ -8,10 +8,10 @@ import net.fabricmc.api.EnvType;
 
 import java.util.List;
 
-public class DefaultModRemapper implements ModRemapper {
+public class V1DefaultModRemapper implements ModRemapper {
     @Override
     public String[] getJarFolders() {
-        return new String[] {"mods"};
+        return new String[]{"mods"};
     }
 
     @Override

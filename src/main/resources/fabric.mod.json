@@ -23,7 +23,7 @@
   "environment": "*",
   "entrypoints": {
     "mod-remapper-api:modremapper_v1": [
-      "io.github.fabriccompatibiltylayers.modremappingapi.impl.DefaultModRemapper"
+      "io.github.fabriccompatibiltylayers.modremappingapi.impl.compatibility.V1DefaultModRemapper"
     ],
     "spasm:raw_transformer": [
       "io.github.fabriccompatibiltylayers.modremappingapi.impl.TransformerRegistry"

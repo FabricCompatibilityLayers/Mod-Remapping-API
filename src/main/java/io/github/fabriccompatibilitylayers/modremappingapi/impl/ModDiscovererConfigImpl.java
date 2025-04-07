@@ -18,16 +18,18 @@ public class ModDiscovererConfigImpl implements ModDiscovererConfig {
     private final Pattern fileNameMatcher;
     private final boolean searchRecursively;
     private final Predicate<String> directoryFilter;
-    private final @Nullable BiFunction<Path, List<String>, List<ModCandidate>> candidateCollector;
+    private final @Nullable Collector candidateCollector;
     private final boolean exportToOriginalFolder;
+    private final boolean allowDirectoryMods;
 
-    private ModDiscovererConfigImpl(String folderName, Pattern fileNameMatcher, boolean searchRecursively, Predicate<String> directoryFilter, @Nullable BiFunction<Path, List<String>, List<ModCandidate>> candidateCollector, boolean exportToOriginalFolder) {
+    private ModDiscovererConfigImpl(String folderName, Pattern fileNameMatcher, boolean searchRecursively, Predicate<String> directoryFilter, @Nullable Collector candidateCollector, boolean exportToOriginalFolder, boolean allowDirectoryMods) {
         this.folderName = folderName;
         this.fileNameMatcher = fileNameMatcher;
         this.searchRecursively = searchRecursively;
         this.directoryFilter = directoryFilter;
         this.candidateCollector = candidateCollector;
         this.exportToOriginalFolder = exportToOriginalFolder;
+        this.allowDirectoryMods = allowDirectoryMods;
     }
 
     @Override
@@ -51,7 +53,7 @@ public class ModDiscovererConfigImpl implements ModDiscovererConfig {
     }
 
     @Override
-    public BiFunction<Path, List<String>, List<ModCandidate>> getCandidateCollector() {
+    public Collector getCandidateCollector() {
         return this.candidateCollector == null ? this::defaultCandidateCollector : this.candidateCollector;
     }
 
@@ -60,12 +62,12 @@ public class ModDiscovererConfigImpl implements ModDiscovererConfig {
         return this.exportToOriginalFolder;
     }
 
-    private List<ModCandidate> defaultCandidateCollector(Path modPath, List<String> fileList) {
+    private List<ModCandidate> defaultCandidateCollector(ModDiscovererConfig config, Path modPath, List<String> fileList) {
         List<ModCandidate> candidates = new ArrayList<>();
 
         for (String file : fileList) {
             if (file.endsWith(".class")) {
-                candidates.add(new DefaultModCandidate(modPath, this));
+                candidates.add(new DefaultModCandidate(modPath, config));
                 break;
             }
         }
@@ -73,13 +75,19 @@ public class ModDiscovererConfigImpl implements ModDiscovererConfig {
         return candidates;
     }
 
+    @Override
+    public boolean allowDirectoryMods() {
+        return allowDirectoryMods;
+    }
+
     public static class BuilderImpl implements ModDiscovererConfig.Builder {
         private final String folderName;
         private String fileNameMatcher = "(.+).jar$";
         private boolean searchRecursively = false;
         private Predicate<String> directoryFilter = s -> true;
-        private BiFunction<Path, List<String>, List<ModCandidate>> candidateCollector;
+        private Collector candidateCollector;
         private boolean exportToOriginalFolder = false;
+        private boolean allowDirectoryMods = false;
 
         public BuilderImpl(String folderName) {
             this.folderName = folderName;
@@ -104,7 +112,7 @@ public class ModDiscovererConfigImpl implements ModDiscovererConfig {
         }
 
         @Override
-        public Builder candidateCollector(BiFunction<Path, List<String>, List<ModCandidate>> collector) {
+        public Builder candidateCollector(Collector collector) {
             this.candidateCollector = collector;
             return this;
         }
@@ -116,8 +124,22 @@ public class ModDiscovererConfigImpl implements ModDiscovererConfig {
         }
 
         @Override
+        public Builder allowDirectoryMods(boolean allowDirectoryMods) {
+            this.allowDirectoryMods = allowDirectoryMods;
+            return this;
+        }
+
+        @Override
         public ModDiscovererConfig build() {
-            return new ModDiscovererConfigImpl(folderName, Pattern.compile(fileNameMatcher), searchRecursively, directoryFilter, candidateCollector, exportToOriginalFolder);
+            return new ModDiscovererConfigImpl(
+                    folderName,
+                    Pattern.compile(fileNameMatcher),
+                    searchRecursively,
+                    directoryFilter,
+                    candidateCollector,
+                    exportToOriginalFolder,
+                    allowDirectoryMods
+            );
         }
     }
 }
