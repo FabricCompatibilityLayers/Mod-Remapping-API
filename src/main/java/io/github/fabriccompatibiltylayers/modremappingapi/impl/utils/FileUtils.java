@@ -164,8 +164,8 @@ public class FileUtils {
                 }
 
                 @Override
-                public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-                    Files.delete(dir);
+                public FileVisitResult postVisitDirectory(Path subDir, IOException exc) throws IOException {
+                    if (dir != subDir) Files.delete(subDir);
                     return FileVisitResult.CONTINUE;
                 }
             });
