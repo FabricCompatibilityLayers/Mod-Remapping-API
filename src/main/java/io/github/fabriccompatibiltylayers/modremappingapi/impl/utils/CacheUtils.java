@@ -29,7 +29,7 @@ public class CacheUtils {
     @ApiStatus.Internal
     public static Map<Path, Path> computeLibraryPaths(Collection<Path> sourcePaths, String target) {
         return sourcePaths.stream().collect(Collectors.toMap(p -> p,
-                p -> CacheUtils.getLibraryPath(target).resolve(p.toFile().getName())));
+                p -> CacheUtils.getLibraryPath(target).resolve(p.getFileName())));
     }
 
     @ApiStatus.Internal

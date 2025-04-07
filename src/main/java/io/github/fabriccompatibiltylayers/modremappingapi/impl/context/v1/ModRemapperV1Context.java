@@ -1,6 +1,7 @@
 package io.github.fabriccompatibiltylayers.modremappingapi.impl.context.v1;
 
 import fr.catcore.modremapperapi.utils.Constants;
+import io.github.fabriccompatibilitylayers.modremappingapi.impl.InternalCacheHandler;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.MappingBuilder;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.ModRemapper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.*;
@@ -27,7 +28,8 @@ public class ModRemapperV1Context extends BaseModRemapperContext<ModRemapper> {
     private final Set<RemappingFlags> remapFlags = new HashSet<>();
     private final List<ModRemapper> remappers = new ArrayList<>();
     private final MixinData mixinData = new MixinData();
-    private final MappingsRegistryInstance mappingsRegistry = new MappingsRegistryInstance();
+    private final InternalCacheHandler cacheHandler = new V1CacheHandler();
+    private final MappingsRegistryInstance mappingsRegistry = new MappingsRegistryInstance(cacheHandler);
     private final LibraryHandler libraryHandler = new LibraryHandler();
     private final V1ModDiscoverer modDiscoverer = new V1ModDiscoverer();
 

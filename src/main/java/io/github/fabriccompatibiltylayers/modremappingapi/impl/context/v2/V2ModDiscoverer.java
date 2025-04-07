@@ -2,7 +2,7 @@ package io.github.fabriccompatibiltylayers.modremappingapi.impl.context.v2;
 
 import io.github.fabriccompatibilitylayers.modremappingapi.api.v2.ModCandidate;
 import io.github.fabriccompatibilitylayers.modremappingapi.api.v2.ModDiscovererConfig;
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.CacheUtils;
+import io.github.fabriccompatibilitylayers.modremappingapi.impl.InternalCacheHandler;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.FileUtils;
 import net.fabricmc.loader.api.FabricLoader;
 
@@ -17,12 +17,10 @@ import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 public class V2ModDiscoverer {
-    private final String contextId;
     private final ModDiscovererConfig config;
     private Path originalDirectory;
 
-    public V2ModDiscoverer(String contextId, ModDiscovererConfig config) {
-        this.contextId = contextId;
+    public V2ModDiscoverer(ModDiscovererConfig config) {
         this.config = config;
     }
 
@@ -70,13 +68,13 @@ public class V2ModDiscoverer {
         candidates.addAll(config.getCandidateCollector().apply(modPath, entries));
     }
 
-    public Map<ModCandidate, Path> computeDestinations(List<ModCandidate> candidates) {
+    public Map<ModCandidate, Path> computeDestinations(List<ModCandidate> candidates, InternalCacheHandler cacheHandler) {
         Path destination;
 
         if (config.getExportToOriginalFolder()) {
             destination = originalDirectory;
         } else {
-            destination = CacheUtils.getCachePath(this.contextId + "/" + config.getFolderName());
+            destination = cacheHandler.resolveCache(config.getFolderName());
         }
 
         if (!Files.exists(destination)) {

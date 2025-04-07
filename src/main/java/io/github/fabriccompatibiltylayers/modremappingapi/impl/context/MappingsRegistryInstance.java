@@ -2,6 +2,7 @@ package io.github.fabriccompatibiltylayers.modremappingapi.impl.context;
 
 import fr.catcore.modremapperapi.utils.Constants;
 import fr.catcore.wfvaio.WhichFabricVariantAmIOn;
+import io.github.fabriccompatibilitylayers.modremappingapi.impl.InternalCacheHandler;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.MappingBuilder;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingBuilderImpl;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingsUtilsImpl;
@@ -30,8 +31,11 @@ public class MappingsRegistryInstance extends MappingsRegistry {
     private String defaultPackage = "";
     private String sourceNamespace = "official";
 
-    public MappingsRegistryInstance() {
+    private final InternalCacheHandler cacheHandler;
+
+    public MappingsRegistryInstance(InternalCacheHandler cacheHandler) {
         super();
+        this.cacheHandler = cacheHandler;
 
         try {
             this.formatVanillaMappings();
@@ -121,7 +125,7 @@ public class MappingsRegistryInstance extends MappingsRegistry {
         }
 
         try {
-            MappingTreeHelper.exportMappings(formatted, Constants.MC_MAPPINGS_FILE.toPath());
+            MappingTreeHelper.exportMappings(formatted, this.cacheHandler.resolveMappings("mc_mappings.tiny"));
         } catch (IOException e) {
             throw new RuntimeException("Error while writing formatted mappings", e);
         }
@@ -151,7 +155,7 @@ public class MappingsRegistryInstance extends MappingsRegistry {
         try {
             mods.visitEnd();
 
-            MappingTreeHelper.exportMappings(mods, Constants.REMAPPED_MAPPINGS_FILE.toPath());
+            MappingTreeHelper.exportMappings(mods, this.cacheHandler.resolveMappings("remapped_mappings.tiny"));
         } catch (IOException e) {
             throw new RuntimeException("Error while generating mods mappings", e);
         }
@@ -174,7 +178,7 @@ public class MappingsRegistryInstance extends MappingsRegistry {
         additional.visitEnd();
 
         try {
-            MappingTreeHelper.exportMappings(additional, Constants.EXTRA_MAPPINGS_FILE.toPath());
+            MappingTreeHelper.exportMappings(additional, this.cacheHandler.resolveMappings("extra_mappings.tiny"));
         } catch (IOException e) {
             throw new RuntimeException("Error while generating remappers mappings", e);
         }
@@ -211,7 +215,7 @@ public class MappingsRegistryInstance extends MappingsRegistry {
     @Override
     public void writeFullMappings() {
         try {
-            MappingTreeHelper.exportMappings(full, Constants.FULL_MAPPINGS_FILE.toPath());
+            MappingTreeHelper.exportMappings(full, this.cacheHandler.resolveMappings("full_mappings.tiny"));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

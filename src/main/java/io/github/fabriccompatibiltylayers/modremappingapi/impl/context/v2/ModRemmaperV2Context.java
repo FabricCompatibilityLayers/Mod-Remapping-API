@@ -2,6 +2,7 @@ package io.github.fabriccompatibiltylayers.modremappingapi.impl.context.v2;
 
 import fr.catcore.modremapperapi.utils.Constants;
 import io.github.fabriccompatibilitylayers.modremappingapi.api.v2.*;
+import io.github.fabriccompatibilitylayers.modremappingapi.impl.InternalCacheHandler;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.LibraryHandler;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.context.BaseModRemapperContext;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.context.MappingsRegistryInstance;
@@ -9,11 +10,11 @@ import io.github.fabriccompatibiltylayers.modremappingapi.impl.context.MixinData
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingsRegistry;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.ModTrRemapper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.SoftLockFixer;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.CacheUtils;
 import net.fabricmc.tinyremapper.TinyRemapper;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.*;
@@ -23,17 +24,22 @@ public class ModRemmaperV2Context extends BaseModRemapperContext<ModRemapper> {
     private final List<ModRemapper> remappers;
     private final Set<RemappingFlags> remapFlags = new HashSet<>();
     private final MixinData mixinData = new MixinData();
-    private final MappingsRegistryInstance mappingsRegistry = new MappingsRegistryInstance();
+    private final MappingsRegistryInstance mappingsRegistry;
     private final LibraryHandler libraryHandler = new LibraryHandler();
+    private final InternalCacheHandler cacheHandler;
 
     public ModRemmaperV2Context(String id, List<ModRemapper> remappers) {
         super(id);
         this.remappers = remappers;
+        this.cacheHandler = new V2CacheHandler(CacheUtils.getCachePath(id));
+        this.mappingsRegistry = new MappingsRegistryInstance(this.cacheHandler);
     }
 
     @Override
     public void init() {
         for (ModRemapper remapper : remappers) {
+            remapper.init(this.cacheHandler);
+
             MappingsConfig mappings = remapper.getMappingsConfig();
 
             if (mappings.getSourceNamespace() != null) {
@@ -89,7 +95,7 @@ public class ModRemmaperV2Context extends BaseModRemapperContext<ModRemapper> {
 
         for (ModRemapper remapper : remappers) {
             for (ModDiscovererConfig config : remapper.getModDiscoverers()) {
-                V2ModDiscoverer discoverer = new V2ModDiscoverer(this.contextId, config);
+                V2ModDiscoverer discoverer = new V2ModDiscoverer(config);
                 config2Discoverer.put(config, discoverer);
                 candidates.addAll(discoverer.collect());
             }
@@ -114,7 +120,7 @@ public class ModRemmaperV2Context extends BaseModRemapperContext<ModRemapper> {
             ModDiscovererConfig config = entry.getKey();
 
             candidateToOutput.putAll(
-                    config2Discoverer.get(config).computeDestinations(entry.getValue())
+                    config2Discoverer.get(config).computeDestinations(entry.getValue(), this.cacheHandler)
             );
         }
 
