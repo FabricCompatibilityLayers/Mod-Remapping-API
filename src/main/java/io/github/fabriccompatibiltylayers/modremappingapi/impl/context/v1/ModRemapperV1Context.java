@@ -20,6 +20,7 @@ import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.SoftLock
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.visitor.MRAApplyVisitor;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.FileUtils;
 import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.impl.launch.FabricLauncherBase;
 import net.fabricmc.tinyremapper.TinyRemapper;
 
 import java.io.IOException;
@@ -189,7 +190,7 @@ public class ModRemapperV1Context extends BaseModRemapperContext<ModRemapper> {
 
         if (!candidateToOutput.isEmpty()) this.remapMods(candidateToOutput);
 
-//        modPaths.values().forEach(FabricLauncherBase.getLauncher()::addToClassPath);
+        candidateToOutput.values().forEach(FabricLauncherBase.getLauncher()::addToClassPath);
 
         return new ArrayList<>();
     }

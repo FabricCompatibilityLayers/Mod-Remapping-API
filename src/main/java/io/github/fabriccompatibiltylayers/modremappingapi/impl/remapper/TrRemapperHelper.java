@@ -91,7 +91,7 @@ public class TrRemapperHelper {
 
             if (!Files.exists(manifestPath)) return false;
 
-            Manifest manifest = new Manifest(manifestPath.toUri().toURL().openStream());
+            Manifest manifest = new Manifest(Files.newInputStream(manifestPath));
             Attributes mainAttributes = manifest.getMainAttributes();
 
             return "static".equalsIgnoreCase(mainAttributes.getValue("Fabric-Loom-Mixin-Remap-Type"));
