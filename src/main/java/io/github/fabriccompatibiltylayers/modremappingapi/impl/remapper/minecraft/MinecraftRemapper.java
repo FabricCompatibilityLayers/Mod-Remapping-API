@@ -1,11 +1,11 @@
 package io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.minecraft;
 
 import fr.catcore.modremapperapi.utils.Constants;
+import io.github.fabriccompatibilitylayers.modremappingapi.api.v2.CacheHandler;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.RemapUtils;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingTreeHelper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingsRegistry;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.TrRemapperHelper;
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.CacheUtils;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.FileUtils;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.tinyremapper.NonClassCopyMode;
@@ -17,17 +17,23 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @ApiStatus.Internal
 public class MinecraftRemapper {
-    private static Collection<Path> getMinecraftJar(Collection<Path> sourcePaths, String src, String target, MappingsRegistry mappingsRegistry) throws IOException {
-        Path targetFolder = CacheUtils.getLibraryPath(target);
+    private static Map<Path, Path> computeLibraryPaths(Collection<Path> sourcePaths, Path basePath) {
+        return sourcePaths.stream().collect(Collectors.toMap(p -> p,
+                p -> basePath.resolve(p.getFileName())));
+    }
+
+    private static Collection<Path> getMinecraftJar(Collection<Path> sourcePaths, String src, String target, MappingsRegistry mappingsRegistry, CacheHandler cacheHandler) throws IOException {
+        Path targetFolder = cacheHandler.resolveLibrary(target);
 
         if (!Files.exists(targetFolder)) {
             Files.createDirectories(targetFolder);
         }
 
-        Map<Path, Path> paths = CacheUtils.computeLibraryPaths(new HashSet<>(sourcePaths), target);
+        Map<Path, Path> paths = computeLibraryPaths(new HashSet<>(sourcePaths), targetFolder);
 
         if (FileUtils.exist(paths.values())) return paths.values();
 
@@ -62,20 +68,21 @@ public class MinecraftRemapper {
     }
 
     @ApiStatus.Internal
-    public static void addMinecraftJar(TinyRemapper remapper, MappingsRegistry mappingsRegistry) throws IOException {
+    public static void addMinecraftJar(TinyRemapper remapper, MappingsRegistry mappingsRegistry, CacheHandler cacheHandler) throws IOException {
         Collection<Path> classPath;
 
         if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
             try {
                 classPath = getMinecraftJar(
-                            getMinecraftJar(RemapUtils.getRemapClasspath(), mappingsRegistry.getTargetNamespace(), "intermediary", mappingsRegistry),
+                            getMinecraftJar(RemapUtils.getRemapClasspath(), mappingsRegistry.getTargetNamespace(), "intermediary", mappingsRegistry, cacheHandler),
                         "intermediary",
                         "official",
-                        mappingsRegistry
+                        mappingsRegistry,
+                        cacheHandler
                 );
 
                 if (!mappingsRegistry.isSourceNamespaceObf()) {
-                    classPath = getMinecraftJar(classPath, "official", mappingsRegistry.getSourceNamespace(), mappingsRegistry);
+                    classPath = getMinecraftJar(classPath, "official", mappingsRegistry.getSourceNamespace(), mappingsRegistry, cacheHandler);
                 }
             } catch (IOException e) {
                 throw new RuntimeException("Failed to populate default remap classpath", e);
@@ -84,7 +91,7 @@ public class MinecraftRemapper {
             classPath = RemapUtils.getClassPathFromObjectShare();
 
             if (!mappingsRegistry.isSourceNamespaceObf()) {
-                classPath = getMinecraftJar(classPath, "official", mappingsRegistry.getSourceNamespace(), mappingsRegistry);
+                classPath = getMinecraftJar(classPath, "official", mappingsRegistry.getSourceNamespace(), mappingsRegistry, cacheHandler);
             }
         }
 

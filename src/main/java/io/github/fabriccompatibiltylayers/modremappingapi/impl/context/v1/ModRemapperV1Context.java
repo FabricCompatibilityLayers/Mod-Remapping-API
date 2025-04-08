@@ -1,12 +1,14 @@
 package io.github.fabriccompatibiltylayers.modremappingapi.impl.context.v1;
 
 import fr.catcore.modremapperapi.utils.Constants;
+import io.github.fabriccompatibilitylayers.modremappingapi.api.v2.CacheHandler;
 import io.github.fabriccompatibilitylayers.modremappingapi.api.v2.ModCandidate;
 import io.github.fabriccompatibilitylayers.modremappingapi.api.v2.ModDiscovererConfig;
 import io.github.fabriccompatibilitylayers.modremappingapi.impl.DefaultModCandidate;
 import io.github.fabriccompatibilitylayers.modremappingapi.impl.InternalCacheHandler;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.MappingBuilder;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.ModRemapper;
+import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.RemapLibrary;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.*;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.compatibility.V0ModRemapper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.context.BaseModRemapperContext;
@@ -78,9 +80,7 @@ public class ModRemapperV1Context extends BaseModRemapperContext<ModRemapper> {
             throw new RuntimeException(e);
         }
 
-        libraryHandler.init(this.mappingsRegistry.getSourceNamespace());
-
-        libraryHandler.gatherRemapLibraries(remappers);
+        this.gatherLibraries();
 
         this.registerAdditionalMappings();
         this.mappingsRegistry.generateAdditionalMappings();
@@ -265,5 +265,23 @@ public class ModRemapperV1Context extends BaseModRemapperContext<ModRemapper> {
     @Override
     public MixinData getMixinData() {
         return mixinData;
+    }
+
+    @Override
+    public void gatherLibraries() {
+        libraryHandler.init(this.mappingsRegistry.getSourceNamespace(), this.cacheHandler);
+
+        List<RemapLibrary> libraries = new ArrayList<>();
+
+        for (ModRemapper remapper : remappers) {
+            remapper.addRemapLibraries(libraries, FabricLoader.getInstance().getEnvironmentType());
+        }
+
+        libraryHandler.cacheLibraries(new ArrayList<>(libraries));
+    }
+
+    @Override
+    public CacheHandler getCacheHandler() {
+        return this.cacheHandler;
     }
 }

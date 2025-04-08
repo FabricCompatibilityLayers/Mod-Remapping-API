@@ -69,7 +69,7 @@ public class ModTrRemapper {
         TinyRemapper remapper = builder.build();
 
         try {
-            MinecraftRemapper.addMinecraftJar(remapper, mappingsRegistry);
+            MinecraftRemapper.addMinecraftJar(remapper, mappingsRegistry, context.getCacheHandler());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -79,7 +79,7 @@ public class ModTrRemapper {
         return remapper;
     }
 
-    public static void remapMods(TinyRemapper remapper, Map<io.github.fabriccompatibilitylayers.modremappingapi.api.v2.ModCandidate, Path> paths, ModRemapperContext context) {
+    public static void remapMods(TinyRemapper remapper, Map<ModCandidate, Path> paths, ModRemapperContext context) {
         List<OutputConsumerPath> outputConsumerPaths = new ArrayList<>();
 
         if (context.getRemappingFlags().contains(RemappingFlags.MIXIN)) {
@@ -107,7 +107,7 @@ public class ModTrRemapper {
         );
 
         if (context.getRemappingFlags().contains(RemappingFlags.ACCESS_WIDENER)) {
-            for (Map.Entry<io.github.fabriccompatibilitylayers.modremappingapi.api.v2.ModCandidate, Path> entry : paths.entrySet()) {
+            for (Map.Entry<ModCandidate, Path> entry : paths.entrySet()) {
                 ModCandidate candidate = entry.getKey();
                 Path jarPath = entry.getValue();
 
@@ -123,13 +123,13 @@ public class ModTrRemapper {
         }
     }
 
-    private static @Nullable Consumer<TinyRemapper> getRemapperConsumer(Map<io.github.fabriccompatibilitylayers.modremappingapi.api.v2.ModCandidate, Path> paths, ModRemapperContext context) {
+    private static @Nullable Consumer<TinyRemapper> getRemapperConsumer(Map<ModCandidate, Path> paths, ModRemapperContext context) {
         Consumer<TinyRemapper> consumer = null;
 
         if (context.getRemappingFlags().contains(RemappingFlags.ACCESS_WIDENER)) {
             consumer = (currentRemapper) -> {
-                for (Map.Entry<io.github.fabriccompatibilitylayers.modremappingapi.api.v2.ModCandidate, Path> entry : paths.entrySet()) {
-                    io.github.fabriccompatibilitylayers.modremappingapi.api.v2.ModCandidate candidate = entry.getKey();
+                for (Map.Entry<ModCandidate, Path> entry : paths.entrySet()) {
+                    ModCandidate candidate = entry.getKey();
 
                     if (candidate.getAccessWidenerPath() != null) {
                         try (FileSystem jarFs = FileUtils.getJarFileSystem(candidate.getPath())) {

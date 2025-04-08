@@ -11,6 +11,7 @@ import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.Mappings
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.ModTrRemapper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.SoftLockFixer;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.CacheUtils;
+import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.tinyremapper.TinyRemapper;
 
 import java.io.ByteArrayInputStream;
@@ -63,7 +64,7 @@ public class ModRemmaperV2Context extends BaseModRemapperContext<ModRemapper> {
             throw new RuntimeException(e);
         }
 
-        libraryHandler.init(this.mappingsRegistry.getSourceNamespace());
+        this.gatherLibraries();
 
         this.mappingsRegistry.generateAdditionalMappings();
     }
@@ -161,5 +162,23 @@ public class ModRemmaperV2Context extends BaseModRemapperContext<ModRemapper> {
     @Override
     public MixinData getMixinData() {
         return mixinData;
+    }
+
+    @Override
+    public void gatherLibraries() {
+        libraryHandler.init(this.mappingsRegistry.getSourceNamespace(), this.cacheHandler);
+
+        List<RemapLibrary> libraries = new ArrayList<>();
+
+        for (ModRemapper remapper : remappers) {
+            remapper.addRemappingLibraries(libraries, FabricLoader.getInstance().getEnvironmentType());
+        }
+
+        libraryHandler.cacheLibraries(libraries);
+    }
+
+    @Override
+    public CacheHandler getCacheHandler() {
+        return this.cacheHandler;
     }
 }

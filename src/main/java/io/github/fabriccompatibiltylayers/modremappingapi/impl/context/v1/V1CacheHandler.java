@@ -10,7 +10,7 @@ import java.nio.file.Path;
 public class V1CacheHandler implements InternalCacheHandler {
     private final Path contextDirectory = CacheUtils.MAIN_FOLDER;
     private final Path tempDirectory = contextDirectory.resolve("temp");
-    private final Path libsDirectory = contextDirectory.resolve("libs");
+    private final Path libsDirectory = CacheUtils.LIBRARY_FOLDER;
 
     public V1CacheHandler() {
         for (Path p : new Path[] {tempDirectory, libsDirectory}) {

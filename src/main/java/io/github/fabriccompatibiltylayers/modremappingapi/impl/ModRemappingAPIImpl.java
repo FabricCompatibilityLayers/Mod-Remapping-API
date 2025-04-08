@@ -61,6 +61,8 @@ public class ModRemappingAPIImpl {
                 context.afterRemap();
             }
 
+            v2Remappers.values().forEach(l -> l.forEach(ModRemapper::afterAllRemappings));
+
             initializing = false;
             init = true;
         }

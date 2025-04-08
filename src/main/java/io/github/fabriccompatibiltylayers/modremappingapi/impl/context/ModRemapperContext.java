@@ -1,5 +1,6 @@
 package io.github.fabriccompatibiltylayers.modremappingapi.impl.context;
 
+import io.github.fabriccompatibilitylayers.modremappingapi.api.v2.CacheHandler;
 import io.github.fabriccompatibilitylayers.modremappingapi.api.v2.ModCandidate;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.LibraryHandler;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingsRegistry;
@@ -23,4 +24,6 @@ public interface ModRemapperContext<T> {
     LibraryHandler getLibraryHandler();
     String getId();
     MixinData getMixinData();
+    void gatherLibraries();
+    CacheHandler getCacheHandler();
 }
