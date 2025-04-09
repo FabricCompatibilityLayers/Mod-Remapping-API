@@ -56,7 +56,8 @@ public class ModRemappingAPIImpl {
                         .stream().collect(Collectors.groupingBy(ModRemapper::getContextId));
 
                 v2Keys.addAll(newRemappers.keySet());
-                v2Remappers.putAll(newRemappers);
+
+                newRemappers.forEach((k, v) -> v2Remappers.computeIfAbsent(k, k2 -> new ArrayList<>()).addAll(v));
 
                 context.afterRemap();
             }
