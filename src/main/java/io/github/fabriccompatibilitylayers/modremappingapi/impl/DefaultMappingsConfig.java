@@ -1,6 +1,7 @@
 package io.github.fabriccompatibilitylayers.modremappingapi.impl;
 
 import io.github.fabriccompatibilitylayers.modremappingapi.api.v2.MappingsConfig;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -20,5 +21,10 @@ public class DefaultMappingsConfig implements MappingsConfig {
     @Override
     public Map<String, String> getRenamingMap() {
         return new HashMap<>();
+    }
+
+    @Override
+    public @Nullable String getDefaultPackage() {
+        return null;
     }
 }
