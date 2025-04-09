@@ -1,4 +1,4 @@
-package io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper;
+package io.github.fabriccompatibilitylayers.modremappingapi.api.v2;
 
 import org.jetbrains.annotations.ApiStatus;
 

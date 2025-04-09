@@ -164,8 +164,8 @@ public class FileUtils {
                 }
 
                 @Override
-                public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-                    Files.delete(dir);
+                public FileVisitResult postVisitDirectory(Path subDir, IOException exc) throws IOException {
+                    if (dir != subDir) Files.delete(subDir);
                     return FileVisitResult.CONTINUE;
                 }
             });
@@ -235,7 +235,7 @@ public class FileUtils {
 
     @ApiStatus.Internal
     public static FileSystem getJarFileSystem(Path path) throws URISyntaxException, IOException {
-        return FileSystems.newFileSystem(new URI("jar:" + path.toUri()), ZIP_PROPERTIES);
+        return FileSystems.newFileSystem(URI.create("jar:" + path.toUri()), ZIP_PROPERTIES);
     }
 
     @ApiStatus.Internal

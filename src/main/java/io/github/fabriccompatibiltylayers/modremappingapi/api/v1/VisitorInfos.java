@@ -3,6 +3,7 @@ package io.github.fabriccompatibiltylayers.modremappingapi.api.v1;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.MappingUtils;
 import org.jetbrains.annotations.Nullable;
 
+@Deprecated
 public interface VisitorInfos {
     void registerSuperType(String target, String replacement);
 
@@ -18,7 +19,8 @@ public interface VisitorInfos {
 
     void registerInstantiation(String target, String replacement);
 
-    class FullClassMember extends MappingUtils.ClassMember {
+    @Deprecated
+    class FullClassMember extends MappingUtils.ClassMember implements io.github.fabriccompatibilitylayers.modremappingapi.api.v2.VisitorInfos.FullClassMember {
         public final String owner;
         public final @Nullable Boolean isStatic;
 
@@ -30,6 +32,16 @@ public interface VisitorInfos {
 
         public FullClassMember(String owner, String name, @Nullable Boolean isStatic) {
             this(owner, name, null, isStatic);
+        }
+
+        @Override
+        public String getOwner() {
+            return this.owner;
+        }
+
+        @Override
+        public @Nullable Boolean isStatic() {
+            return this.isStatic;
         }
     }
 }

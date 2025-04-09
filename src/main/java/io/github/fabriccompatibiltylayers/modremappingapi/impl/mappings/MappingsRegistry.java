@@ -43,7 +43,7 @@ public abstract class MappingsRegistry {
 
     public abstract List<String> getVanillaClassNames();
     public abstract MemoryMappingTree getFormattedMappings();
-    public abstract void addToFormattedMappings(InputStream stream) throws IOException;
+    public abstract void addToFormattedMappings(InputStream stream, Map<String, String> renames) throws IOException;
     public abstract void completeFormattedMappings() throws IOException;
     public abstract void addModMappings(Path path);
     public abstract void generateModMappings();

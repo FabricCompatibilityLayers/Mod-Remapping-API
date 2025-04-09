@@ -1,34 +1,46 @@
 package io.github.fabriccompatibiltylayers.modremappingapi.impl.context.v1;
 
 import fr.catcore.modremapperapi.utils.Constants;
+import io.github.fabriccompatibilitylayers.modremappingapi.api.v2.CacheHandler;
+import io.github.fabriccompatibilitylayers.modremappingapi.api.v2.ModCandidate;
+import io.github.fabriccompatibilitylayers.modremappingapi.api.v2.ModDiscovererConfig;
+import io.github.fabriccompatibilitylayers.modremappingapi.impl.DefaultModCandidate;
+import io.github.fabriccompatibilitylayers.modremappingapi.impl.InternalCacheHandler;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.MappingBuilder;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.ModRemapper;
+import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.RemapLibrary;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.*;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.compatibility.V0ModRemapper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.context.BaseModRemapperContext;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.context.MappingsRegistryInstance;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.context.MixinData;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.context.v2.V2ModDiscoverer;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingsRegistry;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.ModTrRemapper;
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.RemappingFlags;
+import io.github.fabriccompatibilitylayers.modremappingapi.api.v2.RemappingFlags;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.SoftLockFixer;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.visitor.MRAApplyVisitor;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.FileUtils;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.impl.launch.FabricLauncherBase;
 import net.fabricmc.tinyremapper.TinyRemapper;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
-public class ModRemapperV1Context extends BaseModRemapperContext {
+public class ModRemapperV1Context extends BaseModRemapperContext<ModRemapper> {
     private final Set<RemappingFlags> remapFlags = new HashSet<>();
     private final List<ModRemapper> remappers = new ArrayList<>();
-    private final Map<String, List<String>> mixin2TargetMap = new HashMap<>();
-    private final MappingsRegistryInstance mappingsRegistry = new MappingsRegistryInstance();
+    private final MixinData mixinData = new MixinData();
+    private final InternalCacheHandler cacheHandler = new V1CacheHandler();
+    private final MappingsRegistryInstance mappingsRegistry = new MappingsRegistryInstance(cacheHandler);
     private final LibraryHandler libraryHandler = new LibraryHandler();
-    private final V1ModDiscoverer modDiscoverer = new V1ModDiscoverer();
 
     public static ModRemapperV1Context INSTANCE;
 
@@ -51,7 +63,7 @@ public class ModRemapperV1Context extends BaseModRemapperContext {
 
             mappings.ifPresent(inputStreamSupplier -> {
                 try {
-                    this.mappingsRegistry.addToFormattedMappings(inputStreamSupplier.get());
+                    this.mappingsRegistry.addToFormattedMappings(inputStreamSupplier.get(), new HashMap<>());
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -68,9 +80,7 @@ public class ModRemapperV1Context extends BaseModRemapperContext {
             throw new RuntimeException(e);
         }
 
-        libraryHandler.init(this.mappingsRegistry.getSourceNamespace());
-
-        libraryHandler.gatherRemapLibraries(remappers);
+        this.gatherLibraries();
 
         this.registerAdditionalMappings();
         this.mappingsRegistry.generateAdditionalMappings();
@@ -92,19 +102,113 @@ public class ModRemapperV1Context extends BaseModRemapperContext {
         remappers.forEach(ModRemapper::afterRemap);
     }
 
-    @Override
-    public void discoverMods(boolean remapClassEdits) {
-        Map<ModCandidate, Path> modPaths = this.modDiscoverer.init(remappers, remapClassEdits, this);
+    private List<ModCandidate> collectCandidates(ModDiscovererConfig config, Path modPath, List<String> entries) {
+        boolean fabric = false;
+        boolean hasClass = false;
 
-        for (ModCandidate candidate : modPaths.keySet()) {
-            mappingsRegistry.addModMappings(candidate.original);
+        for (String entry : entries) {
+            if (entry.endsWith("fabric.mod.json") || entry.endsWith("quilt.mod.json") || entry.endsWith("quilt.mod.json5")) {
+                fabric = true;
+                break;
+            }
+
+            if (entry.endsWith(".class")) {
+                hasClass = true;
+            }
+        }
+
+        List<ModCandidate> list = new ArrayList<>();
+
+        if (hasClass && !fabric) {
+            list.add(new DefaultModCandidate(modPath, config));
+        }
+
+        return list;
+    }
+
+    @Override
+    public List<ModRemapper> discoverMods(boolean remapClassEdits) {
+        Map<String, List<String>> excluded = new HashMap<>();
+
+        Set<String> modFolders = new HashSet<>();
+
+        for (ModRemapper remapper : remappers) {
+            Collections.addAll(modFolders, remapper.getJarFolders());
+
+            if (remapper instanceof V0ModRemapper) {
+                excluded.putAll(((V0ModRemapper) remapper).getExclusions());
+            }
+        }
+
+        List<ModCandidate> candidates = new ArrayList<>();
+        Map<ModDiscovererConfig, V2ModDiscoverer> config2Discoverer = new HashMap<>();
+
+        for (String modFolder : modFolders) {
+            ModDiscovererConfig config = ModDiscovererConfig.builder(modFolder)
+                    .fileNameMatcher("(.+).(jar|zip)$")
+                    .candidateCollector(this::collectCandidates)
+                    .build();
+            V2ModDiscoverer discoverer = new V2ModDiscoverer(config);
+            config2Discoverer.put(config, discoverer);
+            candidates.addAll(discoverer.collect());
+        }
+
+        try {
+            this.handleV0Excluded(candidates, excluded);
+        } catch (IOException | URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+
+        Map<ModDiscovererConfig, List<ModCandidate>> config2Candidates =
+                candidates.stream().collect(Collectors.groupingBy(ModCandidate::getDiscovererConfig));
+
+        for (Map.Entry<ModDiscovererConfig, List<ModCandidate>> entry : config2Candidates.entrySet()) {
+            ModDiscovererConfig config = entry.getKey();
+
+            try {
+                config2Discoverer.get(config).excludeClassEdits(entry.getValue(), this.cacheHandler, this.mappingsRegistry);
+            } catch (IOException | URISyntaxException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        for (ModCandidate candidate : candidates) {
+            mappingsRegistry.addModMappings(candidate.getPath());
         }
 
         mappingsRegistry.generateModMappings();
 
-        this.remapMods(modPaths);
+        Map<ModCandidate, Path> candidateToOutput = new HashMap<>();
 
-        modPaths.values().forEach(FabricLauncherBase.getLauncher()::addToClassPath);
+        for (Map.Entry<ModDiscovererConfig, List<ModCandidate>> entry : config2Candidates.entrySet()) {
+            ModDiscovererConfig config = entry.getKey();
+
+            candidateToOutput.putAll(
+                    config2Discoverer.get(config).computeDestinations(entry.getValue(), this.cacheHandler)
+            );
+        }
+
+        if (!candidateToOutput.isEmpty()) this.remapMods(candidateToOutput);
+
+        candidateToOutput.values().forEach(FabricLauncherBase.getLauncher()::addToClassPath);
+
+        return new ArrayList<>();
+    }
+
+    private void handleV0Excluded(List<ModCandidate> mods, Map<String, List<String>> excludedMap) throws IOException, URISyntaxException {
+        for (ModCandidate modCandidate : mods) {
+            if (excludedMap.containsKey(modCandidate.getId())) {
+                if (Files.isDirectory(modCandidate.getPath())) {
+                    for (String excluded : excludedMap.get(modCandidate.getId())) {
+                        if (Files.deleteIfExists(modCandidate.getPath().resolve(excluded))) {
+                            Constants.MAIN_LOGGER.debug("File deleted: " + modCandidate.getPath().resolve(excluded));
+                        }
+                    }
+                } else {
+                    FileUtils.removeEntriesFromZip(modCandidate.getPath(), excludedMap.get(modCandidate.getId()));
+                }
+            }
+        }
     }
 
     private static final String v0EntrypointName = "mod-remapper-api:modremapper";
@@ -122,17 +226,12 @@ public class ModRemapperV1Context extends BaseModRemapperContext {
     }
 
     @Override
-    public Map<String, List<String>> getMixin2TargetMap() {
-        return mixin2TargetMap;
-    }
-
-    @Override
     public MappingsRegistry getMappingsRegistry() {
         return this.mappingsRegistry;
     }
 
     private void registerAdditionalMappings() {
-        MappingBuilder builder = new MappingBuilderImpl(mappingsRegistry.getAdditionalMappings());
+        MappingBuilder builder = new V1MappingBuilderImpl(mappingsRegistry.getAdditionalMappings());
 
         for (ModRemapper remapper : remappers) {
             remapper.registerMappings(builder);
@@ -161,5 +260,28 @@ public class ModRemapperV1Context extends BaseModRemapperContext {
     @Override
     public LibraryHandler getLibraryHandler() {
         return libraryHandler;
+    }
+
+    @Override
+    public MixinData getMixinData() {
+        return mixinData;
+    }
+
+    @Override
+    public void gatherLibraries() {
+        libraryHandler.init(this.mappingsRegistry.getSourceNamespace(), this.cacheHandler);
+
+        List<RemapLibrary> libraries = new ArrayList<>();
+
+        for (ModRemapper remapper : remappers) {
+            remapper.addRemapLibraries(libraries, FabricLoader.getInstance().getEnvironmentType());
+        }
+
+        libraryHandler.cacheLibraries(new ArrayList<>(libraries));
+    }
+
+    @Override
+    public CacheHandler getCacheHandler() {
+        return this.cacheHandler;
     }
 }

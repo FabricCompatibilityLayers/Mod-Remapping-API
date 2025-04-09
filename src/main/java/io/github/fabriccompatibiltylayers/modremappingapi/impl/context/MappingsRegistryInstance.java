@@ -1,16 +1,17 @@
 package io.github.fabriccompatibiltylayers.modremappingapi.impl.context;
 
-import fr.catcore.modremapperapi.utils.Constants;
 import fr.catcore.wfvaio.WhichFabricVariantAmIOn;
+import io.github.fabriccompatibilitylayers.modremappingapi.impl.InternalCacheHandler;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.MappingBuilder;
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingBuilderImpl;
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingsUtilsImpl;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.context.v1.V1MappingBuilderImpl;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingTreeHelper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingsRegistry;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.FileUtils;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.VersionHelper;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.mappingio.MappingVisitor;
+import net.fabricmc.mappingio.adapter.MappingNsRenamer;
+import net.fabricmc.mappingio.adapter.MappingSourceNsSwitch;
 import net.fabricmc.mappingio.tree.MappingTree;
 import net.fabricmc.mappingio.tree.MemoryMappingTree;
 
@@ -28,8 +29,11 @@ public class MappingsRegistryInstance extends MappingsRegistry {
     private String defaultPackage = "";
     private String sourceNamespace = "official";
 
-    public MappingsRegistryInstance() {
+    private final InternalCacheHandler cacheHandler;
+
+    public MappingsRegistryInstance(InternalCacheHandler cacheHandler) {
         super();
+        this.cacheHandler = cacheHandler;
 
         try {
             this.formatVanillaMappings();
@@ -80,8 +84,28 @@ public class MappingsRegistryInstance extends MappingsRegistry {
     }
 
     @Override
-    public void addToFormattedMappings(InputStream stream) throws IOException {
+    public void addToFormattedMappings(InputStream stream, Map<String, String> renames) throws IOException {
         MappingTree extra = MappingTreeHelper.readMappings(stream);
+
+        if (!renames.isEmpty()) {
+            MemoryMappingTree renamed = new MemoryMappingTree();
+
+            MappingNsRenamer renamer = new MappingNsRenamer(renamed, renames);
+
+            extra.accept(renamer);
+
+            extra = renamed;
+        }
+
+        if (!Objects.equals(extra.getSrcNamespace(), formatted.getSrcNamespace()) && extra.getDstNamespaces().contains(formatted.getSrcNamespace())) {
+            MemoryMappingTree switched = new MemoryMappingTree();
+
+            MappingSourceNsSwitch switcher = new MappingSourceNsSwitch(switched, formatted.getSrcNamespace());
+
+            extra.accept(switcher);
+
+            extra = switched;
+        }
 
         formatted = MappingTreeHelper.mergeIntoNew(formatted, extra);
     }
@@ -99,7 +123,7 @@ public class MappingsRegistryInstance extends MappingsRegistry {
         }
 
         try {
-            MappingTreeHelper.exportMappings(formatted, Constants.MC_MAPPINGS_FILE.toPath());
+            MappingTreeHelper.exportMappings(formatted, this.cacheHandler.resolveMappings("mc_mappings.tiny"));
         } catch (IOException e) {
             throw new RuntimeException("Error while writing formatted mappings", e);
         }
@@ -111,7 +135,7 @@ public class MappingsRegistryInstance extends MappingsRegistry {
 
     @Override
     public void addModMappings(Path path) {
-        MappingBuilder mappingBuilder = new MappingBuilderImpl(mods);
+        MappingBuilder mappingBuilder = new V1MappingBuilderImpl(mods);
 
         try {
             FileUtils.listPathContent(path)
@@ -129,7 +153,7 @@ public class MappingsRegistryInstance extends MappingsRegistry {
         try {
             mods.visitEnd();
 
-            MappingTreeHelper.exportMappings(mods, Constants.REMAPPED_MAPPINGS_FILE.toPath());
+            MappingTreeHelper.exportMappings(mods, this.cacheHandler.resolveMappings("remapped_mappings.tiny"));
         } catch (IOException e) {
             throw new RuntimeException("Error while generating mods mappings", e);
         }
@@ -152,7 +176,7 @@ public class MappingsRegistryInstance extends MappingsRegistry {
         additional.visitEnd();
 
         try {
-            MappingTreeHelper.exportMappings(additional, Constants.EXTRA_MAPPINGS_FILE.toPath());
+            MappingTreeHelper.exportMappings(additional, this.cacheHandler.resolveMappings("extra_mappings.tiny"));
         } catch (IOException e) {
             throw new RuntimeException("Error while generating remappers mappings", e);
         }
@@ -189,7 +213,7 @@ public class MappingsRegistryInstance extends MappingsRegistry {
     @Override
     public void writeFullMappings() {
         try {
-            MappingTreeHelper.exportMappings(full, Constants.FULL_MAPPINGS_FILE.toPath());
+            MappingTreeHelper.exportMappings(full, this.cacheHandler.resolveMappings("full_mappings.tiny"));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

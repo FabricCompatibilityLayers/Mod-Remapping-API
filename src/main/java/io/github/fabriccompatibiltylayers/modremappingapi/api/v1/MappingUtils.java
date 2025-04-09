@@ -4,6 +4,10 @@ import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingsUtilsImpl
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * @deprecated Use {@link io.github.fabriccompatibilitylayers.modremappingapi.api.v2.MappingUtils} instead.
+ */
+@Deprecated
 public interface MappingUtils {
     /**
      *
@@ -84,15 +88,23 @@ public interface MappingUtils {
         return MappingsUtilsImpl.mapDescriptor(MappingsUtilsImpl.getV1Registry(), desc);
     }
 
-    class ClassMember {
+    class ClassMember implements io.github.fabriccompatibilitylayers.modremappingapi.api.v2.MappingUtils.ClassMember {
         public final @NotNull String name;
         public final @Nullable String desc;
 
         public ClassMember(@NotNull String name, @Nullable String desc) {
-            assert name != null;
-
             this.name = name;
             this.desc = desc;
+        }
+
+        @Override
+        public @NotNull String getName() {
+            return this.name;
+        }
+
+        @Override
+        public @Nullable String getDesc() {
+            return this.desc;
         }
     }
 }

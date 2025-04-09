@@ -58,7 +58,7 @@ dependencies {
 
 	implementation(include("io.github.llamalad7:mixinextras-fabric:${project.mixin_extras_version}"))
 	implementation(include("com.github.thecatcore.CursedMixinExtensions:fabric:1.0.0"))
-	implementation(include("com.github.thecatcore:WFVAIO:1.1.0"))
+	implementation(include("com.github.thecatcore:WFVAIO:1.2.0"))
 
 	testImplementation "net.fabricmc:fabric-loader-junit:${project.loader_version}"
 }
@@ -163,3 +163,11 @@ Now allow ModRemappers to disable mixin remapping which is enabled by default fo
 		embedded.version "spasm", project.spasm_version
 	}
 }
+
+task testmodJar(type: Jar) {
+	from sourceSets.test.output
+	destinationDirectory = project.layout.buildDirectory.dir("libs")
+	archiveClassifier.set("testmod")
+}
+
+build.dependsOn testmodJar

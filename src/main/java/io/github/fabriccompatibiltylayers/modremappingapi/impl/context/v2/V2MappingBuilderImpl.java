@@ -1,16 +1,16 @@
-package io.github.fabriccompatibiltylayers.modremappingapi.impl;
+package io.github.fabriccompatibiltylayers.modremappingapi.impl.context.v2;
 
-import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.MappingBuilder;
+import io.github.fabriccompatibilitylayers.modremappingapi.api.v2.MappingBuilder;
 import net.fabricmc.mappingio.MappedElementKind;
 import net.fabricmc.mappingio.tree.MemoryMappingTree;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 
 @ApiStatus.Internal
-public class MappingBuilderImpl implements MappingBuilder {
+public class V2MappingBuilderImpl implements MappingBuilder {
     private final MemoryMappingTree next;
 
-    public MappingBuilderImpl(MemoryMappingTree next) {
+    public V2MappingBuilderImpl(MemoryMappingTree next) {
         this.next = next;
     }
 
