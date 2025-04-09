@@ -4,6 +4,10 @@ import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingsUtilsImpl
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * @deprecated Use {@link io.github.fabriccompatibilitylayers.modremappingapi.api.v2.MappingUtils} instead.
+ */
+@Deprecated
 public interface MappingUtils {
     /**
      *

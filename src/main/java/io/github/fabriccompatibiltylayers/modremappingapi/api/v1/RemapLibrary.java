@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+@Deprecated
 public class RemapLibrary implements io.github.fabriccompatibilitylayers.modremappingapi.api.v2.RemapLibrary {
     public final String url;
     public final Path path;
