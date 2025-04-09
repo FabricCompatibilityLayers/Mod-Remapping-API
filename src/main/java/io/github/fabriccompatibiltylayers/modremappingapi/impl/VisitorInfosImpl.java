@@ -1,20 +1,20 @@
 package io.github.fabriccompatibiltylayers.modremappingapi.impl;
 
-import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.VisitorInfos;
+import io.github.fabriccompatibilitylayers.modremappingapi.api.v2.VisitorInfos;
 import org.jetbrains.annotations.ApiStatus;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @ApiStatus.Internal
-public class VisitorInfosImpl extends fr.catcore.modremapperapi.remapping.VisitorInfos implements VisitorInfos {
+public class VisitorInfosImpl extends fr.catcore.modremapperapi.remapping.VisitorInfos implements VisitorInfos, io.github.fabriccompatibiltylayers.modremappingapi.api.v1.VisitorInfos {
     public final Map<String, String> SUPERS = new HashMap<>();
     public final Map<String, String> ANNOTATION = new HashMap<>();
     public final Map<String, String> METHOD_TYPE = new HashMap<>();
 
     public final Map<String, String> INSTANTIATION = new HashMap<>();
-    public final Map<String, Map<String, Map<String, FullClassMember>>> METHOD_INVOCATION = new HashMap<>();
-    public final Map<String, Map<String, Map<String, FullClassMember>>> FIELD_REF = new HashMap<>();
+    public final Map<String, Map<String, Map<String, VisitorInfos.FullClassMember>>> METHOD_INVOCATION = new HashMap<>();
+    public final Map<String, Map<String, Map<String, VisitorInfos.FullClassMember>>> FIELD_REF = new HashMap<>();
     public final Map<String, Map<Object, Object>> LDC = new HashMap<>();
 
     @Override
@@ -33,14 +33,24 @@ public class VisitorInfosImpl extends fr.catcore.modremapperapi.remapping.Visito
     }
 
     @Override
-    public void registerFieldRef(String targetClass, String targetField, String targetDesc, FullClassMember classMember) {
+    public void registerFieldRef(String targetClass, String targetField, String targetDesc, io.github.fabriccompatibiltylayers.modremappingapi.api.v1.VisitorInfos.FullClassMember classMember) {
+        this.registerFieldRef(targetClass, targetField, targetDesc, (VisitorInfos.FullClassMember) classMember);
+    }
+
+    @Override
+    public void registerMethodInvocation(String targetClass, String targetMethod, String targetDesc, io.github.fabriccompatibiltylayers.modremappingapi.api.v1.VisitorInfos.FullClassMember classMember) {
+        this.registerMethodInvocation(targetClass, targetMethod, targetDesc, (VisitorInfos.FullClassMember) classMember);
+    }
+
+    @Override
+    public void registerFieldRef(String targetClass, String targetField, String targetDesc, VisitorInfos.FullClassMember classMember) {
         FIELD_REF.computeIfAbsent(targetClass, k -> new HashMap<>())
                 .computeIfAbsent(targetField, k -> new HashMap<>())
                 .put(targetDesc, classMember);
     }
 
     @Override
-    public void registerMethodInvocation(String targetClass, String targetMethod, String targetDesc, FullClassMember classMember) {
+    public void registerMethodInvocation(String targetClass, String targetMethod, String targetDesc, VisitorInfos.FullClassMember classMember) {
         METHOD_INVOCATION.computeIfAbsent(targetClass, k -> new HashMap<>())
                 .computeIfAbsent(targetMethod, k -> new HashMap<>())
                 .put(targetDesc, classMember);
@@ -89,14 +99,14 @@ public class VisitorInfosImpl extends fr.catcore.modremapperapi.remapping.Visito
                 .put(target.value, replacement.value);
     }
 
-    private void registerMethodNamed(MethodNamed target, MethodNamed replacementObject, Map<String, Map<String, Map<String, FullClassMember>>> map) {
+    private void registerMethodNamed(MethodNamed target, MethodNamed replacementObject, Map<String, Map<String, Map<String, VisitorInfos.FullClassMember>>> map) {
         String targetClass = target.owner;
         String targetMember = target.name;
 
         String replacement = replacementObject.name;
         if (replacement == null) replacement = "";
 
-        FullClassMember classMember = new FullClassMember(replacementObject.owner, replacement, null, null);
+        VisitorInfos.FullClassMember classMember = new io.github.fabriccompatibiltylayers.modremappingapi.api.v1.VisitorInfos.FullClassMember(replacementObject.owner, replacement, null, null);
 
         if (targetMember == null) targetMember = "";
 

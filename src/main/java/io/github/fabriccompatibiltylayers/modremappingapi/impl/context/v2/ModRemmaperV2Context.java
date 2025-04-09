@@ -4,12 +4,14 @@ import fr.catcore.modremapperapi.utils.Constants;
 import io.github.fabriccompatibilitylayers.modremappingapi.api.v2.*;
 import io.github.fabriccompatibilitylayers.modremappingapi.impl.InternalCacheHandler;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.LibraryHandler;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.VisitorInfosImpl;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.context.BaseModRemapperContext;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.context.MappingsRegistryInstance;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.context.MixinData;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingsRegistry;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.ModTrRemapper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.SoftLockFixer;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.visitor.MRAApplyVisitor;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.CacheUtils;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.tinyremapper.TinyRemapper;
@@ -55,6 +57,10 @@ public class ModRemmaperV2Context extends BaseModRemapperContext<ModRemapper> {
                 }
             }
 
+            if (mappings.getDefaultPackage() != null) {
+                this.mappingsRegistry.setDefaultPackage(mappings.getDefaultPackage());
+            }
+
             remapFlags.addAll(remapper.getRemappingFlags());
         }
 
@@ -66,6 +72,7 @@ public class ModRemmaperV2Context extends BaseModRemapperContext<ModRemapper> {
 
         this.gatherLibraries();
 
+        this.registerAdditionalMappings();
         this.mappingsRegistry.generateAdditionalMappings();
     }
 
@@ -140,9 +147,26 @@ public class ModRemmaperV2Context extends BaseModRemapperContext<ModRemapper> {
         return mappingsRegistry;
     }
 
+    private void registerAdditionalMappings() {
+        MappingBuilder builder = new V2MappingBuilderImpl(mappingsRegistry.getAdditionalMappings());
+
+        for (ModRemapper remapper : remappers) {
+            remapper.registerAdditionalMappings(builder);
+        }
+    }
+
     @Override
     public void addToRemapperBuilder(TinyRemapper.Builder builder) {
+        VisitorInfosImpl preInfos = new VisitorInfosImpl();
+        VisitorInfosImpl postInfos = new VisitorInfosImpl();
 
+        for (ModRemapper remapper : remappers) {
+            remapper.registerPreVisitors(preInfos);
+            remapper.registerPostVisitors(postInfos);
+        }
+
+        builder.extraPreApplyVisitor(new MRAApplyVisitor(preInfos));
+        builder.extraPostApplyVisitor(new MRAApplyVisitor(postInfos));
     }
 
     @Override

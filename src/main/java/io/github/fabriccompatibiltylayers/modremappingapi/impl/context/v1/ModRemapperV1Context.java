@@ -231,7 +231,7 @@ public class ModRemapperV1Context extends BaseModRemapperContext<ModRemapper> {
     }
 
     private void registerAdditionalMappings() {
-        MappingBuilder builder = new MappingBuilderImpl(mappingsRegistry.getAdditionalMappings());
+        MappingBuilder builder = new V1MappingBuilderImpl(mappingsRegistry.getAdditionalMappings());
 
         for (ModRemapper remapper : remappers) {
             remapper.registerMappings(builder);

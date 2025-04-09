@@ -1,6 +1,6 @@
 package io.github.fabriccompatibiltylayers.modremappingapi.impl.remapper.asm;
 
-import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.VisitorInfos;
+import io.github.fabriccompatibilitylayers.modremappingapi.api.v2.VisitorInfos;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.VisitorInfosImpl;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -57,9 +57,9 @@ public class MRAMethodVisitor extends MethodVisitor implements Opcodes {
                 }
 
                 if (classMember != null) {
-                    currentOwner = classMember.owner;
-                    currentName = classMember.name;
-                    currentDescriptor  = classMember.desc;
+                    currentOwner = classMember.getOwner();
+                    currentName = classMember.getName();
+                    currentDescriptor  = classMember.getDesc();
                 }
             }
         }
@@ -107,11 +107,11 @@ public class MRAMethodVisitor extends MethodVisitor implements Opcodes {
                     }
 
                     if (fullClassMember != null) {
-                        currentOwner = fullClassMember.owner;
-                        currentName = fullClassMember.name;
-                        currentDescriptor  = fullClassMember.desc;
+                        currentOwner = fullClassMember.getOwner();
+                        currentName = fullClassMember.getName();
+                        currentDescriptor  = fullClassMember.getDesc();
 
-                        if (fullClassMember.isStatic != null) currentOpcode = fullClassMember.isStatic ? INVOKESTATIC : INVOKEVIRTUAL;
+                        if (fullClassMember.isStatic() != null) currentOpcode = fullClassMember.isStatic() ? INVOKESTATIC : INVOKEVIRTUAL;
                     }
                 }
             }

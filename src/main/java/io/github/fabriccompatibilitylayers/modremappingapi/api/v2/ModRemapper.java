@@ -17,4 +17,7 @@ public interface ModRemapper {
     void afterAllRemappings();
 
     void addRemappingLibraries(List<RemapLibrary> libraries, EnvType environment);
+    void registerAdditionalMappings(MappingBuilder mappingBuilder);
+    void registerPreVisitors(VisitorInfos visitorInfos);
+    void registerPostVisitors(VisitorInfos visitorInfos);
 }

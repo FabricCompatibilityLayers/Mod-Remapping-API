@@ -1,11 +1,9 @@
 package io.github.fabriccompatibiltylayers.modremappingapi.impl.context;
 
-import fr.catcore.modremapperapi.utils.Constants;
 import fr.catcore.wfvaio.WhichFabricVariantAmIOn;
 import io.github.fabriccompatibilitylayers.modremappingapi.impl.InternalCacheHandler;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.MappingBuilder;
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingBuilderImpl;
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingsUtilsImpl;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.context.v1.V1MappingBuilderImpl;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingTreeHelper;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingsRegistry;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.FileUtils;
@@ -137,7 +135,7 @@ public class MappingsRegistryInstance extends MappingsRegistry {
 
     @Override
     public void addModMappings(Path path) {
-        MappingBuilder mappingBuilder = new MappingBuilderImpl(mods);
+        MappingBuilder mappingBuilder = new V1MappingBuilderImpl(mods);
 
         try {
             FileUtils.listPathContent(path)

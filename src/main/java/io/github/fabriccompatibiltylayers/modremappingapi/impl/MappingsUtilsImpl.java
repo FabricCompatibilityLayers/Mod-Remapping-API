@@ -1,6 +1,7 @@
 package io.github.fabriccompatibiltylayers.modremappingapi.impl;
 
 import io.github.fabriccompatibiltylayers.modremappingapi.api.MappingUtils;
+import io.github.fabriccompatibiltylayers.modremappingapi.impl.context.BaseModRemapperContext;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.context.v1.ModRemapperV1Context;
 import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingsRegistry;
 import net.fabricmc.api.EnvType;
@@ -29,6 +30,10 @@ public class MappingsUtilsImpl {
 
     public static MappingsRegistry getV1Registry() {
         return ModRemapperV1Context.INSTANCE.getMappingsRegistry();
+    }
+
+    public static MappingsRegistry getMappingsRegistry(String contextId) {
+        return BaseModRemapperContext.get(contextId).getMappingsRegistry();
     }
 
     public static String mapClass(MappingsRegistry registry, String className) {
@@ -151,11 +156,11 @@ public class MappingsUtilsImpl {
                 String methodSubName = methodDef.getName(srcNamespace);
 
                 if (Objects.equals(methodSubName, methodName)) {
-                    String methodDescriptor = methodDef.getDesc(registry.getTargetNamespace());
+                    String methodDescriptor = methodDef.getDesc(targetNamespace);
 
                     if (methodDescriptor != null && methodDescriptor.startsWith(argDesc)) {
                         return new MappingUtils.ClassMember(
-                                methodDef.getName(registry.getTargetNamespace()),
+                                methodDef.getName(targetNamespace),
                                 methodDescriptor
                         );
                     }
