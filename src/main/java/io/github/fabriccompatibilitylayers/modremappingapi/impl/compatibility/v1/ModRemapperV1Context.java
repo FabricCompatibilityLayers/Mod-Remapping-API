@@ -221,6 +221,8 @@ public class ModRemapperV1Context extends BaseModRemapperContext<ModRemapper> {
                 .forEach(remappers::add);
 
         remappers.addAll(FabricLoader.getInstance().getEntrypoints(v1EntrypointName, ModRemapper.class));
+
+        if (remappers.size() == 1) remappers.clear();
     }
 
     @Override

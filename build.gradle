@@ -153,18 +153,7 @@ modrinth {
 	token = System.getenv("MODRINTH_TOKEN")
 	projectId = "mod-remapping-api"
 	changelog = """
-Dropped Fabric Loader 0.14 support.\\
-Improved mixin remapping by a lot.\\
-New v2 api featuring:
-- Remapping context based on a provided id, shareable by multiple mod remapper.
-- ModDiscovererConfigs allowing better mod candidate filtering, multiple can be provided.
-- MappingsConfig defining source Namespace, default package, custom mappings and namespace renames for the custom mappings.
-- RemappingFlags, available currently: mixins and access wideners.
-- Allow registering more ModRemappers dynamically.
-- CacheHandler system, allowing to get diverse file locations linked to a RemappingContext
-- v2 MappingUtils methods now also take the contextId as argument. 
-- Access wideners remapping support.\\
-v0 and v1 apis are still supported but deprecated.
+Fix issues caused by backward compatibility
 """
 	uploadFile = remapJar
 
