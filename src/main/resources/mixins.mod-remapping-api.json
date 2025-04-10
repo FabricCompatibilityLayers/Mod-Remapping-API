@@ -1,4 +1,4 @@
 {
   "minVersion": "0.8",
-  "plugin": "io.github.fabriccompatibiltylayers.modremappingapi.impl.RemapperPlugin"
+  "plugin": "io.github.fabriccompatibilitylayers.modremappingapi.impl.RemapperPlugin"
 }

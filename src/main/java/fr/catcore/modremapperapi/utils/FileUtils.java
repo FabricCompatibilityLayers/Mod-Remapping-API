@@ -52,7 +52,7 @@ public class FileUtils {
     @Deprecated
     public static void excludeFromZipFile(File file, List<String> excluded) throws IOException {
         try {
-            io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.FileUtils.removeEntriesFromZip(file.toPath(), excluded);
+            io.github.fabriccompatibilitylayers.modremappingapi.impl.utils.FileUtils.removeEntriesFromZip(file.toPath(), excluded);
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
         }
@@ -60,6 +60,6 @@ public class FileUtils {
 
     @Deprecated
     public static void copyFile(Path original, Path copy) throws IOException {
-        io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.FileUtils.copyZipFile(original, copy);
+        io.github.fabriccompatibilitylayers.modremappingapi.impl.utils.FileUtils.copyZipFile(original, copy);
     }
 }

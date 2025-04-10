@@ -1,6 +1,6 @@
 package io.github.fabriccompatibiltylayers.modremappingapi.api.v1;
 
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.TransformerRegistry;
+import io.github.fabriccompatibilitylayers.modremappingapi.impl.utils.TransformerRegistry;
 
 // Original author is gudenau.
 public interface ClassTransformer {

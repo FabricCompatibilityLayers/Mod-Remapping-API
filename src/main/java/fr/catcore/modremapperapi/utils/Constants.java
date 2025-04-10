@@ -1,6 +1,6 @@
 package fr.catcore.modremapperapi.utils;
 
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.utils.CacheUtils;
+import io.github.fabriccompatibilitylayers.modremappingapi.impl.utils.CacheUtils;
 import net.legacyfabric.fabric.api.logger.v1.Logger;
 
 import java.io.File;

@@ -1,8 +1,8 @@
 package fr.catcore.modremapperapi.utils;
 
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingsUtilsImpl;
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingTreeHelper;
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.mappings.MappingsRegistry;
+import io.github.fabriccompatibilitylayers.modremappingapi.impl.mappings.MappingsUtilsImpl;
+import io.github.fabriccompatibilitylayers.modremappingapi.impl.mappings.MappingTreeHelper;
+import io.github.fabriccompatibilitylayers.modremappingapi.impl.mappings.MappingsRegistry;
 import net.fabricmc.mappingio.tree.MappingTree;
 import net.fabricmc.tinyremapper.*;
 

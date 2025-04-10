@@ -1,10 +1,9 @@
 package io.github.fabriccompatibilitylayers.modremappingapi.api.v2;
 
-import io.github.fabriccompatibilitylayers.modremappingapi.impl.ModDiscovererConfigImpl;
+import io.github.fabriccompatibilitylayers.modremappingapi.impl.defaults.ModDiscovererConfigImpl;
 
 import java.nio.file.Path;
 import java.util.List;
-import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 

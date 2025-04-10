@@ -1,8 +1,8 @@
 package fr.catcore.modremapperapi.remapping;
 
 import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.MappingUtils;
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingsUtilsImpl;
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.context.v1.ModRemapperV1Context;
+import io.github.fabriccompatibilitylayers.modremappingapi.impl.mappings.MappingsUtilsImpl;
+import io.github.fabriccompatibilitylayers.modremappingapi.impl.compatibility.v1.ModRemapperV1Context;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.mappingio.MappingVisitor;
