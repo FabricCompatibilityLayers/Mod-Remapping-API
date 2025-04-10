@@ -27,9 +27,8 @@
     ]
   },
   "depends": {
-    "fabricloader": ">0.14.23",
-    "spasm": ">=0.2.0",
-    "com_github_llamalad7_mixinextras": ">=0.2.0"
+    "fabricloader": ">0.15.5",
+    "spasm": ">=0.2.0"
   },
   "mixins": [
   ]

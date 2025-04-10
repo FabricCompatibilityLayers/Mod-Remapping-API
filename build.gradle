@@ -56,9 +56,8 @@ dependencies {
 		transitive = false
 	}
 
-	implementation(include("io.github.llamalad7:mixinextras-fabric:${project.mixin_extras_version}"))
 	implementation(include("com.github.thecatcore.CursedMixinExtensions:fabric:1.0.0"))
-	implementation(include("com.github.thecatcore:WFVAIO:1.2.0"))
+	implementation(include("com.github.thecatcore:WFVAIO:1.2.1"))
 
 	testImplementation "net.fabricmc:fabric-loader-junit:${project.loader_version}"
 }

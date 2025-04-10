@@ -1,6 +1,6 @@
 package net.fabricmc.tinyremapper.extension.mixin.hard;
 
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.ModRemappingAPIImpl;
+import io.github.fabriccompatibilitylayers.modremappingapi.impl.ModRemappingAPIImpl;
 import net.fabricmc.tinyremapper.extension.mixin.common.data.AnnotationElement;
 import net.fabricmc.tinyremapper.extension.mixin.common.data.Constant;
 import net.fabricmc.tinyremapper.extension.mixin.common.data.MxClass;

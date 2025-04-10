@@ -1,6 +1,6 @@
 package io.github.fabriccompatibilitylayers.modremappingapi.api.v2;
 
-import io.github.fabriccompatibilitylayers.modremappingapi.impl.DefaultMappingsConfig;
+import io.github.fabriccompatibilitylayers.modremappingapi.impl.defaults.DefaultMappingsConfig;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;

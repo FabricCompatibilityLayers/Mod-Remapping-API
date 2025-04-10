@@ -1,6 +1,6 @@
 package io.github.fabriccompatibilitylayers.modremappingapi.api.v2;
 
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.MappingsUtilsImpl;
+import io.github.fabriccompatibilitylayers.modremappingapi.impl.mappings.MappingsUtilsImpl;
 import org.jetbrains.annotations.Nullable;
 
 public interface MappingUtils {

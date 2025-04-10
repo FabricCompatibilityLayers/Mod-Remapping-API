@@ -1,6 +1,6 @@
 package io.github.fabriccompatibilitylayers.modremappingapi.api.v2;
 
-import io.github.fabriccompatibilitylayers.modremappingapi.impl.DefaultRemapLibrary;
+import io.github.fabriccompatibilitylayers.modremappingapi.impl.defaults.DefaultRemapLibrary;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Path;

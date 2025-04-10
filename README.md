@@ -12,14 +12,14 @@ Provides hooks to expand the remapping process from other mods such as:
 
 This mod jar-in-jars:
 - [CursedMixinExtensions](https://github.com/FabricCompatibilityLayers/CursedMixinExtensions) 1.0.0
-- [WFVAIO (What Fabric Variant Am I On)](https://github.com/thecatcore/WFVAIO) 1.1.0
+- [WFVAIO (What Fabric Variant Am I On)](https://github.com/thecatcore/WFVAIO) 1.2.1
 - [Legacy Fabric Logger API](https://github.com/Legacy-Fabric/fabric/tree/main/legacy-fabric-logger-api-v1) 1.0.4
 - [SpASM](https://github.com/mineLdiver/SpASM) 0.2
-- [MixinExtras](https://github.com/LlamaLad7/MixinExtras) 0.2.1 for Fabric Loader 0.14 compatibility purpose only.
 
 This mod shadows and relocates for internal usage:
 - [mapping-io](https://github.com/FabricMC/mapping-io) 0.7.1
 - [tiny-remapper](https://github.com/FabricMC/tiny-remapper) 0.11.0
+- [access-widener](https://github.com/FabricMC/access-widener) 2.1.0
 - [gson](https://github.com/google/gson) 2.2.4
 
 This mod doesn't depend on a specific Minecraft version and should work on any version that Fabric Loader can launch.

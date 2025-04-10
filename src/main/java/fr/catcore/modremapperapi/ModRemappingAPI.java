@@ -1,6 +1,6 @@
 package fr.catcore.modremapperapi;
 
-import io.github.fabriccompatibiltylayers.modremappingapi.impl.ModRemappingAPIImpl;
+import io.github.fabriccompatibilitylayers.modremappingapi.impl.ModRemappingAPIImpl;
 
 @Deprecated
 public class ModRemappingAPI {
