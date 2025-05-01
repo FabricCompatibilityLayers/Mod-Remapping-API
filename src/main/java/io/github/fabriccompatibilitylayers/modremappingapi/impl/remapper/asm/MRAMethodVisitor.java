@@ -91,7 +91,7 @@ public class MRAMethodVisitor extends MethodVisitor implements Opcodes {
             skip = true;
         }
 
-        if (!skip && (opcode == INVOKEVIRTUAL || opcode == INVOKESTATIC)) {
+        if (!skip && (opcode == INVOKEVIRTUAL || opcode == INVOKESTATIC || opcode == INVOKEINTERFACE)) {
             if (infos.METHOD_INVOCATION.containsKey(owner)) {
                 Map<String, Map<String, VisitorInfos.FullClassMember>> methods = infos.METHOD_INVOCATION.get(owner);
 
@@ -114,6 +114,7 @@ public class MRAMethodVisitor extends MethodVisitor implements Opcodes {
                         currentDescriptor  = fullClassMember.getDesc();
 
                         if (fullClassMember.isStatic() != null) currentOpcode = fullClassMember.isStatic() ? INVOKESTATIC : INVOKEVIRTUAL;
+                        if (isInterface) isInterface = false;
                     }
                 }
             }
