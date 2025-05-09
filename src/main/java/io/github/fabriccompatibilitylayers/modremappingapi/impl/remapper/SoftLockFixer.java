@@ -235,7 +235,10 @@ public class SoftLockFixer {
     }
 
     private static String getLibClassName(String lib, String string) {
-        if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
+        boolean isDev = FabricLoader.getInstance().isDevelopmentEnvironment();
+        boolean shouldDev = isDev && System.getProperty("fabric-mod-remapper-api.dev") == null;
+
+        if (shouldDev) {
             return "net.fabricmc." + lib + "." + string;
         }
 
