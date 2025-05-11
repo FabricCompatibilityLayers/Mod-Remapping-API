@@ -103,10 +103,10 @@ shadowJar {
 	configurations = [project.configurations.shadow]
 	exclude("META-INF/**")
 
-	relocate 'net.fabricmc.mappingio', 'fr.catcore.modremapperapi.impl.lib.mappingio'
-	relocate 'net.fabricmc.tinyremapper', 'fr.catcore.modremapperapi.impl.lib.tinyremapper'
-	relocate 'net.fabricmc.accesswidener', 'fr.catcore.modremapperapi.impl.lib.accesswidener'
-	relocate 'com.google.gson', 'fr.catcore.modremapperapi.impl.lib.gson'
+	relocate 'net.fabricmc.mappingio', 'io.github.fabriccompatibilitylayers.modremappingapi.impl.lib.mappingio'
+	relocate 'net.fabricmc.tinyremapper', 'io.github.fabriccompatibilitylayers.modremappingapi.impl.lib.tinyremapper'
+	relocate 'net.fabricmc.accesswidener', 'io.github.fabriccompatibilitylayers.modremappingapi.impl.lib.accesswidener'
+	relocate 'com.google.gson', 'io.github.fabriccompatibilitylayers.modremappingapi.impl.lib.gson'
 }
 
 jar {

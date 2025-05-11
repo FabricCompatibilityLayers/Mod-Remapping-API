@@ -242,6 +242,6 @@ public class SoftLockFixer {
             return "net.fabricmc." + lib + "." + string;
         }
 
-        return "fr.catcore.modremapperapi.impl.lib." + lib + "." + string;
+        return "io.github.fabriccompatibilitylayers.modremappingapi.impl.lib." + lib + "." + string;
     }
 }
