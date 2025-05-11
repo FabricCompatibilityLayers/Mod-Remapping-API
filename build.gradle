@@ -3,6 +3,7 @@ plugins {
 	id 'legacy-looming' version "1.10-SNAPSHOT" // Version must be the same as fabric-loom's
 	id 'maven-publish'
 	id 'com.gradleup.shadow' version '8.3.6'
+	id 'xyz.wagyourtail.jvmdowngrader' version '1.3.0'
 	id "com.modrinth.minotaur" version "2.+"
 	id 'jacoco'
 	id "org.sonarqube" version "5.0.0.4638"
@@ -62,6 +63,12 @@ dependencies {
 	testImplementation "net.fabricmc:fabric-loader-junit:${project.loader_version}"
 }
 
+jvmdg {
+	downgradeTo = JavaVersion.VERSION_1_8
+	multiReleaseOriginal.set(true)
+	multiReleaseVersions = [JavaVersion.VERSION_17]
+}
+
 base {
 	archivesName = project.archives_base_name
 }
@@ -79,7 +86,7 @@ processResources {
 // see http://yodaconditions.net/blog/fix-for-java-file-encoding-problems-with-gradle.html
 tasks.withType(JavaCompile).configureEach {
 	it.options.encoding = "UTF-8"
-	if (JavaVersion.current().isJava9Compatible()) it.options.release = 17
+	it.options.release = 17
 }
 
 java {
@@ -94,7 +101,7 @@ java {
 
 shadowJar {
 	configurations = [project.configurations.shadow]
-	exclude("META-INF")
+	exclude("META-INF/**")
 
 	relocate 'net.fabricmc.mappingio', 'fr.catcore.modremapperapi.impl.lib.mappingio'
 	relocate 'net.fabricmc.tinyremapper', 'fr.catcore.modremapperapi.impl.lib.tinyremapper'
@@ -114,6 +121,15 @@ remapJar {
 	mustRunAfter(shadowJar)
 	// Set the input jar for the task. Here use the shadow Jar that include the .class of the transitive dependency
 	input = shadowJar.archiveFile
+	setArchiveClassifier("remapped")
+}
+
+downgradeJar {
+	inputFile = remapJar.archiveFile
+}
+
+shadeDowngradedApi {
+	setArchiveClassifier("")
 }
 
 test {
@@ -157,7 +173,7 @@ Apply method invocation replacers to Interface methods as well.\
 Fix possible crash while remapping refmap.\
 Add system property to run in development mode for 3rd party remappers.
 """
-	uploadFile = remapJar
+	uploadFile = shadeDowngradedApi
 
 	dependencies {
 		embedded.version "spasm", project.spasm_version
@@ -170,4 +186,4 @@ task testmodJar(type: Jar) {
 	archiveClassifier.set("testmod")
 }
 
-build.dependsOn testmodJar
+build.dependsOn(testmodJar, shadeDowngradedApi)
