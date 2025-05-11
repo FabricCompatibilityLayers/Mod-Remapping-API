@@ -22,7 +22,7 @@ public class DefaultMappingsConfig implements MappingsConfig {
 
     @Override
     public Map<String, String> getRenamingMap() {
-        return new HashMap<>();
+        return Map.of();
     }
 
     @Override

@@ -42,7 +42,7 @@ public class MappingTreeHelper {
 
         result.visitHeader();
 
-        List<String> dstNamespaces = new ArrayList<>(left.getDstNamespaces());
+        var dstNamespaces = new ArrayList<>(left.getDstNamespaces());
 
         for (String dstNamespace : right.getDstNamespaces()) {
             if (!dstNamespaces.contains(dstNamespace)) {

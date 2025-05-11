@@ -146,7 +146,7 @@ public class FileUtils {
     @ApiStatus.Internal
     public static void emptyDir(Path dir) {
         try {
-            Files.walkFileTree(dir, new FileVisitor<Path>() {
+            Files.walkFileTree(dir, new FileVisitor<>() {
                 @Override
                 public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
                     return FileVisitResult.CONTINUE;

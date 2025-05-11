@@ -30,7 +30,7 @@ public class ModDiscoverer {
     public List<ModCandidate> collect() {
         originalDirectory = FabricLoader.getInstance().getGameDir().resolve(config.getFolderName());
 
-        if (!Files.isDirectory(originalDirectory)) return new ArrayList<>();
+        if (!Files.isDirectory(originalDirectory)) return List.of();
 
         List<ModCandidate> candidates = new ArrayList<>();
 

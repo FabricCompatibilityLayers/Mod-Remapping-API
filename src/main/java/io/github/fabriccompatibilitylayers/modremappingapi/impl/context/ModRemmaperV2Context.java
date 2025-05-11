@@ -94,7 +94,7 @@ public class ModRemmaperV2Context extends BaseModRemapperContext<ModRemapper> {
 
     @Override
     public List<ModRemapper> discoverMods(boolean remapClassEdits) {
-        List<ModRemapper> collected = new ArrayList<>();
+        var collected = new ArrayList<ModRemapper>();
         List<ModCandidate> candidates = new ArrayList<>();
         Map<ModDiscovererConfig, ModDiscoverer> config2Discoverer = new HashMap<>();
 

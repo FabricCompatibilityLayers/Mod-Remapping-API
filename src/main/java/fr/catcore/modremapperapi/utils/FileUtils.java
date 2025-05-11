@@ -4,8 +4,8 @@ import net.fabricmc.loader.impl.launch.FabricLauncherBase;
 
 import java.io.*;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -14,39 +14,27 @@ public class FileUtils {
     @Deprecated
     public static void writeTextFile(Collection<String> lines, File file) {
         file.getParentFile().mkdirs();
+        
         try {
-            FileWriter fileWriter = new FileWriter(file);
-            BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
-            for (String line : lines) {
-                bufferedWriter.append(line);
-                bufferedWriter.append("\n");
-            }
-            bufferedWriter.close();
-            fileWriter.close();
+            Files.writeString(file.toPath(), String.join("\n", lines));
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     @Deprecated
-    public static List<String> readTextSource(String path) {
-        List<String> result = new ArrayList<>();
+    public static List<String> readTextSource(String path) {        
         try {
-            InputStream stream = FabricLauncherBase.class.getClassLoader().getResourceAsStream(path);
-            InputStreamReader streamReader = new InputStreamReader(stream);
-            BufferedReader bufferedWriter = new BufferedReader(streamReader);
-            String line = bufferedWriter.readLine();
-            while (line != null) {
-                result.add(line);
-                line = bufferedWriter.readLine();
+            var url = FabricLauncherBase.class.getClassLoader().getResource(path);
+
+            if (url != null) {
+                return Files.readAllLines(Path.of(url.toURI()));
             }
-            bufferedWriter.close();
-            streamReader.close();
-            stream.close();
-        } catch (IOException e) {
+        } catch (IOException | URISyntaxException e) {
             e.printStackTrace();
         }
-        return result;
+
+        return List.of();
     }
 
     @Deprecated
