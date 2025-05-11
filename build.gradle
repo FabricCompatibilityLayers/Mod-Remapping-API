@@ -2,7 +2,7 @@ plugins {
 	id 'fabric-loom' version '1.10-SNAPSHOT'
 	id 'legacy-looming' version "1.10-SNAPSHOT" // Version must be the same as fabric-loom's
 	id 'maven-publish'
-	id 'com.github.johnrengelman.shadow' version '8.1.1'
+	id 'com.gradleup.shadow' version '8.3.6'
 	id "com.modrinth.minotaur" version "2.+"
 	id 'jacoco'
 	id "org.sonarqube" version "5.0.0.4638"
@@ -79,7 +79,7 @@ processResources {
 // see http://yodaconditions.net/blog/fix-for-java-file-encoding-problems-with-gradle.html
 tasks.withType(JavaCompile).configureEach {
 	it.options.encoding = "UTF-8"
-//	if (JavaVersion.current().isJava9Compatible()) it.options.release = 8
+	if (JavaVersion.current().isJava9Compatible()) it.options.release = 17
 }
 
 java {
@@ -88,8 +88,8 @@ java {
 	// If you remove this line, sources will not be generated.
 	withSourcesJar()
 
-	sourceCompatibility = JavaVersion.VERSION_1_8
-	targetCompatibility = JavaVersion.VERSION_1_8
+	sourceCompatibility = JavaVersion.VERSION_17
+	targetCompatibility = JavaVersion.VERSION_17
 }
 
 shadowJar {
