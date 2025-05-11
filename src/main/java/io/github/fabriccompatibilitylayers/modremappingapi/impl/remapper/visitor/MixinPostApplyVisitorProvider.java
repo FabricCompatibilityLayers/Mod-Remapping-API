@@ -21,12 +21,12 @@ public class MixinPostApplyVisitorProvider implements TinyRemapper.ApplyVisitorP
 
     @Override
     public ClassVisitor insertApplyVisitor(TrClass cls, ClassVisitor next) {
-        ClassNode node = new ClassNode();
+        var node = new ClassNode();
         cls.accept(node, ClassReader.SKIP_FRAMES);
 
-        String className = cls.getName().replace(".", "/");
+        var className = cls.getName().replace(".", "/");
 
-        List<String> supers = new ArrayList<>();
+        var supers = new ArrayList<String>();
 
         for (List<AnnotationNode> nodeList : new List[]{
                 node.visibleAnnotations, node.invisibleAnnotations
@@ -39,12 +39,12 @@ public class MixinPostApplyVisitorProvider implements TinyRemapper.ApplyVisitorP
                     for (int i = 0; i < len; i += 2) {
                         Object value = an.values.get(i + 1);
 
-                        if (value instanceof List) {
-                            for (Object val : (List) value) {
+                        if (value instanceof List<?> valueList) {
+                            for (Object val : valueList) {
                                 String theVal;
 
-                                if (val instanceof Type) {
-                                    theVal = ((Type) val).getInternalName();
+                                if (val instanceof Type type) {
+                                    theVal = type.getInternalName();
                                 } else {
                                     theVal = ModRemappingAPIImpl.getCurrentContext().getMixinData().getMixinRefmapData()
                                             .getOrDefault(className, new HashMap<>()).getOrDefault((String) val, (String) val);

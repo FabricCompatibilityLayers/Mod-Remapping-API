@@ -21,24 +21,26 @@ import java.util.stream.Collectors;
 @ApiStatus.Internal
 public class MinecraftRemapper {
     private static Map<Path, Path> computeLibraryPaths(Collection<Path> sourcePaths, Path basePath) {
-        return sourcePaths.stream().collect(Collectors.toMap(p -> p,
-                p -> basePath.resolve(p.getFileName())));
+        return sourcePaths.stream().collect(Collectors.toMap(
+                path -> path,
+                path -> basePath.resolve(path.getFileName())
+        ));
     }
 
     private static Collection<Path> getMinecraftJar(Collection<Path> sourcePaths, String src, String target, MappingsRegistry mappingsRegistry, CacheHandler cacheHandler) throws IOException {
-        Path targetFolder = cacheHandler.resolveLibrary(target);
+        var targetFolder = cacheHandler.resolveLibrary(target);
 
-        if (!Files.exists(targetFolder)) {
+        if (Files.notExists(targetFolder)) {
             Files.createDirectories(targetFolder);
         }
 
-        Map<Path, Path> paths = computeLibraryPaths(new HashSet<>(sourcePaths), targetFolder);
+        var paths = computeLibraryPaths(new HashSet<>(sourcePaths), targetFolder);
 
         if (FileUtils.exist(paths.values())) return paths.values();
 
         FileUtils.delete(paths.values());
 
-        TinyRemapper.Builder builder = TinyRemapper
+        var builder = TinyRemapper
                 .newRemapper()
                 .renameInvalidLocals(true)
                 .ignoreFieldDesc(false)
@@ -51,13 +53,12 @@ public class MinecraftRemapper {
                                 src, target)
                 );
 
-        TinyRemapper remapper = builder.build();
+        var remapper = builder.build();
 
-        Constants.MAIN_LOGGER.info("Remapping minecraft jar from " + src + " to " + target + "!");
+        Constants.MAIN_LOGGER.info("Remapping minecraft jar from {} to {}!", src, target);
 
-        List<OutputConsumerPath> outputConsumerPaths = new ArrayList<>();
-
-        List<OutputConsumerPath.ResourceRemapper> resourceRemappers = new ArrayList<>(NonClassCopyMode.FIX_META_INF.remappers);
+        var outputConsumerPaths = new ArrayList<OutputConsumerPath>();
+        var resourceRemappers = new ArrayList<>(NonClassCopyMode.FIX_META_INF.remappers);
 
         TrRemapperHelper.applyRemapper(remapper, paths, outputConsumerPaths, resourceRemappers, true, src, target);
 
@@ -73,7 +74,7 @@ public class MinecraftRemapper {
         if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
             try {
                 classPath = getMinecraftJar(
-                            getMinecraftJar(ClasspathUtils.getRemapClasspath(), mappingsRegistry.getTargetNamespace(), "intermediary", mappingsRegistry, cacheHandler),
+                        getMinecraftJar(ClasspathUtils.getRemapClasspath(), mappingsRegistry.getTargetNamespace(), "intermediary", mappingsRegistry, cacheHandler),
                         "intermediary",
                         "official",
                         mappingsRegistry,
@@ -94,8 +95,8 @@ public class MinecraftRemapper {
             }
         }
 
-        for (Path path : classPath) {
-            Constants.MAIN_LOGGER.debug("Appending '%s' to remapper classpath", path);
+        for (var path : classPath) {
+            Constants.MAIN_LOGGER.debug("Appending '{}' to remapper classpath", path);
             remapper.readClassPathAsync(path);
         }
     }

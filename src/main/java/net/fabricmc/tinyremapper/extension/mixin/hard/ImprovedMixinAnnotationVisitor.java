@@ -10,6 +10,7 @@ import org.objectweb.asm.Type;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
+import java.util.Map;
 
 public class ImprovedMixinAnnotationVisitor extends AnnotationVisitor {
     private final List<String> targets;
@@ -24,39 +25,36 @@ public class ImprovedMixinAnnotationVisitor extends AnnotationVisitor {
 
     @Override
     public AnnotationVisitor visitArray(String name) {
-        AnnotationVisitor visitor = super.visitArray(name);
+        var visitor = super.visitArray(name);
 
-        if (name.equals(AnnotationElement.TARGETS)) {
-            return new AnnotationVisitor(Constant.ASM_VERSION, visitor) {
+        return switch (name) {
+            case AnnotationElement.TARGETS -> new AnnotationVisitor(Constant.ASM_VERSION, visitor) {
                 @Override
                 public void visit(String name, Object value) {
-                    String srcName = ((String) value).replaceAll("\\s", "").replace('.', '/');
-                    String dstName = srcName;
+                    var srcName = ((String) value).replaceAll("\\s", "").replace('.', '/');
+                    var dstName = srcName;
 
-                    srcName = ModRemappingAPIImpl.getCurrentContext().getMixinData()
+                    Map<String, String> refmapData = ModRemappingAPIImpl.getCurrentContext().getMixinData()
                             .getMixinRefmapData()
-                            .getOrDefault(ImprovedMixinAnnotationVisitor.this._class.getName(), new HashMap<>())
-                            .getOrDefault(value, srcName);
+                            .getOrDefault(ImprovedMixinAnnotationVisitor.this._class.getName(), new HashMap<>());
+                    
+                    srcName = refmapData.getOrDefault(value, srcName);
 
                     ImprovedMixinAnnotationVisitor.this.targets.add(srcName);
 
-                    value = dstName;
-                    super.visit(name, value);
+                    super.visit(name, dstName);
                 }
             };
-        } else if (name.equals(AnnotationElement.VALUE)) {
-            return new AnnotationVisitor(Constant.ASM_VERSION, visitor) {
+            case AnnotationElement.VALUE -> new AnnotationVisitor(Constant.ASM_VERSION, visitor) {
                 @Override
                 public void visit(String name, Object value) {
-                    Type srcType = Objects.requireNonNull((Type) value);
-
-                    ImprovedMixinAnnotationVisitor.this.targets.add(srcType.getInternalName());
-
+                    if (value instanceof Type srcType) {
+                        ImprovedMixinAnnotationVisitor.this.targets.add(srcType.getInternalName());
+                    }
                     super.visit(name, value);
                 }
             };
-        } else {
-            return visitor;
-        }
+            default -> visitor;
+        };
     }
 }

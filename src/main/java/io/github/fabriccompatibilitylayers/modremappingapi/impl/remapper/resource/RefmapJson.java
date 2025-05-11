@@ -27,22 +27,24 @@ public class RefmapJson {
         );
 
         this.data.put("named:intermediary", this.mappings);
-
     }
 
     public void remap(MappingTree tree, String from, String to) {
         this.data.clear();
 
-        this.mappings.forEach((mixinClass, refmapEntryMap) -> refmapEntryMap.entrySet()
-                .stream().filter(this::filterClass)
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
-                .replaceAll((originalName, oldMappedName) ->
-                        mapRefMapEntry(mixinClass, oldMappedName, tree, from, to)));
+        this.mappings.forEach((mixinClass, refmapEntryMap) -> {
+            var filteredMap = refmapEntryMap.entrySet()
+                    .stream()
+                    .filter(this::filterClass)
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            
+            filteredMap.replaceAll((originalName, oldMappedName) ->
+                    mapRefMapEntry(mixinClass, oldMappedName, tree, from, to));
+        });
     }
 
-    private boolean filterClass(Map.Entry<String, String> stringStringEntry) {
-        String value = stringStringEntry.getValue();
-
+    private boolean filterClass(Map.Entry<String, String> entry) {
+        var value = entry.getValue();
         return value != null &&
                 value.contains("/") &&
                 !value.contains(";") &&
@@ -51,16 +53,16 @@ public class RefmapJson {
     }
 
     private String mapRefMapEntry(String mixinClass, String old, MappingTree tree, String from, String to) {
-        int fromId = tree.getNamespaceId(from);
-        int toId = tree.getNamespaceId(to);
+        var fromId = tree.getNamespaceId(from);
+        var toId = tree.getNamespaceId(to);
 
         return tree.mapClassName(old, fromId, toId);
     }
 
     private String mapRefMapEntry(String mixinClass, String old, TinyRemapper remapper) {
         try {
-            TrRemapper trRemapper = remapper.getEnvironment().getRemapper();
-            List<String> supers = ModRemappingAPIImpl.getCurrentContext().getMixinData().getMixin2TargetMap().get(mixinClass);
+            var trRemapper = remapper.getEnvironment().getRemapper();
+            var supers = ModRemappingAPIImpl.getCurrentContext().getMixinData().getMixin2TargetMap().get(mixinClass);
             // format is:
             // owner + name + quantifier + (desc == null || desc.startsWith("(") ? "" : ":") + desc + (tail != null ? " -> " : "") + tail
             String owner; // can be ""
@@ -211,7 +213,7 @@ public class RefmapJson {
             return "L" + trRemapper.map(owner) + ";" + trRemapper.mapFieldName(owner, name, desc) + (!desc.isEmpty() ? ":" + trRemapper.mapDesc(desc) : "");
         } catch (Throwable t) {
             System.err.println("Error while remapping refmap entry: " + old + " for mixin " + mixinClass);
-            System.err.println(t);
+            t.printStackTrace();
             return old;
         }
     }

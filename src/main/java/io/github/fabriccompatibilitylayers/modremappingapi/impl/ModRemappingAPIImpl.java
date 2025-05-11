@@ -9,10 +9,8 @@ import io.github.fabriccompatibilitylayers.modremappingapi.impl.context.ModRemma
 import net.fabricmc.loader.api.FabricLoader;
 import org.jetbrains.annotations.ApiStatus;
 
-import java.io.File;
+import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @ApiStatus.Internal
@@ -30,8 +28,12 @@ public class ModRemappingAPIImpl {
         if (!init && !initializing) {
             initializing = true;
 
-            FabricLoader.getInstance().getConfigDir().toFile().mkdirs();
-            remapClassEdits = new File(FabricLoader.getInstance().getConfigDir().toFile(), ".remapclassedits").exists();
+            try {
+                Files.createDirectories(FabricLoader.getInstance().getConfigDir());
+                remapClassEdits = Files.exists(FabricLoader.getInstance().getConfigDir().resolve(".remapclassedits"));
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to initialize config directory", e);
+            }
 
             CURRENT_CONTEXT = new ModRemapperV1Context();
             CURRENT_CONTEXT.gatherRemappers();
@@ -41,21 +43,23 @@ public class ModRemappingAPIImpl {
 
             CURRENT_CONTEXT.afterRemap();
 
-            Map<String, List<ModRemapper>> v2Remappers = FabricLoader.getInstance()
+            var v2Remappers = FabricLoader.getInstance()
                     .getEntrypoints(v2EntrypointName, ModRemapper.class)
-                    .stream().collect(Collectors.groupingBy(ModRemapper::getContextId));
+                    .stream()
+                    .collect(Collectors.groupingBy(ModRemapper::getContextId));
 
-            List<String> v2Keys = new ArrayList<>(v2Remappers.keySet());
+            var v2Keys = new ArrayList<>(v2Remappers.keySet());
 
             while (!v2Keys.isEmpty()) {
-                String contextKey = v2Keys.remove(0);
-                ModRemmaperV2Context context = new ModRemmaperV2Context(contextKey, v2Remappers.get(contextKey));
+                var contextKey = v2Keys.remove(0);
+                var context = new ModRemmaperV2Context(contextKey, v2Remappers.get(contextKey));
                 CURRENT_CONTEXT = context;
 
                 CURRENT_CONTEXT.init();
 
-                Map<String, List<ModRemapper>> newRemappers = context.discoverMods(remapClassEdits)
-                        .stream().collect(Collectors.groupingBy(ModRemapper::getContextId));
+                var newRemappers = context.discoverMods(remapClassEdits)
+                        .stream()
+                        .collect(Collectors.groupingBy(ModRemapper::getContextId));
 
                 v2Keys.addAll(newRemappers.keySet());
 

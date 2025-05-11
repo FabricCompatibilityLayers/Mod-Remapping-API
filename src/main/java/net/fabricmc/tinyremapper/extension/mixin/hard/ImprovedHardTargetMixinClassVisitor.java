@@ -41,7 +41,7 @@ public class ImprovedHardTargetMixinClassVisitor extends ClassVisitor {
      */
     @Override
     public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
-        AnnotationVisitor av = super.visitAnnotation(descriptor, visible);
+        var av = super.visitAnnotation(descriptor, visible);
 
         if (Annotation.MIXIN.equals(descriptor)) {
             av = new ImprovedMixinAnnotationVisitor(av, targets, this._class);
@@ -54,8 +54,8 @@ public class ImprovedHardTargetMixinClassVisitor extends ClassVisitor {
 
     @Override
     public FieldVisitor visitField(int access, String name, String descriptor, String signature, Object value) {
-        FieldVisitor fv = super.visitField(access, name, descriptor, signature, value);
-        MxMember field = _class.getField(name, descriptor);
+        var fv = super.visitField(access, name, descriptor, signature, value);
+        var field = _class.getField(name, descriptor);
 
         if (targets.isEmpty()) {
             return fv;
@@ -66,8 +66,8 @@ public class ImprovedHardTargetMixinClassVisitor extends ClassVisitor {
 
     @Override
     public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
-        MethodVisitor mv = super.visitMethod(access, name, descriptor, signature, exceptions);
-        MxMember method = _class.getMethod(name, descriptor);
+        var mv = super.visitMethod(access, name, descriptor, signature, exceptions);
+        var method = _class.getMethod(name, descriptor);
 
         if (!interfaces.isEmpty() && !MapUtility.IGNORED_NAME.contains(name)) {
             ImplementsAnnotationVisitor.visitMethod(tasks, method, interfaces);

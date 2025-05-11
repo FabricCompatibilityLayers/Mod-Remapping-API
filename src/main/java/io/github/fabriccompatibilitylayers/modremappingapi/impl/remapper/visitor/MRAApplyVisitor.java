@@ -17,7 +17,7 @@ public class MRAApplyVisitor implements TinyRemapper.ApplyVisitorProvider {
 
     @Override
     public ClassVisitor insertApplyVisitor(TrClass cls, ClassVisitor next) {
-        final String className = cls.getName();
+        var className = cls.getName();
         return new MRAClassVisitor(next, infos, className);
     }
 }

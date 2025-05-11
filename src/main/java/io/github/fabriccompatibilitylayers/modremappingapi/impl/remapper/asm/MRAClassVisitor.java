@@ -17,30 +17,19 @@ public class MRAClassVisitor extends ClassVisitor {
 
     @Override
     public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
-        String superType = superName;
-
-        if (infos.SUPERS.containsKey(superName)) {
-            superType = infos.SUPERS.get(superName);
-        }
-
+        var superType = infos.SUPERS.getOrDefault(superName, superName);
         super.visit(version, access, name, signature, superType, interfaces);
     }
 
     @Override
     public AnnotationVisitor visitTypeAnnotation(int typeRef, TypePath typePath, String descriptor, boolean visible) {
-        String annotationType = descriptor;
-
-        if (infos.ANNOTATION.containsKey(descriptor)) {
-            annotationType = infos.ANNOTATION.get(descriptor);
-        }
-
+        var annotationType = infos.ANNOTATION.getOrDefault(descriptor, descriptor);
         return super.visitTypeAnnotation(typeRef, typePath, annotationType, visible);
     }
 
     @Override
     public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
-        MethodVisitor original = super.visitMethod(access, name, descriptor, signature, exceptions);
-        original = new MRAMethodVisitor(original, infos, this.className);
-        return original;
+        var original = super.visitMethod(access, name, descriptor, signature, exceptions);
+        return new MRAMethodVisitor(original, infos, this.className);
     }
 }

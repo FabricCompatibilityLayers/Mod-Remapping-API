@@ -32,9 +32,9 @@ public class RefmapBaseMixinExtension implements TinyRemapper.Extension {
     }
 
     private void stateProcessor(TrEnvironment environment) {
-        CommonData data = new CommonData(environment);
+        var data = new CommonData(environment);
 
-        for (Consumer<CommonData> task : tasks.getOrDefault(environment.getMrjVersion(), Collections.emptyList())) {
+        for (var task : tasks.getOrDefault(environment.getMrjVersion(), Collections.emptyList())) {
             try {
                 task.accept(data);
             } catch (RuntimeException e) {
@@ -54,7 +54,7 @@ public class RefmapBaseMixinExtension implements TinyRemapper.Extension {
             if (inputTagFilter == null || inputTags == null) {
                 return insertAnalyzeVisitor(mrjVersion, className, next);
             } else {
-                for (InputTag tag : inputTags) {
+                for (var tag : inputTags) {
                     if (inputTagFilter.test(tag)) {
                         return insertAnalyzeVisitor(mrjVersion, className, next);
                     }

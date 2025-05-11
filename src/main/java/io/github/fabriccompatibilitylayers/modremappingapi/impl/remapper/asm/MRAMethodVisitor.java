@@ -1,17 +1,17 @@
 package io.github.fabriccompatibilitylayers.modremappingapi.impl.remapper.asm;
 
-import io.github.fabriccompatibilitylayers.modremappingapi.api.v2.VisitorInfos;
 import io.github.fabriccompatibilitylayers.modremappingapi.impl.remapper.VisitorInfosImpl;
 import org.jetbrains.annotations.ApiStatus;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
-import java.util.Map;
+import java.util.Optional;
 
 @ApiStatus.Internal
 public class MRAMethodVisitor extends MethodVisitor implements Opcodes {
     private final VisitorInfosImpl infos;
     private final String className;
+    
     protected MRAMethodVisitor(MethodVisitor methodVisitor, VisitorInfosImpl visitorInfos, String className) {
         super(Opcodes.ASM9, methodVisitor);
         this.infos = visitorInfos;
@@ -20,9 +20,8 @@ public class MRAMethodVisitor extends MethodVisitor implements Opcodes {
 
     @Override
     public void visitTypeInsn(int opcode, String type) {
-        String currentType = type;
-
-        boolean skip = false;
+        var currentType = type;
+        var skip = false;
 
         if (opcode == NEW && infos.INSTANTIATION.containsKey(type)) {
             currentType = infos.INSTANTIATION.get(type);
@@ -38,30 +37,24 @@ public class MRAMethodVisitor extends MethodVisitor implements Opcodes {
 
     @Override
     public void visitFieldInsn(int opcode, String owner, String name, String descriptor) {
-        String currentOwner = owner;
-        String currentName = name;
-        String currentDescriptor = descriptor;
+        var currentOwner = owner;
+        var currentName = name;
+        var currentDescriptor = descriptor;
 
         if (infos.FIELD_REF.containsKey(owner)) {
-            Map<String, Map<String, VisitorInfos.FullClassMember>> fields = infos.FIELD_REF.get(owner);
+            var fields = infos.FIELD_REF.get(owner);
 
-            Map<String, VisitorInfos.FullClassMember> args = fields.get(name);
-
-            if (args == null) {
-                args = fields.get("");
-            }
+            var args = Optional.ofNullable(fields.get(name))
+                    .orElse(fields.get(""));
 
             if (args != null) {
-                VisitorInfos.FullClassMember classMember = args.get(descriptor);
-
-                if (classMember == null) {
-                    classMember = args.get("");
-                }
+                var classMember = Optional.ofNullable(args.get(descriptor))
+                        .orElse(args.get(""));
 
                 if (classMember != null) {
                     currentOwner = classMember.getOwner();
                     currentName = classMember.getName();
-                    currentDescriptor  = classMember.getDesc();
+                    currentDescriptor = classMember.getDesc();
                 }
             }
         }
@@ -79,12 +72,13 @@ public class MRAMethodVisitor extends MethodVisitor implements Opcodes {
 
     @Override
     public void visitMethodInsn(int opcode, String owner, String name, String descriptor, boolean isInterface) {
-        int currentOpcode = opcode;
-        String currentOwner = owner;
-        String currentName = name;
-        String currentDescriptor = descriptor;
+        var currentOpcode = opcode;
+        var currentOwner = owner;
+        var currentName = name;
+        var currentDescriptor = descriptor;
+        var isInterfaceCall = isInterface;
 
-        boolean skip = false;
+        var skip = false;
 
         if (opcode == INVOKESPECIAL && infos.INSTANTIATION.containsKey(owner) && name.equals("<init>")) {
             currentOwner = infos.INSTANTIATION.get(owner);
@@ -93,28 +87,27 @@ public class MRAMethodVisitor extends MethodVisitor implements Opcodes {
 
         if (!skip && (opcode == INVOKEVIRTUAL || opcode == INVOKESTATIC || opcode == INVOKEINTERFACE)) {
             if (infos.METHOD_INVOCATION.containsKey(owner)) {
-                Map<String, Map<String, VisitorInfos.FullClassMember>> methods = infos.METHOD_INVOCATION.get(owner);
+                var methods = infos.METHOD_INVOCATION.get(owner);
 
-                Map<String, VisitorInfos.FullClassMember> args = methods.get(currentName);
-
-                if (args == null) {
-                    args = methods.get("");
-                }
+                var args = Optional.ofNullable(methods.get(currentName))
+                        .orElse(methods.get(""));
 
                 if (args != null) {
-                    VisitorInfos.FullClassMember fullClassMember = args.get(currentDescriptor);
-
-                    if (fullClassMember == null) {
-                        fullClassMember = args.get("");
-                    }
+                    var fullClassMember = Optional.ofNullable(args.get(currentDescriptor))
+                            .orElse(args.get(""));
 
                     if (fullClassMember != null) {
                         currentOwner = fullClassMember.getOwner();
                         currentName = fullClassMember.getName();
-                        currentDescriptor  = fullClassMember.getDesc();
+                        currentDescriptor = fullClassMember.getDesc();
 
-                        if (fullClassMember.isStatic() != null) currentOpcode = fullClassMember.isStatic() ? INVOKESTATIC : INVOKEVIRTUAL;
-                        if (isInterface) isInterface = false;
+                        if (fullClassMember.isStatic() != null) {
+                            currentOpcode = fullClassMember.isStatic() ? INVOKESTATIC : INVOKEVIRTUAL;
+                        }
+                        
+                        if (isInterfaceCall) {
+                            isInterfaceCall = false;
+                        }
                     }
                 }
             }
@@ -128,18 +121,18 @@ public class MRAMethodVisitor extends MethodVisitor implements Opcodes {
             currentDescriptor = descriptor;
         }
 
-        super.visitMethodInsn(currentOpcode, currentOwner, currentName, currentDescriptor, isInterface);
+        super.visitMethodInsn(currentOpcode, currentOwner, currentName, currentDescriptor, isInterfaceCall);
     }
 
     @Override
     public void visitLdcInsn(Object value) {
-        Object currentValue = value;
+        var currentValue = value;
 
         if (infos.LDC.containsKey(this.className)) {
-            Map<Object, Object> map = infos.LDC.get(this.className);
-
-            if (map.containsKey(value)) {
-                currentValue = map.get(value);
+            var ldcMap = infos.LDC.get(this.className);
+            
+            if (ldcMap.containsKey(value)) {
+                currentValue = ldcMap.get(value);
             }
         }
 

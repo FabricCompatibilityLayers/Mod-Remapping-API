@@ -16,7 +16,7 @@ public class FileUtils {
         file.getParentFile().mkdirs();
         
         try {
-            Files.writeString(file.toPath(), String.join("\n", lines));
+            Files.writeString(file.toPath(), String.join(System.lineSeparator(), lines));
         } catch (IOException e) {
             e.printStackTrace();
         }
