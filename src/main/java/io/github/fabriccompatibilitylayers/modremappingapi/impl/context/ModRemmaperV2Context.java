@@ -37,10 +37,10 @@ public class ModRemmaperV2Context extends BaseModRemapperContext<ModRemapper> {
 
     @Override
     public void init() {
-        for (ModRemapper remapper : remappers) {
+        for (var remapper : remappers) {
             remapper.init(this.cacheHandler);
 
-            MappingsConfig mappings = remapper.getMappingsConfig();
+            var mappings = remapper.getMappingsConfig();
 
             if (mappings.getSourceNamespace() != null) {
                 this.mappingsRegistry.setSourceNamespace(mappings.getSourceNamespace());
@@ -48,7 +48,10 @@ public class ModRemmaperV2Context extends BaseModRemapperContext<ModRemapper> {
 
             if (mappings.getExtraMappings() != null) {
                 try {
-                    this.mappingsRegistry.addToFormattedMappings(new ByteArrayInputStream(mappings.getExtraMappings().get().getBytes(StandardCharsets.UTF_8)), mappings.getRenamingMap());
+                    this.mappingsRegistry.addToFormattedMappings(
+                            new ByteArrayInputStream(mappings.getExtraMappings().get().getBytes(StandardCharsets.UTF_8)),
+                            mappings.getRenamingMap()
+                    );
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -77,7 +80,7 @@ public class ModRemmaperV2Context extends BaseModRemapperContext<ModRemapper> {
     public void remapMods(Map<ModCandidate, Path> pathMap) {
         Constants.MAIN_LOGGER.debug("Starting jar remapping!");
         SoftLockFixer.preloadClasses();
-        TinyRemapper remapper = ModTrRemapper.makeRemapper(this);
+        var remapper = ModTrRemapper.makeRemapper(this);
         Constants.MAIN_LOGGER.debug("Remapper created!");
         ModTrRemapper.remapMods(remapper, pathMap, this);
         Constants.MAIN_LOGGER.debug("Jar remapping done!");
@@ -87,49 +90,48 @@ public class ModRemmaperV2Context extends BaseModRemapperContext<ModRemapper> {
 
     @Override
     public void afterRemap() {
-        for (ModRemapper remapper : remappers) {
-            remapper.afterRemapping();
-        }
+        remappers.forEach(ModRemapper::afterRemapping);
     }
 
     @Override
     public List<ModRemapper> discoverMods(boolean remapClassEdits) {
         var collected = new ArrayList<ModRemapper>();
-        List<ModCandidate> candidates = new ArrayList<>();
-        Map<ModDiscovererConfig, ModDiscoverer> config2Discoverer = new HashMap<>();
+        var candidates = new ArrayList<ModCandidate>();
+        var config2Discoverer = new HashMap<ModDiscovererConfig, ModDiscoverer>();
 
-        for (ModRemapper remapper : remappers) {
-            for (ModDiscovererConfig config : remapper.getModDiscoverers()) {
-                ModDiscoverer discoverer = new ModDiscoverer(config);
+        for (var remapper : remappers) {
+            for (var config : remapper.getModDiscoverers()) {
+                var discoverer = new ModDiscoverer(config);
                 config2Discoverer.put(config, discoverer);
                 candidates.addAll(discoverer.collect());
             }
         }
 
-        for (ModRemapper remapper : remappers) {
+        for (var remapper : remappers) {
             collected.addAll(remapper.collectSubRemappers(candidates));
         }
 
-        Map<ModDiscovererConfig, List<ModCandidate>> config2Candidates =
-                candidates.stream().collect(Collectors.groupingBy(ModCandidate::getDiscovererConfig));
+        var config2Candidates = candidates.stream()
+                .collect(Collectors.groupingBy(ModCandidate::getDiscovererConfig));
 
-        for (ModCandidate candidate : candidates) {
+        for (var candidate : candidates) {
             mappingsRegistry.addModMappings(candidate.getPath());
         }
 
         mappingsRegistry.generateModMappings();
 
-        Map<ModCandidate, Path> candidateToOutput = new HashMap<>();
+        var candidateToOutput = new HashMap<ModCandidate, Path>();
 
-        for (Map.Entry<ModDiscovererConfig, List<ModCandidate>> entry : config2Candidates.entrySet()) {
-            ModDiscovererConfig config = entry.getKey();
-
+        for (var entry : config2Candidates.entrySet()) {
+            var config = entry.getKey();
             candidateToOutput.putAll(
                     config2Discoverer.get(config).computeDestinations(entry.getValue(), this.cacheHandler)
             );
         }
 
-        if (!candidateToOutput.isEmpty()) this.remapMods(candidateToOutput);
+        if (!candidateToOutput.isEmpty()) {
+            this.remapMods(candidateToOutput);
+        }
 
         return collected;
     }
@@ -145,19 +147,19 @@ public class ModRemmaperV2Context extends BaseModRemapperContext<ModRemapper> {
     }
 
     private void registerAdditionalMappings() {
-        MappingBuilder builder = new V2MappingBuilderImpl(mappingsRegistry.getAdditionalMappings());
+        var builder = new V2MappingBuilderImpl(mappingsRegistry.getAdditionalMappings());
 
-        for (ModRemapper remapper : remappers) {
+        for (var remapper : remappers) {
             remapper.registerAdditionalMappings(builder);
         }
     }
 
     @Override
     public void addToRemapperBuilder(TinyRemapper.Builder builder) {
-        VisitorInfosImpl preInfos = new VisitorInfosImpl();
-        VisitorInfosImpl postInfos = new VisitorInfosImpl();
+        var preInfos = new VisitorInfosImpl();
+        var postInfos = new VisitorInfosImpl();
 
-        for (ModRemapper remapper : remappers) {
+        for (var remapper : remappers) {
             remapper.registerPreVisitors(preInfos);
             remapper.registerPostVisitors(postInfos);
         }
@@ -189,9 +191,9 @@ public class ModRemmaperV2Context extends BaseModRemapperContext<ModRemapper> {
     public void gatherLibraries() {
         libraryHandler.init(this.mappingsRegistry.getSourceNamespace(), this.cacheHandler);
 
-        List<RemapLibrary> libraries = new ArrayList<>();
+        var libraries = new ArrayList<RemapLibrary>();
 
-        for (ModRemapper remapper : remappers) {
+        for (var remapper : remappers) {
             remapper.addRemappingLibraries(libraries, FabricLoader.getInstance().getEnvironmentType());
         }
 

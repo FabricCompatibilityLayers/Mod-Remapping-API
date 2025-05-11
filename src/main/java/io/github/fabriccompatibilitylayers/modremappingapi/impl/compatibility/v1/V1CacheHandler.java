@@ -7,6 +7,7 @@ import org.jetbrains.annotations.ApiStatus;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 @ApiStatus.Internal
 public class V1CacheHandler implements InternalCacheHandler {
@@ -15,12 +16,14 @@ public class V1CacheHandler implements InternalCacheHandler {
     private final Path libsDirectory = CacheUtils.LIBRARY_FOLDER;
 
     public V1CacheHandler() {
-        for (Path p : new Path[] {tempDirectory, libsDirectory}) {
-            if (!Files.exists(p)) {
+        var directoriesToCreate = List.of(tempDirectory, libsDirectory);
+
+        for (var directory : directoriesToCreate) {
+            if (!Files.exists(directory)) {
                 try {
-                    Files.createDirectories(p);
+                    Files.createDirectories(directory);
                 } catch (IOException e) {
-                    throw new RuntimeException(e);
+                    throw new RuntimeException("Failed to create directory: " + directory, e);
                 }
             }
         }

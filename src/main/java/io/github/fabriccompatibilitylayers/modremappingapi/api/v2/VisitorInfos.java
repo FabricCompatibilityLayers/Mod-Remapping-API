@@ -23,7 +23,8 @@ public interface VisitorInfos {
     }
 
     static FullClassMember classMember(String owner, String name, @Nullable Boolean isStatic) {
-        return new io.github.fabriccompatibiltylayers.modremappingapi.api.v1.VisitorInfos.FullClassMember(owner, name, isStatic);
+            var fullClassMember = new io.github.fabriccompatibiltylayers.modremappingapi.api.v1.VisitorInfos.FullClassMember(owner, name, isStatic);
+            return fullClassMember;
     }
 
     interface FullClassMember extends MappingUtils.ClassMember {

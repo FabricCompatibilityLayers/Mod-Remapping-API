@@ -5,6 +5,7 @@ import org.jetbrains.annotations.ApiStatus;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 @ApiStatus.Internal
 public class V2CacheHandler implements InternalCacheHandler {
@@ -18,12 +19,14 @@ public class V2CacheHandler implements InternalCacheHandler {
         mappingsDirectory = this.contextDirectory.resolve("mappings");
         librariesDirectory = this.contextDirectory.resolve("libraries");
 
-        for (Path p : new Path[]{tempDirectory, cacheDirectory, mappingsDirectory, librariesDirectory}) {
-            if (!Files.exists(p)) {
+        var directories = List.of(tempDirectory, cacheDirectory, mappingsDirectory, librariesDirectory);
+        
+        for (var directory : directories) {
+            if (!Files.exists(directory)) {
                 try {
-                    Files.createDirectories(p);
+                    Files.createDirectories(directory);
                 } catch (IOException e) {
-                    throw new RuntimeException(e);
+                    throw new RuntimeException("Failed to create directory: " + directory, e);
                 }
             }
         }

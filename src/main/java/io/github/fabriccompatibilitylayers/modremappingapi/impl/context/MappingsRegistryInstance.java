@@ -46,30 +46,28 @@ public class MappingsRegistryInstance extends MappingsRegistry {
     }
 
     private void formatVanillaMappings() throws IOException {
-        Map<String, String> renames = new HashMap<>();
+        var renames = new HashMap<String, String>();
         boolean switchNamespace = false;
 
         switch (WhichFabricVariantAmIOn.getVariant()) {
-            case BABRIC:
+            case BABRIC -> {
                 renames.put(FabricLoader.getInstance().getEnvironmentType().name().toLowerCase(Locale.ENGLISH), "official");
                 switchNamespace = true;
-                break;
-            case ORNITHE_V2:
-                Boolean merged = VersionHelper.predicate(">=1.3");
+            }
+            case ORNITHE_V2 -> {
+                var merged = VersionHelper.predicate(">=1.3");
                 if (merged != null && !merged) {
                     renames.put(FabricLoader.getInstance().getEnvironmentType().name().toLowerCase(Locale.ENGLISH) + "Official", "official");
                     switchNamespace = true;
                 }
-                break;
-            case BABRIC_NEW_FORMAT:
+            }
+            case BABRIC_NEW_FORMAT -> {
                 renames.put(FabricLoader.getInstance().getEnvironmentType().name().toLowerCase(Locale.ENGLISH) + "Official", "official");
                 switchNamespace = true;
-                break;
-            default:
-                break;
+            }
         }
 
-        MappingVisitor visitor = MappingTreeHelper.getNsReorderingVisitor(formatted, switchNamespace, renames);
+        var visitor = MappingTreeHelper.getNsReorderingVisitor(formatted, switchNamespace, renames);
 
         MappingsRegistry.VANILLA.accept(visitor);
     }
@@ -86,25 +84,20 @@ public class MappingsRegistryInstance extends MappingsRegistry {
 
     @Override
     public void addToFormattedMappings(InputStream stream, Map<String, String> renames) throws IOException {
-        MappingTree extra = MappingTreeHelper.readMappings(stream);
-
+        var extra = MappingTreeHelper.readMappings(stream);
+    
         if (!renames.isEmpty()) {
-            MemoryMappingTree renamed = new MemoryMappingTree();
-
-            MappingNsRenamer renamer = new MappingNsRenamer(renamed, renames);
-
+            var renamed = new MemoryMappingTree();
+            var renamer = new MappingNsRenamer(renamed, renames);
             extra.accept(renamer);
-
             extra = renamed;
         }
-
-        if (!Objects.equals(extra.getSrcNamespace(), formatted.getSrcNamespace()) && extra.getDstNamespaces().contains(formatted.getSrcNamespace())) {
-            MemoryMappingTree switched = new MemoryMappingTree();
-
-            MappingSourceNsSwitch switcher = new MappingSourceNsSwitch(switched, formatted.getSrcNamespace());
-
+    
+        if (!Objects.equals(extra.getSrcNamespace(), formatted.getSrcNamespace()) && 
+            extra.getDstNamespaces().contains(formatted.getSrcNamespace())) {
+            var switched = new MemoryMappingTree();
+            var switcher = new MappingSourceNsSwitch(switched, formatted.getSrcNamespace());
             extra.accept(switcher);
-
             extra = switched;
         }
 
@@ -115,8 +108,8 @@ public class MappingsRegistryInstance extends MappingsRegistry {
     public void completeFormattedMappings() throws IOException {
         formatted.accept(full);
 
-        for (MappingTree.ClassMapping classView : formatted.getClasses()) {
-            String className = classView.getName(this.getSourceNamespace());
+        for (var classView : formatted.getClasses()) {
+            var className = classView.getName(this.getSourceNamespace());
 
             if (className != null) {
                 vanillaClassNames.add("/" + className + ".class");
@@ -136,7 +129,7 @@ public class MappingsRegistryInstance extends MappingsRegistry {
 
     @Override
     public void addModMappings(Path path) {
-        MappingBuilder mappingBuilder = new V1MappingBuilderImpl(mods);
+        var mappingBuilder = new V1MappingBuilderImpl(mods);
 
         try {
             FileUtils.listPathContent(path)
@@ -222,7 +215,7 @@ public class MappingsRegistryInstance extends MappingsRegistry {
 
     @Override
     public List<MappingTree> getRemappingMappings() {
-        return Arrays.asList(
+        return List.of(
                 this.getFormattedMappings(),
                 this.getModsMappings(),
                 this.getAdditionalMappings()

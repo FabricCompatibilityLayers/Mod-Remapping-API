@@ -27,7 +27,7 @@ public class LibraryHandler {
         this.sourceNamespace = sourceNamespace;
         this.cacheHandler = cacheHandler;
 
-        Path sourceLibraryPath = this.cacheHandler.resolveLibrary(this.sourceNamespace);
+        var sourceLibraryPath = this.cacheHandler.resolveLibrary(this.sourceNamespace);
 
         if (!Files.exists(sourceLibraryPath)) {
             try {
@@ -48,19 +48,19 @@ public class LibraryHandler {
         remapLibraries = computeExtraLibraryPaths(libraries, sourceNamespace);
 
         try {
-            for (Map.Entry<RemapLibrary, Path> entry : remapLibraries.entrySet()) {
-                RemapLibrary library = entry.getKey();
-                Path path = entry.getValue();
+            for (var entry : remapLibraries.entrySet()) {
+                var library = entry.getKey();
+                var path = entry.getValue();
 
                 if (Files.exists(path)) continue;
 
                 if (library.getURL() != null && !library.getURL().isEmpty()) {
-                    Constants.MAIN_LOGGER.info("Downloading remapping library '" + library.getFileName() + "' from url '" + library.getURL() + "'");
+                    Constants.MAIN_LOGGER.info("Downloading remapping library '%s' from url '%s'", library.getFileName(), library.getURL());
                     FileUtils.downloadFile(library.getURL(), path);
                     FileUtils.removeEntriesFromZip(path, library.getToExclude());
                     Constants.MAIN_LOGGER.info("Remapping library ready for use.");
                 } else if (library.getPath() != null) {
-                    Constants.MAIN_LOGGER.info("Extracting remapping library '" + library.getFileName() + "' from mod jar.");
+                    Constants.MAIN_LOGGER.info("Extracting remapping library '%s' from mod jar.", library.getFileName());
                     FileUtils.copyZipFile(library.getPath(), path);
                     Constants.MAIN_LOGGER.info("Remapping library ready for use.");
                 }
@@ -71,11 +71,11 @@ public class LibraryHandler {
     }
 
     public void addLibrariesToRemapClasspath(TinyRemapper remapper) {
-        for (Path libPath : remapLibraries.values()) {
+        for (var libPath : remapLibraries.values()) {
             if (Files.exists(libPath)) {
                 remapper.readClassPathAsync(libPath);
             } else {
-                Constants.MAIN_LOGGER.info("Library " + libPath + " does not exist.");
+                Constants.MAIN_LOGGER.info("Library %s does not exist.", libPath);
             }
         }
     }

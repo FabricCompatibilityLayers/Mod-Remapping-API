@@ -56,12 +56,7 @@ public class TransformerRegistry implements RawClassTransformer {
     public @NotNull Optional<byte[]> transform(@NotNull ClassLoader classLoader, @NotNull String className, byte @NotNull [] bytes) {
         byte[] modifiedBytes = bytes;
         modifiedBytes = transform(className, className, modifiedBytes);
-
-        if (modifiedBytes != null) {
-            return Optional.of(modifiedBytes);
-        }
-
-        return Optional.empty();
+        return Optional.ofNullable(modifiedBytes);
     }
 
     @Override

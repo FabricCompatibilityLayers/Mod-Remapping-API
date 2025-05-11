@@ -44,16 +44,16 @@ public class VisitorInfosImpl extends fr.catcore.modremapperapi.remapping.Visito
 
     @Override
     public void registerFieldRef(String targetClass, String targetField, String targetDesc, VisitorInfos.FullClassMember classMember) {
-        FIELD_REF.computeIfAbsent(targetClass, k -> new HashMap<>())
-                .computeIfAbsent(targetField, k -> new HashMap<>())
-                .put(targetDesc, classMember);
+        var classMap = FIELD_REF.computeIfAbsent(targetClass, k -> new HashMap<>());
+        var fieldMap = classMap.computeIfAbsent(targetField, k -> new HashMap<>());
+        fieldMap.put(targetDesc, classMember);
     }
 
     @Override
     public void registerMethodInvocation(String targetClass, String targetMethod, String targetDesc, VisitorInfos.FullClassMember classMember) {
-        METHOD_INVOCATION.computeIfAbsent(targetClass, k -> new HashMap<>())
-                .computeIfAbsent(targetMethod, k -> new HashMap<>())
-                .put(targetDesc, classMember);
+        var classMap = METHOD_INVOCATION.computeIfAbsent(targetClass, k -> new HashMap<>());
+        var methodMap = classMap.computeIfAbsent(targetMethod, k -> new HashMap<>());
+        methodMap.put(targetDesc, classMember);
     }
 
     @Override

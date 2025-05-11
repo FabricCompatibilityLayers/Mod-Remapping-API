@@ -13,6 +13,7 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -30,9 +31,9 @@ public class ModDiscoverer {
     public List<ModCandidate> collect() {
         originalDirectory = FabricLoader.getInstance().getGameDir().resolve(config.getFolderName());
 
-        if (!Files.isDirectory(originalDirectory)) return List.of();
+        if (!Files.isDirectory(originalDirectory)) return Collections.emptyList();
 
-        List<ModCandidate> candidates = new ArrayList<>();
+        var candidates = new ArrayList<ModCandidate>();
 
         try {
             searchDir(candidates, originalDirectory);
@@ -44,9 +45,9 @@ public class ModDiscoverer {
     }
 
     private void searchDir(List<ModCandidate> candidates, Path dir) throws IOException {
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir)) {
-            for (Path path : stream) {
-                String name = path.getFileName().toString();
+        try (var stream = Files.newDirectoryStream(dir)) {
+            for (var path : stream) {
+                var name = path.getFileName().toString();
 
                 if (Files.isDirectory(path)) {
                     if (config.searchRecursively()) {
@@ -55,7 +56,7 @@ public class ModDiscoverer {
                         discoverMods(candidates, path);
                     }
                 } else if (Files.exists(path)) {
-                    Matcher matcher = config.getFileNameMatcher().matcher(name);
+                    var matcher = config.getFileNameMatcher().matcher(name);
 
                     if (matcher.matches()) {
                         discoverMods(candidates, path);
@@ -66,29 +67,27 @@ public class ModDiscoverer {
     }
 
     private void discoverMods(List<ModCandidate> candidates, Path modPath) throws IOException {
-        List<String> entries = FileUtils.listPathContent(modPath);
-
+        var entries = FileUtils.listPathContent(modPath);
         candidates.addAll(config.getCandidateCollector().collect(config, modPath, entries));
     }
 
     public void excludeClassEdits(List<ModCandidate> candidates, InternalCacheHandler cacheHandler, MappingsRegistry registry) throws IOException, URISyntaxException {
-        Path tempDirectory = cacheHandler.resolveTemp(this.config.getFolderName());
+        var tempDirectory = cacheHandler.resolveTemp(this.config.getFolderName());
 
         if (!Files.exists(tempDirectory)) {
             try {
                 Files.createDirectories(tempDirectory);
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                throw new RuntimeException("Failed to create temp directory", e);
             }
         } else {
             FileUtils.emptyDir(tempDirectory);
         }
 
-        for (ModCandidate candidate : candidates) {
-            Path modPath = candidate.getPath();
-
-            String outputName = candidate.getDestinationName();
-            Path outputPath = tempDirectory.resolve(outputName);
+        for (var candidate : candidates) {
+            var modPath = candidate.getPath();
+            var outputName = candidate.getDestinationName();
+            var outputPath = tempDirectory.resolve(outputName);
 
             if (Files.isDirectory(modPath)) {
                 FileUtils.zipFolder(modPath, outputPath);
@@ -97,7 +96,6 @@ public class ModDiscoverer {
             }
 
             FileUtils.removeEntriesFromZip(outputPath, registry.getVanillaClassNames());
-
             candidate.setPath(outputPath);
         }
     }
@@ -115,25 +113,25 @@ public class ModDiscoverer {
             try {
                 Files.createDirectories(destination);
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                throw new RuntimeException("Failed to create destination directory", e);
             }
         } else if (!config.getExportToOriginalFolder()) {
             FileUtils.emptyDir(destination);
         }
 
-        Path finalDestination = destination;
+        var finalDestination = destination;
 
         return candidates.stream().collect(Collectors.toMap(
                 candidate -> candidate,
                 candidate -> {
-                    Path modDestination = finalDestination.resolve(candidate.getDestinationName());
+                    var modDestination = finalDestination.resolve(candidate.getDestinationName());
                     candidate.setDestination(modDestination);
 
                     if (Files.exists(modDestination)) {
                         try {
                             Files.delete(modDestination);
                         } catch (IOException e) {
-                            throw new RuntimeException(e);
+                            throw new RuntimeException("Failed to delete existing mod destination", e);
                         }
                     }
 

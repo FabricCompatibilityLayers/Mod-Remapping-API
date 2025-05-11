@@ -9,28 +9,23 @@ import java.util.Collections;
 import java.util.List;
 
 @ApiStatus.Internal
-public class DefaultRemapLibrary implements RemapLibrary {
-    private final @Nullable String url;
-    private final @Nullable Path path;
-    private final String fileName;
-    private final List<String> toExclude;
+public record DefaultRemapLibrary(
+        @Nullable String url,
+        @Nullable Path path,
+        String fileName,
+        List<String> toExclude
+) implements RemapLibrary {
 
     public DefaultRemapLibrary(@Nullable String url, String fileName, List<String> toExclude) {
-        this.url = url;
-        this.path = null;
-        this.fileName = fileName;
-        this.toExclude = toExclude;
+        this(url, null, fileName, toExclude);
     }
 
     public DefaultRemapLibrary(@Nullable Path path, String fileName, List<String> toExclude) {
-        this.url = null;
-        this.path = path;
-        this.fileName = fileName;
-        this.toExclude = toExclude;
+        this(null, path, fileName, toExclude);
     }
 
     public DefaultRemapLibrary(@Nullable Path path, String fileName) {
-        this(path, fileName, Collections.emptyList());
+        this(null, path, fileName, Collections.emptyList());
     }
 
     @Override

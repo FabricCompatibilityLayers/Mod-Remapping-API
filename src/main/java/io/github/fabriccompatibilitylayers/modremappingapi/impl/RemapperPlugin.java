@@ -30,8 +30,9 @@ public class RemapperPlugin implements IMixinConfigPlugin {
     @Override
     public List<String> getMixins(){
         try {
-            ((Runnable)Class.forName("io.github.fabriccompatibilitylayers.modremappingapi.impl.ModRemappingApiInit").newInstance()).run();
-        } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+            Class<?> initClass = Class.forName("io.github.fabriccompatibilitylayers.modremappingapi.impl.ModRemappingApiInit");
+            ((Runnable)initClass.getDeclaredConstructor().newInstance()).run();
+        } catch (ReflectiveOperationException e) {
             throw new RuntimeException(e);
         }
 

@@ -38,7 +38,7 @@ public class V0ModRemapper implements ModRemapper {
 
     @Override
     public void addRemapLibraries(List<RemapLibrary> libraries, EnvType environment) {
-        for (fr.catcore.modremapperapi.api.RemapLibrary library : modRemapper.getRemapLibraries()) {
+        for (var library : modRemapper.getRemapLibraries()) {
             libraries.add(new RemapLibrary(library.url, library.path, library.toExclude, library.fileName));
         }
     }
@@ -49,19 +49,19 @@ public class V0ModRemapper implements ModRemapper {
 
     @Override
     public void registerMappings(MappingBuilder list) {
-        RemapUtil.MappingList mappingList = new RemapUtil.MappingList();
+        var mappingList = new RemapUtil.MappingList();
         modRemapper.getMappingList(mappingList);
 
-        MemoryMappingTree mappingTree = convertMappingList(mappingList);
+        var mappingTree = convertMappingList(mappingList);
 
         if (mappingTree != null) {
-            for (MappingTree.ClassMapping classMapping : mappingTree.getClasses()) {
-                MappingBuilder.ClassMapping classBuilder = list.addMapping(
+            for (var classMapping : mappingTree.getClasses()) {
+                var classBuilder = list.addMapping(
                         classMapping.getName("official"),
                         classMapping.getName("intermediary")
                 );
 
-                for (MappingTree.FieldMapping fieldMapping : classMapping.getFields()) {
+                for (var fieldMapping : classMapping.getFields()) {
                     classBuilder.field(
                             fieldMapping.getName("official"),
                             fieldMapping.getName("intermediary"),
@@ -69,7 +69,7 @@ public class V0ModRemapper implements ModRemapper {
                     );
                 }
 
-                for (MappingTree.MethodMapping methodMapping : classMapping.getMethods()) {
+                for (var methodMapping : classMapping.getMethods()) {
                     classBuilder.method(
                             methodMapping.getName("official"),
                             methodMapping.getName("intermediary"),
@@ -110,19 +110,16 @@ public class V0ModRemapper implements ModRemapper {
         MemoryMappingTree mappingTree;
 
         try {
-            if (BABRIC) {
-                mappingTree = MappingTreeHelper.createMappingTree("intermediary", "official");
-            } else {
-                mappingTree = MappingTreeHelper.createMappingTree();
-            }
+            mappingTree = BABRIC
+                ? MappingTreeHelper.createMappingTree("intermediary", "official")
+                : MappingTreeHelper.createMappingTree();
 
             mappingList.accept(mappingTree);
-
             mappingTree.visitEnd();
 
-            if (Objects.equals(mappingTree.getSrcNamespace(), "intermediary")) {
-                MemoryMappingTree newTree = new MemoryMappingTree();
-                MappingVisitor visitor = new MappingSourceNsSwitch(newTree, "official");
+            if ("intermediary".equals(mappingTree.getSrcNamespace())) {
+                var newTree = new MemoryMappingTree();
+                var visitor = new MappingSourceNsSwitch(newTree, "official");
 
                 mappingTree.accept(visitor);
                 mappingTree = newTree;

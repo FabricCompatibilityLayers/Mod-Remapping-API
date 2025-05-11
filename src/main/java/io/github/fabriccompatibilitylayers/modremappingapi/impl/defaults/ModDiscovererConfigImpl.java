@@ -62,9 +62,9 @@ public class ModDiscovererConfigImpl implements ModDiscovererConfig {
     }
 
     private List<ModCandidate> defaultCandidateCollector(ModDiscovererConfig config, Path modPath, List<String> fileList) {
-        List<ModCandidate> candidates = new ArrayList<>();
+        var candidates = new ArrayList<ModCandidate>();
 
-        for (String file : fileList) {
+        for (var file : fileList) {
             if (file.endsWith(".class")) {
                 candidates.add(new DefaultModCandidate(modPath, config));
                 break;
@@ -79,12 +79,12 @@ public class ModDiscovererConfigImpl implements ModDiscovererConfig {
         return allowDirectoryMods;
     }
 
-    public static class BuilderImpl implements ModDiscovererConfig.Builder {
+    public static final class BuilderImpl implements ModDiscovererConfig.Builder {
         private final String folderName;
         private String fileNameMatcher = "(.+).jar$";
         private boolean searchRecursively = false;
         private Predicate<String> directoryFilter = s -> true;
-        private Collector candidateCollector;
+        private @Nullable Collector candidateCollector;
         private boolean exportToOriginalFolder = false;
         private boolean allowDirectoryMods = false;
 

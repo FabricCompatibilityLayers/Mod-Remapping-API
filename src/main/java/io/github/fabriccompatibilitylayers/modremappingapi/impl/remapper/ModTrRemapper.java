@@ -37,36 +37,36 @@ import java.util.stream.Collectors;
 @ApiStatus.Internal
 public class ModTrRemapper {
     public static TinyRemapper makeRemapper(ModRemapperContext context) {
-        MappingsRegistry mappingsRegistry = context.getMappingsRegistry();
-
-        List<MappingTree> trees = mappingsRegistry.getRemappingMappings();
-
-        TinyRemapper.Builder builder = TinyRemapper
+        var mappingsRegistry = context.getMappingsRegistry();
+    
+        var trees = mappingsRegistry.getRemappingMappings();
+    
+        var builder = TinyRemapper
                 .newRemapper()
                 .renameInvalidLocals(true)
                 .ignoreFieldDesc(false)
                 .propagatePrivate(true)
                 .ignoreConflicts(true);
-
+    
         if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
             builder.fixPackageAccess(true);
         }
-
-        for (MappingTree tree : trees) {
+    
+        for (var tree : trees) {
             builder.withMappings(MappingTreeHelper.createMappingProvider(tree, mappingsRegistry.getSourceNamespace(), mappingsRegistry.getTargetNamespace()));
         }
-
+    
         context.addToRemapperBuilder(builder);
-
+    
         if (context.getRemappingFlags().contains(RemappingFlags.MIXIN)) {
             builder.extension(new RefmapBaseMixinExtension(inputTag -> !context.getMixinData().getHardMixins().contains(inputTag)));
-
-            MixinPostApplyVisitorProvider mixinPostApplyVisitorProvider = new MixinPostApplyVisitorProvider();
+    
+            var mixinPostApplyVisitorProvider = new MixinPostApplyVisitorProvider();
             builder.extraPostApplyVisitor(mixinPostApplyVisitorProvider);
             builder.extension(new MixinExtension(context.getMixinData().getHardMixins()::contains));
         }
-
-        TinyRemapper remapper = builder.build();
+    
+        var remapper = builder.build();
 
         try {
             MinecraftRemapper.addMinecraftJar(remapper, mappingsRegistry, context.getCacheHandler());
@@ -80,8 +80,8 @@ public class ModTrRemapper {
     }
 
     public static void remapMods(TinyRemapper remapper, Map<ModCandidate, Path> paths, ModRemapperContext context) {
-        List<OutputConsumerPath> outputConsumerPaths = new ArrayList<>();
-
+        var outputConsumerPaths = new ArrayList<OutputConsumerPath>();
+    
         if (context.getRemappingFlags().contains(RemappingFlags.MIXIN)) {
             try {
                 analyzeRefMaps(paths.keySet(), context);
@@ -89,12 +89,12 @@ public class ModTrRemapper {
                 throw new RuntimeException(e);
             }
         }
-
-        List<OutputConsumerPath.ResourceRemapper> resourcePostRemappers = new ArrayList<>(NonClassCopyMode.FIX_META_INF.remappers);
+    
+        var resourcePostRemappers = new ArrayList<OutputConsumerPath.ResourceRemapper>(NonClassCopyMode.FIX_META_INF.remappers);
         if (context.getRemappingFlags().contains(RemappingFlags.MIXIN)) resourcePostRemappers.add(new RefmapRemapper());
-
-        Consumer<TinyRemapper> consumer = getRemapperConsumer(paths, context);
-
+    
+        var consumer = getRemapperConsumer(paths, context);
+    
         TrRemapperHelper.applyRemapper(
                 remapper,
                 paths.entrySet().stream().collect(Collectors.toMap(entry -> entry.getKey().getPath(), Map.Entry::getValue)),
@@ -105,14 +105,14 @@ public class ModTrRemapper {
                 context.getMappingsRegistry().getTargetNamespace(),
                 consumer
         );
-
+    
         if (context.getRemappingFlags().contains(RemappingFlags.ACCESS_WIDENER)) {
-            for (Map.Entry<ModCandidate, Path> entry : paths.entrySet()) {
-                ModCandidate candidate = entry.getKey();
-                Path jarPath = entry.getValue();
-
+            for (var entry : paths.entrySet()) {
+                var candidate = entry.getKey();
+                var jarPath = entry.getValue();
+    
                 if (candidate.getAccessWidenerPath() != null && candidate.getAccessWidener() != null) {
-                    try (FileSystem fs = FileUtils.getJarFileSystem(jarPath)) {
+                    try (var fs = FileUtils.getJarFileSystem(jarPath)) {
                         Files.delete(fs.getPath(candidate.getAccessWidenerPath()));
                         Files.write(fs.getPath(candidate.getAccessWidenerPath()), candidate.getAccessWidener());
                     } catch (Throwable t) {
@@ -124,16 +124,18 @@ public class ModTrRemapper {
     }
 
     private static @Nullable Consumer<TinyRemapper> getRemapperConsumer(Map<ModCandidate, Path> paths, ModRemapperContext context) {
-        Consumer<TinyRemapper> consumer = null;
-
         if (context.getRemappingFlags().contains(RemappingFlags.ACCESS_WIDENER)) {
-            consumer = (currentRemapper) -> {
-                for (Map.Entry<ModCandidate, Path> entry : paths.entrySet()) {
-                    ModCandidate candidate = entry.getKey();
-
+            return (currentRemapper) -> {
+                for (var entry : paths.entrySet()) {
+                    var candidate = entry.getKey();
+    
                     if (candidate.getAccessWidenerPath() != null) {
-                        try (FileSystem jarFs = FileUtils.getJarFileSystem(candidate.getPath())) {
-                            candidate.setAccessWidener(remapAccessWidener(Files.readAllBytes(jarFs.getPath(candidate.getAccessWidenerPath())), currentRemapper.getRemapper(), context.getMappingsRegistry().getTargetNamespace()));
+                        try (var jarFs = FileUtils.getJarFileSystem(candidate.getPath())) {
+                            candidate.setAccessWidener(remapAccessWidener(
+                                Files.readAllBytes(jarFs.getPath(candidate.getAccessWidenerPath())), 
+                                currentRemapper.getRemapper(), 
+                                context.getMappingsRegistry().getTargetNamespace()
+                            ));
                         } catch (Throwable t) {
                             throw new RuntimeException("Error while remapping access widener for '" + candidate.getId() + "'", t);
                         }
@@ -141,42 +143,40 @@ public class ModTrRemapper {
                 }
             };
         }
-
-        return consumer;
+    
+        return null;
     }
 
     private static byte[] remapAccessWidener(byte[] data, Remapper remapper, String targetNamespace) {
-        AccessWidenerWriter writer = new AccessWidenerWriter();
-        AccessWidenerRemapper remappingDecorator = new AccessWidenerRemapper(writer, remapper, "intermediary", targetNamespace);
-        AccessWidenerReader accessWidenerReader = new AccessWidenerReader(remappingDecorator);
+        var writer = new AccessWidenerWriter();
+        var remappingDecorator = new AccessWidenerRemapper(writer, remapper, "intermediary", targetNamespace);
+        var accessWidenerReader = new AccessWidenerReader(remappingDecorator);
         accessWidenerReader.read(data, "intermediary");
         return writer.write();
     }
 
-    private static Gson GSON = new Gson();
+    private static final Gson GSON = new Gson();
 
     private static void analyzeRefMaps(Set<ModCandidate> candidates, ModRemapperContext context) throws IOException, URISyntaxException {
-        for (ModCandidate candidate : candidates) {
-            Path path = candidate.getPath();
-
-            List<String> files = FileUtils.listPathContent(path);
-
-            List<String> refmaps = new ArrayList<>();
-
-            for (String file : files) {
-                if (file.contains("refmap") && file.endsWith(".json")) {
-                    refmaps.add(file);
-                }
-            }
-
+        for (var candidate : candidates) {
+            var path = candidate.getPath();
+            var files = FileUtils.listPathContent(path);
+            
+            var refmaps = files.stream()
+                .filter(file -> file.contains("refmap") && file.endsWith(".json"))
+                .toList();
+    
             if (!refmaps.isEmpty()) {
-                try (FileSystem fs = FileUtils.getJarFileSystem(path)) {
-                    for (String refmap : refmaps) {
-                        Path refmapPath = fs.getPath(refmap);
-
-                        RefmapJson refmapJson = GSON.fromJson(new String(Files.readAllBytes(refmapPath)), RefmapJson.class);
-
-                        refmapJson.remap(context.getMappingsRegistry().getFullMappings(), context.getMappingsRegistry().getSourceNamespace(), context.getMappingsRegistry().getTargetNamespace());
+                try (var fs = FileUtils.getJarFileSystem(path)) {
+                    for (var refmap : refmaps) {
+                        var refmapPath = fs.getPath(refmap);
+                        var refmapJson = GSON.fromJson(new String(Files.readAllBytes(refmapPath)), RefmapJson.class);
+    
+                        refmapJson.remap(
+                            context.getMappingsRegistry().getFullMappings(),
+                            context.getMappingsRegistry().getSourceNamespace(), 
+                            context.getMappingsRegistry().getTargetNamespace()
+                        );
 
                         context.getMixinData().getMixinRefmapData().putAll(refmapJson.mappings);
                     }

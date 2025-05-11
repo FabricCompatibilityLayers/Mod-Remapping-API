@@ -27,50 +27,45 @@ public class V2MappingBuilderImpl implements MappingBuilder {
         return new ClassMappingImpl(name, null, next);
     }
 
-    private static class ClassMappingImpl implements ClassMapping {
-        private final String sourceName;
-        private final @Nullable String targetName;
-        private final MemoryMappingTree next;
-
-        public ClassMappingImpl(String sourceName, @Nullable String targetName, MemoryMappingTree next) {
-            this.sourceName = sourceName;
-            this.targetName = targetName;
-            this.next = next;
-        }
+    private record ClassMappingImpl(
+            String sourceName,
+            @Nullable String targetName,
+            MemoryMappingTree next
+    ) implements ClassMapping {
 
         private void visit() {
-            this.next.visitClass(sourceName);
-            if (targetName != null) this.next.visitDstName(MappedElementKind.CLASS, 0, targetName);
+                this.next.visitClass(sourceName);
+                if (targetName != null) this.next.visitDstName(MappedElementKind.CLASS, 0, targetName);
+            }
+
+            @Override
+            public ClassMapping field(String sourceName, String targetName, String sourceDescriptor) {
+                visit();
+
+                this.next.visitField(sourceName, sourceDescriptor);
+                if (targetName != null) this.next.visitDstName(MappedElementKind.FIELD, 0, targetName);
+
+                return this;
+            }
+
+            @Override
+            public ClassMapping field(String name, String descriptor) {
+                return this.field(name, null, descriptor);
+            }
+
+            @Override
+            public ClassMapping method(String sourceName, String targetName, String sourceDescriptor) {
+                visit();
+
+                this.next.visitMethod(sourceName, sourceDescriptor);
+                if (targetName != null) this.next.visitDstName(MappedElementKind.METHOD, 0, targetName);
+
+                return this;
+            }
+
+            @Override
+            public ClassMapping method(String name, String descriptor) {
+                return this.method(name, null, descriptor);
+            }
         }
-
-        @Override
-        public ClassMapping field(String sourceName, String targetName, String sourceDescriptor) {
-            visit();
-
-            this.next.visitField(sourceName, sourceDescriptor);
-            if (targetName != null) this.next.visitDstName(MappedElementKind.FIELD, 0, targetName);
-
-            return this;
-        }
-
-        @Override
-        public ClassMapping field(String name, String descriptor) {
-            return this.field(name, null, descriptor);
-        }
-
-        @Override
-        public ClassMapping method(String sourceName, String targetName, String sourceDescriptor) {
-            visit();
-
-            this.next.visitMethod(sourceName, sourceDescriptor);
-            if (targetName != null) this.next.visitDstName(MappedElementKind.METHOD, 0, targetName);
-
-            return this;
-        }
-
-        @Override
-        public ClassMapping method(String name, String descriptor) {
-            return this.method(name, null, descriptor);
-        }
-    }
 }

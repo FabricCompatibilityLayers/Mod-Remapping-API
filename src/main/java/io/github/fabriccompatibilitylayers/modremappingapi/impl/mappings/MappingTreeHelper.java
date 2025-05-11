@@ -103,14 +103,9 @@ public class MappingTreeHelper {
             reader.reset();
 
             switch (format) {
-                case TINY_FILE:
-                    Tiny1FileReader.read(reader, mappingTree);
-                    break;
-                case TINY_2_FILE:
-                    Tiny2FileReader.read(reader, mappingTree);
-                    break;
-                default:
-                    throw new UnsupportedOperationException("Unsupported mapping format: " + format);
+                case TINY_FILE -> Tiny1FileReader.read(reader, mappingTree);
+                case TINY_2_FILE -> Tiny2FileReader.read(reader, mappingTree);
+                default -> throw new UnsupportedOperationException("Unsupported mapping format: " + format);
             }
 
             Log.debug(LogCategory.MAPPINGS, "Loading mappings took %d ms", System.currentTimeMillis() - time);
@@ -156,7 +151,9 @@ public class MappingTreeHelper {
         List<String> targetNamespace = new ArrayList<>();
         targetNamespace.add("intermediary");
 
-        if (FabricLoader.getInstance().getMappingResolver().getNamespaces().contains("named")) targetNamespace.add("named");
+        if (FabricLoader.getInstance().getMappingResolver().getNamespaces().contains("named")) {
+            targetNamespace.add("named");
+        }
 
         MappingVisitor visitor = tempTree;
 

@@ -27,16 +27,11 @@ public class V1MappingBuilderImpl implements MappingBuilder {
         return new ClassMappingImpl(name, null, next);
     }
 
-    private static class ClassMappingImpl implements ClassMapping {
-        private final String sourceName;
-        private final @Nullable String targetName;
-        private final MemoryMappingTree next;
-
-        public ClassMappingImpl(String sourceName, @Nullable String targetName, MemoryMappingTree next) {
-            this.sourceName = sourceName;
-            this.targetName = targetName;
-            this.next = next;
-        }
+    private record ClassMappingImpl(
+            String sourceName,
+            @Nullable String targetName,
+            MemoryMappingTree next
+    ) implements ClassMapping {
 
         private void visit() {
             this.next.visitClass(sourceName);

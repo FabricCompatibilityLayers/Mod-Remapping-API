@@ -86,15 +86,17 @@ public class TrRemapperHelper {
     }
 
     private static boolean useHardMixinRemap(Path inputPath) throws IOException, URISyntaxException {
-        try (FileSystem fs = FileUtils.getJarFileSystem(inputPath)) {
-            Path manifestPath = fs.getPath("/META-INF/MANIFEST.MF");
+        try (var fs = FileUtils.getJarFileSystem(inputPath)) {
+            var manifestPath = fs.getPath("/META-INF/MANIFEST.MF");
 
             if (!Files.exists(manifestPath)) return false;
 
-            Manifest manifest = new Manifest(Files.newInputStream(manifestPath));
-            Attributes mainAttributes = manifest.getMainAttributes();
+            try (var inputStream = Files.newInputStream(manifestPath)) {
+                var manifest = new Manifest(inputStream);
+                var mainAttributes = manifest.getMainAttributes();
 
-            return "static".equalsIgnoreCase(mainAttributes.getValue("Fabric-Loom-Mixin-Remap-Type"));
+                return "static".equalsIgnoreCase(mainAttributes.getValue("Fabric-Loom-Mixin-Remap-Type"));
+            }
         }
     }
 }
