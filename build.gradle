@@ -173,9 +173,7 @@ modrinth {
 	token = System.getenv("MODRINTH_TOKEN")
 	projectId = "mod-remapping-api"
 	changelog = """
-Apply method invocation replacers to Interface methods as well.\
-Fix possible crash while remapping refmap.\
-Add system property to run in development mode for 3rd party remappers.
+Now compile against Java 17 while retaining backward compatibility with Java 8.
 """
 	uploadFile = shadeDowngradedApi
 
