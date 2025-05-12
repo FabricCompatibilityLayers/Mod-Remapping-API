@@ -154,7 +154,11 @@ sonar {
 publishing {
 	publications {
 		mavenJava(MavenPublication) {
-			from components.java
+			artifactId = project.archives_base_name
+			group = project.group
+			version = project.version
+
+			artifact shadeDowngradedApi
 		}
 	}
 

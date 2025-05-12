@@ -209,8 +209,8 @@ public class FileUtils {
     );
     
     @ApiStatus.Internal
-    public static FileSystem getJarFileSystem(Path path) throws URISyntaxException, IOException {
-        return FileSystems.newFileSystem(URI.create("jar:" + path.toUri()), ZIP_PROPERTIES);
+    public static FileSystem getJarFileSystem(Path path) throws IOException {
+        return FileSystems.newFileSystem(path, ZIP_PROPERTIES);
     }
     
     @ApiStatus.Internal

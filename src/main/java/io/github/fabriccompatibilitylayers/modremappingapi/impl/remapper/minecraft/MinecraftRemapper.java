@@ -55,7 +55,7 @@ public class MinecraftRemapper {
 
         var remapper = builder.build();
 
-        Constants.MAIN_LOGGER.info("Remapping minecraft jar from {} to {}!", src, target);
+        Constants.MAIN_LOGGER.info("Remapping minecraft jar from %s to %s!", src, target);
 
         var outputConsumerPaths = new ArrayList<OutputConsumerPath>();
         var resourceRemappers = new ArrayList<>(NonClassCopyMode.FIX_META_INF.remappers);
