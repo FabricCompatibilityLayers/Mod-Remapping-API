@@ -96,7 +96,7 @@ public class MinecraftRemapper {
         }
 
         for (var path : classPath) {
-            Constants.MAIN_LOGGER.debug("Appending '{}' to remapper classpath", path);
+            Constants.MAIN_LOGGER.debug("Appending '%s' to remapper classpath", path);
             remapper.readClassPathAsync(path);
         }
     }
