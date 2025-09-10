@@ -173,7 +173,7 @@ modrinth {
 	token = System.getenv("MODRINTH_TOKEN")
 	projectId = "mod-remapping-api"
 	changelog = """
-Now compile against Java 17 while retaining backward compatibility with Java 8.
+Fix softlock on loader 0.17+.
 """
 	uploadFile = shadeDowngradedApi
 
