@@ -1,5 +1,6 @@
 package io.github.fabriccompatibiltylayers.modremappingapi.test;
 
+import io.github.fabriccompatibilitylayers.modremappingapi.impl.remapper.SoftLockFixer;
 import io.github.fabriccompatibiltylayers.modremappingapi.api.v1.MappingUtils;
 import net.fabricmc.loader.api.FabricLoader;
 import org.junit.jupiter.api.Assertions;
@@ -15,5 +16,10 @@ public class ModRemapperTests {
                         "net/minecraft/client/class_785"
                         : "net/minecraft/class_785"
         );
+    }
+
+    @Test
+    public void testSoftLockFixer() {
+        SoftLockFixer.preloadClasses();
     }
 }
