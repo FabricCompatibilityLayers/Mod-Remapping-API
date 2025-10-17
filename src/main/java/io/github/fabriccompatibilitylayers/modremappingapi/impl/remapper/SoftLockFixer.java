@@ -1,6 +1,5 @@
 package io.github.fabriccompatibilitylayers.modremappingapi.impl.remapper;
 
-import fr.catcore.modremapperapi.utils.Constants;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.impl.launch.FabricLauncherBase;
 import org.jetbrains.annotations.ApiStatus;
@@ -49,8 +48,7 @@ public class SoftLockFixer {
 
         for (String clazz : toCheck) {
             try {
-                Constants.MAIN_LOGGER.info("Preloading class: " + clazz);
-                Class.forName(clazz, false, cl);
+                if (!clazz.startsWith("META-INF.versions")) Class.forName(clazz, false, cl);
             } catch (ClassNotFoundException | NoClassDefFoundError | UnsupportedClassVersionError e) {
                 if (!clazz.startsWith("META-INF.versions")) throw new RuntimeException(e);
             }
@@ -85,8 +83,8 @@ public class SoftLockFixer {
         URL url = cl.getResource(locatorClass + ".class");
 
         URLConnection connection = url.openConnection();
-        return connection instanceof JarURLConnection ?
-                ((JarURLConnection) connection).getJarFile().stream()
+        return connection instanceof JarURLConnection jarConnection ?
+                jarConnection.getJarFile().stream()
                 .filter(jarEntry -> jarEntry.getName().contains(pkg) && jarEntry.getName().endsWith(".class"))
                 .map(jarEntry -> jarEntry.getName().replace("/", ".").replace(".class", ""))
                 : Stream.empty();
