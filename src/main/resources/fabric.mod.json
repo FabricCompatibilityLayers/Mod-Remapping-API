@@ -3,7 +3,7 @@
   "id": "mod-remapping-api",
   "version": "${version}",
   "name": "Mod Remapping API",
-  "description": "Remaps non fabric mods at runtime with hooks available to expand it.",
+  "description": "Remaps mods at runtime with hooks available to expand it.",
   "authors": [
     "CatCore"
   ],

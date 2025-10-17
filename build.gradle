@@ -173,7 +173,9 @@ modrinth {
 	token = System.getenv("MODRINTH_TOKEN")
 	projectId = "mod-remapping-api"
 	changelog = """
-Fix softlock on loader 0.17+.
+Remove previous testing logging.
+
+Fix excluding files from extracted libraries not working.
 """
 	uploadFile = shadeDowngradedApi
 
