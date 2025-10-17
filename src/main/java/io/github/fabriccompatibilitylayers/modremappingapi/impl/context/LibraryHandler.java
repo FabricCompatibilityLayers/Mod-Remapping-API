@@ -62,6 +62,7 @@ public class LibraryHandler {
                 } else if (library.getPath() != null) {
                     Constants.MAIN_LOGGER.info("Extracting remapping library '%s' from mod jar.", library.getFileName());
                     FileUtils.copyZipFile(library.getPath(), path);
+                    FileUtils.removeEntriesFromZip(path, library.getToExclude());
                     Constants.MAIN_LOGGER.info("Remapping library ready for use.");
                 }
             }
