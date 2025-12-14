@@ -12,9 +12,10 @@ import io.github.fabriccompatibilitylayers.modremappingapi.impl.remapper.resourc
 import io.github.fabriccompatibilitylayers.modremappingapi.impl.remapper.resource.RefmapRemapper;
 import io.github.fabriccompatibilitylayers.modremappingapi.impl.remapper.visitor.MixinPostApplyVisitorProvider;
 import io.github.fabriccompatibilitylayers.modremappingapi.impl.utils.FileUtils;
-import net.fabricmc.accesswidener.AccessWidenerReader;
-import net.fabricmc.accesswidener.AccessWidenerRemapper;
-import net.fabricmc.accesswidener.AccessWidenerWriter;
+import net.fabricmc.classtweaker.api.ClassTweaker;
+import net.fabricmc.classtweaker.api.ClassTweakerReader;
+import net.fabricmc.classtweaker.api.ClassTweakerWriter;
+import net.fabricmc.classtweaker.api.visitor.ClassTweakerVisitor;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.mappingio.tree.MappingTree;
 import net.fabricmc.tinyremapper.NonClassCopyMode;
@@ -148,11 +149,12 @@ public class ModTrRemapper {
     }
 
     private static byte[] remapAccessWidener(byte[] data, Remapper remapper, String targetNamespace) {
-        var writer = new AccessWidenerWriter();
-        var remappingDecorator = new AccessWidenerRemapper(writer, remapper, "intermediary", targetNamespace);
-        var accessWidenerReader = new AccessWidenerReader(remappingDecorator);
-        accessWidenerReader.read(data, "intermediary");
-        return writer.write();
+        var header = ClassTweakerReader.readHeader(data);
+        var writer = ClassTweakerWriter.create(header.getVersion());
+        var remappingDecorator = ClassTweakerVisitor.remap(writer, remapper, header.getNamespace(), targetNamespace);
+        var reader = ClassTweakerReader.create(remappingDecorator);
+        reader.read(data);
+        return writer.getOutput();
     }
 
     private static final Gson GSON = new Gson();

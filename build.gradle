@@ -1,12 +1,10 @@
 plugins {
-	id 'fabric-loom' version '1.10-SNAPSHOT'
-	id 'legacy-looming' version "1.10-SNAPSHOT" // Version must be the same as fabric-loom's
+	id 'fabric-loom' version '1.14-SNAPSHOT'
+	id 'legacy-looming' version "1.14-SNAPSHOT" // Version must be the same as fabric-loom's
 	id 'maven-publish'
-	id 'com.gradleup.shadow' version '8.3.6'
-	id 'xyz.wagyourtail.jvmdowngrader' version '1.3.0'
+	id 'com.gradleup.shadow' version '9.3.0'
+	id 'xyz.wagyourtail.jvmdowngrader' version '1.3.4'
 	id "com.modrinth.minotaur" version "2.+"
-	id 'jacoco'
-	id "org.sonarqube" version "5.0.0.4638"
 }
 
 version = project.mod_version
@@ -43,13 +41,13 @@ dependencies {
 	modImplementation(include(legacy.apiModule("legacy-fabric-logger-api-v1", project.fabric_version)))
 	modImplementation(include("maven.modrinth:spasm:${project.spasm_version}"))
 
-	shadow(runtimeOnly('net.fabricmc:mapping-io:0.7.1')) {
+	shadow(runtimeOnly('net.fabricmc:mapping-io:0.8.0')) {
 		transitive = false
 	}
-	shadow(runtimeOnly('net.fabricmc:tiny-remapper:0.11.2')) {
+	shadow(runtimeOnly('net.fabricmc:tiny-remapper:0.12.1')) {
 		transitive = false
 	}
-	shadow(runtimeOnly('net.fabricmc:access-widener:2.1.0')) {
+	shadow(runtimeOnly('net.fabricmc:class-tweaker:0.2')) {
 		transitive = false
 	}
 
@@ -134,20 +132,6 @@ shadeDowngradedApi {
 
 test {
 	useJUnitPlatform()
-}
-
-jacocoTestReport {
-	reports {
-		xml.required = true
-		html.outputLocation = layout.buildDirectory.dir('jacocoHtml')
-	}
-}
-
-sonar {
-	properties {
-		property "sonar.host.url", System.getenv("SONAR_URL")
-		property "sonar.token", System.getenv("SONAR_TOKEN")
-	}
 }
 
 // configure the maven publication
