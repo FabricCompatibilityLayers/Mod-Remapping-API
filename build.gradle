@@ -44,7 +44,7 @@ dependencies {
 	shadow(runtimeOnly('net.fabricmc:mapping-io:0.8.0')) {
 		transitive = false
 	}
-	shadow(runtimeOnly('net.fabricmc:tiny-remapper:0.12.1')) {
+	shadow(runtimeOnly('net.fabricmc:tiny-remapper:0.13.0')) {
 		transitive = false
 	}
 	shadow(runtimeOnly('net.fabricmc:class-tweaker:0.2')) {
@@ -103,7 +103,7 @@ shadowJar {
 
 	relocate 'net.fabricmc.mappingio', 'io.github.fabriccompatibilitylayers.modremappingapi.impl.lib.mappingio'
 	relocate 'net.fabricmc.tinyremapper', 'io.github.fabriccompatibilitylayers.modremappingapi.impl.lib.tinyremapper'
-	relocate 'net.fabricmc.accesswidener', 'io.github.fabriccompatibilitylayers.modremappingapi.impl.lib.accesswidener'
+	relocate 'net.fabricmc.classtweaker', 'io.github.fabriccompatibilitylayers.modremappingapi.impl.lib.classtweaker'
 	relocate 'com.google.gson', 'io.github.fabriccompatibilitylayers.modremappingapi.impl.lib.gson'
 }
 
@@ -157,15 +157,19 @@ modrinth {
 	token = System.getenv("MODRINTH_TOKEN")
 	projectId = "mod-remapping-api"
 	changelog = """
-Remove previous testing logging.
+Update Tiny Remapper to 0.13.0.
 
-Fix excluding files from extracted libraries not working.
+Update MappingIO to 0.8.0.
+
+Add Class Tweaker support.
 """
 	uploadFile = shadeDowngradedApi
 
 	dependencies {
 		embedded.version "spasm", project.spasm_version
 	}
+
+	additionalFiles.add(sourcesJar)
 }
 
 task testmodJar(type: Jar) {
