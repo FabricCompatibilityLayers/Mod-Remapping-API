@@ -86,7 +86,7 @@ public class SoftLockFixer {
         return connection instanceof JarURLConnection jarConnection ?
                 jarConnection.getJarFile().stream()
                 .filter(jarEntry -> jarEntry.getName().contains(pkg) && jarEntry.getName().endsWith(".class"))
-                .map(jarEntry -> jarEntry.getName().replace("/", ".").replace(".class", ""))
+                .map(jarEntry -> jarEntry.getName().replace("/", ".").replaceFirst(".class$", ""))
                 : Stream.empty();
     }
 }

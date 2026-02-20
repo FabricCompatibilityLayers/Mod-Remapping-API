@@ -16,7 +16,7 @@ public class DefaultModCandidate implements ModCandidate {
 
     public DefaultModCandidate(Path path, ModDiscovererConfig discovererConfig) {
         this.sanitizedFileName = path.getFileName().toString().replace(" ", "_");
-        this.id = this.sanitizedFileName.replace(".jar", "").replace(".zip", "");
+        this.id = this.sanitizedFileName.replaceFirst(".jar$", "").replaceFirst(".zip$", "");
         this.path = path;
         this.discovererConfig = discovererConfig;
 
