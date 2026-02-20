@@ -1,6 +1,5 @@
 package io.github.fabriccompatibilitylayers.modremappingapi.impl.remapper.visitor;
 
-import fr.catcore.modremapperapi.utils.Constants;
 import io.github.fabriccompatibilitylayers.modremappingapi.impl.ModRemappingAPIImpl;
 import net.fabricmc.tinyremapper.TinyRemapper;
 import net.fabricmc.tinyremapper.api.TrClass;
@@ -52,8 +51,6 @@ public class MixinPostApplyVisitorProvider implements TinyRemapper.ApplyVisitorP
 
                                 supers.add(theVal);
                             }
-                        } else {
-                            Constants.MAIN_LOGGER.info(an.values.get(i) + " : " + value.toString());
                         }
                     }
                 }

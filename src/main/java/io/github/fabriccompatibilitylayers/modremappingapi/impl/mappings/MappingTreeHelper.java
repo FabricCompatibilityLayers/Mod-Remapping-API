@@ -2,8 +2,6 @@ package io.github.fabriccompatibilitylayers.modremappingapi.impl.mappings;
 
 import io.github.fabriccompatibilitylayers.modremappingapi.impl.ModRemappingAPIImpl;
 import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.loader.impl.util.log.Log;
-import net.fabricmc.loader.impl.util.log.LogCategory;
 import net.fabricmc.mappingio.MappingReader;
 import net.fabricmc.mappingio.MappingVisitor;
 import net.fabricmc.mappingio.MappingWriter;
@@ -16,6 +14,7 @@ import net.fabricmc.mappingio.format.tiny.Tiny2FileReader;
 import net.fabricmc.mappingio.tree.*;
 import net.fabricmc.tinyremapper.IMappingProvider;
 import net.fabricmc.tinyremapper.TinyUtils;
+import net.legacyfabric.fabric.api.logger.v1.Logger;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
@@ -31,6 +30,7 @@ import java.util.Objects;
 
 @ApiStatus.Internal
 public class MappingTreeHelper {
+    public static final Logger LOGGER = Logger.get("ModRemappingAPI", "Mappings");
 
     @ApiStatus.Internal
     public static MemoryMappingTree mergeIntoNew(MappingTree left, MappingTree right) throws IOException {
@@ -108,7 +108,7 @@ public class MappingTreeHelper {
                 default -> throw new UnsupportedOperationException("Unsupported mapping format: " + format);
             }
 
-            Log.debug(LogCategory.MAPPINGS, "Loading mappings took %d ms", System.currentTimeMillis() - time);
+            LOGGER.debug("Loading mappings took %d ms", System.currentTimeMillis() - time);
 
             return mappingTree;
         }
