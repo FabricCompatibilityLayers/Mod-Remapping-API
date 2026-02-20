@@ -157,11 +157,11 @@ modrinth {
 	token = System.getenv("MODRINTH_TOKEN")
 	projectId = "mod-remapping-api"
 	changelog = """
-Update Tiny Remapper to 0.13.0.
+Remove direct FabricLoader Logger usage and replace it by LFAPI's one.
 
-Update MappingIO to 0.8.0.
+Include most Flap patches to MRAPI.
 
-Add Class Tweaker support.
+Fix wrong usage of replace in the codebase.
 """
 	uploadFile = shadeDowngradedApi
 
