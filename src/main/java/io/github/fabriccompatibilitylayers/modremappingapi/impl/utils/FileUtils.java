@@ -11,6 +11,7 @@ import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.SimpleFileVisitor;
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -97,32 +98,16 @@ public class FileUtils {
         return files;
     }
 
-    @ApiStatus.Internal
-    public static List<String> listDirectoryContent(File[] files) {
-        List<String> list = new ArrayList<>();
-
-        for (File file : files) {
-            if (file.isDirectory()) {
-                String name = file.getName();
-
-                for (String fileName : listDirectoryContent(file.listFiles())) {
-                    list.add(name + "/" + fileName);
-                }
-            } else if (file.isFile()) {
-                list.add(file.getName());
-            }
-        }
-
-        return list;
-    }
-
+    /**
+     * @author moehreag
+     */
     @ApiStatus.Internal
     public static List<String> listPathContent(Path path) throws IOException {
-        File file = path.toFile();
-
-        if (file.isDirectory()) {
-            return listDirectoryContent(file.listFiles());
-        } else if (file.isFile()) {
+        if (Files.isDirectory(path)) {
+            try (var s = Files.walk(path)) {
+                return s.map(Path::toString).collect(Collectors.toCollection(ArrayList::new));
+            }
+        } else if (Files.isRegularFile(path)) {
             return listZipContent(path);
         }
 
@@ -152,52 +137,22 @@ public class FileUtils {
         }
     }
 
+    /**
+     * @author moehreag
+     */
     @ApiStatus.Internal
-    public static void zipFolder(Path input, Path output) throws IOException {
-        try (var zout = new ZipOutputStream(Files.newOutputStream(output))) {
-            var fileToZip = input.toFile();
-            zipFile(fileToZip, fileToZip.getName(), zout, true);
-        }
-    }
-    
-    private static void zipFile(File fileToZip, String fileName, ZipOutputStream zipOut, boolean root) throws IOException {
-        if (fileToZip.isHidden()) {
-            return;
-        }
-    
-        if (fileToZip.isDirectory()) {
-            if (!root) {
-                if (fileName.endsWith("/")) {
-                    zipOut.putNextEntry(new ZipEntry(fileName));
-                    zipOut.closeEntry();
-                } else {
-                    zipOut.putNextEntry(new ZipEntry(fileName + "/"));
-                    zipOut.closeEntry();
+    public static void zipFolder(Path in, Path out) throws IOException {
+        try (var outFs = FileSystems.newFileSystem(out)) {
+            Files.walkFileTree(in, new SimpleFileVisitor<>(){
+                @Override
+                public @NotNull FileVisitResult visitFile(@NotNull Path file, @NotNull BasicFileAttributes attrs) throws IOException {
+                    var outPath = outFs.getPath(in.relativize(file).toString());
+                    Files.createDirectories(outPath.getParent());
+                    Files.copy(file, outPath);
+                    return super.visitFile(file, attrs);
                 }
-            }
-    
-            var children = fileToZip.listFiles();
-            if (children != null) {
-                for (File childFile : children) {
-                    zipFile(childFile, (root ? "" : fileName + "/") + childFile.getName(), zipOut, false);
-                }
-            }
-            return;
+            });
         }
-    
-        var zipEntry = new ZipEntry(fileName);
-        zipOut.putNextEntry(zipEntry);
-    
-        try (var fis = Files.newInputStream(fileToZip.toPath())) {
-            var bytes = new byte[1024];
-            int length;
-
-            while ((length = fis.read(bytes)) >= 0) {
-                zipOut.write(bytes, 0, length);
-            }
-        }
-
-        zipOut.closeEntry();
     }
 
     /* Define ZIP File System Properties in Map */

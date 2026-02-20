@@ -135,7 +135,7 @@ public class MappingsRegistryInstance extends MappingsRegistry {
             FileUtils.listPathContent(path)
                     .stream()
                     .filter(file -> file.endsWith(".class"))
-                    .map(file -> file.replace(".class", ""))
+                    .map(file -> file.replaceFirst(".class$", ""))
                     .forEach(cl -> mappingBuilder.addMapping(cl, (cl.contains("/") ? "" : this.defaultPackage) + cl));
         } catch (IOException e) {
             throw new RuntimeException(e);
