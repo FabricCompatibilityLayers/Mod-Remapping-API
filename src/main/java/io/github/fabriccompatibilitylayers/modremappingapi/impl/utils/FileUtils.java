@@ -137,17 +137,29 @@ public class FileUtils {
         }
     }
 
+    /* Define ZIP File System Properties in Map */
+    private static final Map<String, String> ZIPPING_PROPERTIES = Map.of(
+            /* We want to read an existing ZIP File, so we set this to False */
+            "create", "true",
+            /* Specify the encoding as UTF-8 */
+            "encoding", "UTF-8"
+    );
+
     /**
      * @author moehreag
      */
     @ApiStatus.Internal
     public static void zipFolder(Path in, Path out) throws IOException {
-        try (var outFs = FileSystems.newFileSystem(out)) {
+        try (var outFs = FileSystems.newFileSystem(out, ZIPPING_PROPERTIES)) {
             Files.walkFileTree(in, new SimpleFileVisitor<>(){
                 @Override
                 public @NotNull FileVisitResult visitFile(@NotNull Path file, @NotNull BasicFileAttributes attrs) throws IOException {
                     var outPath = outFs.getPath(in.relativize(file).toString());
-                    Files.createDirectories(outPath.getParent());
+
+                    if (outPath.getParent() != null) {
+                        Files.createDirectories(outPath.getParent());
+                    }
+
                     Files.copy(file, outPath);
                     return super.visitFile(file, attrs);
                 }

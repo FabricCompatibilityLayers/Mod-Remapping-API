@@ -14,6 +14,7 @@ import org.jetbrains.annotations.ApiStatus;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.*;
@@ -113,6 +114,16 @@ public class ModRemmaperV2Context extends BaseModRemapperContext<ModRemapper> {
 
         var config2Candidates = candidates.stream()
                 .collect(Collectors.groupingBy(ModCandidate::getDiscovererConfig));
+
+        for (var entry : config2Candidates.entrySet()) {
+            var config = entry.getKey();
+
+            try {
+                config2Discoverer.get(config).excludeClassEdits(entry.getValue(), this.cacheHandler, this.mappingsRegistry);
+            } catch (IOException | URISyntaxException e) {
+                throw new RuntimeException(e);
+            }
+        }
 
         for (var candidate : candidates) {
             mappingsRegistry.addModMappings(candidate.getPath());

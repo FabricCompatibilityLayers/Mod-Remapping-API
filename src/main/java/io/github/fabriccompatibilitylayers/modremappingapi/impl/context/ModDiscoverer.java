@@ -90,6 +90,7 @@ public class ModDiscoverer {
             var outputPath = tempDirectory.resolve(outputName);
 
             if (Files.isDirectory(modPath)) {
+                outputPath = tempDirectory.resolve(outputName + ".zip");
                 FileUtils.zipFolder(modPath, outputPath);
             } else {
                 Files.copy(modPath, outputPath);
