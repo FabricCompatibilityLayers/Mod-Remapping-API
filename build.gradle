@@ -157,11 +157,7 @@ modrinth {
 	token = System.getenv("MODRINTH_TOKEN")
 	projectId = "mod-remapping-api"
 	changelog = """
-Remove direct FabricLoader Logger usage and replace it by LFAPI's one.
-
-Include most Flap patches to MRAPI.
-
-Fix wrong usage of replace in the codebase.
+Fix vanilla classes not being filtered out of mods.
 """
 	uploadFile = shadeDowngradedApi
 
