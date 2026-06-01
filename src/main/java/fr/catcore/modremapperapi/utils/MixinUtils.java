@@ -138,8 +138,7 @@ public class MixinUtils {
     private static void transformCalls(ClassNode classNode, Consumer<MethodInsnNode> consumer) {
         for (MethodNode method : classNode.methods) {
             for (AbstractInsnNode insn : method.instructions) {
-                if (insn instanceof MethodInsnNode) {
-                    MethodInsnNode call = (MethodInsnNode) insn;
+                if (insn instanceof MethodInsnNode call) {
                     consumer.accept(call);
                 }
             }

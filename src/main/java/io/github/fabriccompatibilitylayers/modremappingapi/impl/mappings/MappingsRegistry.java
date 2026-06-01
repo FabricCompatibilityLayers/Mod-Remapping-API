@@ -209,7 +209,7 @@ public abstract class MappingsRegistry {
             var toAdd = new ArrayList<>(entry.getValue());
     
             while (!toAdd.isEmpty()) {
-                var trClass = trEnvironment.getClass(toAdd.remove(0));
+                var trClass = trEnvironment.getClass(toAdd.removeFirst());
                 if (trClass == null) continue;
     
                 var children = trClass.getChildren().stream()

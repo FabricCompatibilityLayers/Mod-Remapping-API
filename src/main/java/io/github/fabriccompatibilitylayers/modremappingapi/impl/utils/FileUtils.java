@@ -41,7 +41,7 @@ public class FileUtils {
 
     @ApiStatus.Internal
     public static void downloadFile(String url, Path target) throws IOException {
-        try (var inputStream = new BufferedInputStream(new URL(url).openStream());
+        try (var inputStream = new BufferedInputStream(URI.create(url).toURL().openStream());
              var outputStream = new BufferedOutputStream(Files.newOutputStream(target))) {
             
             var buffer = new byte[2048];

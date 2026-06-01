@@ -49,10 +49,9 @@ public class ClasspathUtils {
 
         completeClasspath.addAll(classPaths);
 
-        Optional.ofNullable(share.get("fabric-loader:inputRealmsJar"))
-                .filter(Path.class::isInstance)
-                .map(Path.class::cast)
-                .ifPresent(completeClasspath::add);
+        if (share.get("fabric-loader:inputRealmsJar") instanceof Path realmsJar) {
+            completeClasspath.add(realmsJar);
+        }
 
         return completeClasspath;
     }

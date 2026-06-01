@@ -40,16 +40,11 @@ public class MixinPostApplyVisitorProvider implements TinyRemapper.ApplyVisitorP
 
                         if (value instanceof List<?> valueList) {
                             for (Object val : valueList) {
-                                String theVal;
-
-                                if (val instanceof Type type) {
-                                    theVal = type.getInternalName();
-                                } else {
-                                    theVal = ModRemappingAPIImpl.getCurrentContext().getMixinData().getMixinRefmapData()
+                                supers.add(switch (val) {
+                                    case Type type -> type.getInternalName();
+                                    default -> ModRemappingAPIImpl.getCurrentContext().getMixinData().getMixinRefmapData()
                                             .getOrDefault(className, new HashMap<>()).getOrDefault((String) val, (String) val);
-                                }
-
-                                supers.add(theVal);
+                                });
                             }
                         }
                     }

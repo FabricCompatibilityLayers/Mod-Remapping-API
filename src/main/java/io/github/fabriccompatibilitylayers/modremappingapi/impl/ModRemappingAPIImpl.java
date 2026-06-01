@@ -51,7 +51,7 @@ public class ModRemappingAPIImpl {
             var v2Keys = new ArrayList<>(v2Remappers.keySet());
 
             while (!v2Keys.isEmpty()) {
-                var contextKey = v2Keys.remove(0);
+                var contextKey = v2Keys.removeFirst();
                 var context = new ModRemmaperV2Context(contextKey, v2Remappers.get(contextKey));
                 CURRENT_CONTEXT = context;
 

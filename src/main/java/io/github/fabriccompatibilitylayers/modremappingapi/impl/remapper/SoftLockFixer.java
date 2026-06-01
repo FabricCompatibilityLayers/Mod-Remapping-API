@@ -9,7 +9,6 @@ import java.net.JarURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -35,15 +34,15 @@ public class SoftLockFixer {
             }
         }
 
-        Stream<String> t = classes.stream().flatMap(s -> s);
-        List<String> toCheck = new ArrayList<>(Arrays.asList(new String[] {
+        var t = classes.stream().flatMap(s -> s);
+        var toCheck = new ArrayList<>(List.of(
                 "net.fabricmc.loader.impl.launch.FabricLauncher",
                 "net.fabricmc.loader.impl.launch.FabricLauncherBase",
                 "net.fabricmc.loader.api.ObjectShare",
                 "javax.lang.model.SourceVersion",
                 getLibClassName("tinyremapper", "extension.mixin.hard.ImprovedHardTargetMixinClassVisitor"),
                 getLibClassName("tinyremapper", "extension.mixin.hard.ImprovedMixinAnnotationVisitor")
-        }));
+        ));
         toCheck.addAll(t.toList());
 
         for (String clazz : toCheck) {
