@@ -157,7 +157,8 @@ modrinth {
 	token = System.getenv("MODRINTH_TOKEN")
 	projectId = "mod-remapping-api"
 	changelog = """
-Fix vanilla classes not being filtered out of mods.
+Now compile against Java 21 while retaining backward compatibility with Java 8.\
+Update TinyRemapper and ClassTweaker.
 """
 	uploadFile = shadeDowngradedApi
 
