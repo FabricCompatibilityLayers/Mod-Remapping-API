@@ -72,12 +72,22 @@ public class LibraryHandler {
     }
 
     public void addLibrariesToRemapClasspath(TinyRemapper remapper) {
-        for (var libPath : remapLibraries.values()) {
+        for (var libPath : remapLibraries.entrySet().stream()
+                .filter(entry -> !entry.getKey().mergeWithMainJar())
+                .map(Map.Entry::getValue)
+                .toList()) {
             if (Files.exists(libPath)) {
                 remapper.readClassPathAsync(libPath);
             } else {
                 Constants.MAIN_LOGGER.info("Library %s does not exist.", libPath);
             }
         }
+    }
+
+    public List<Map.Entry<RemapLibrary, Path>> getMergableLibraries() {
+        return remapLibraries.entrySet().stream()
+                .filter(entry -> entry.getKey().mergeWithMainJar())
+                .sorted(Comparator.comparing(entry -> entry.getKey().getPriority()))
+                .toList();
     }
 }

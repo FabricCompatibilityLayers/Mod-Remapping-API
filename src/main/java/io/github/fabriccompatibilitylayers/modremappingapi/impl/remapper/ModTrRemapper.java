@@ -70,7 +70,7 @@ public class ModTrRemapper {
         var remapper = builder.build();
 
         try {
-            MinecraftRemapper.addMinecraftJar(remapper, mappingsRegistry, context.getCacheHandler());
+            MinecraftRemapper.addMinecraftJar(remapper, mappingsRegistry, context.getCacheHandler(), context.getLibraryHandler());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
