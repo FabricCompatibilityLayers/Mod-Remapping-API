@@ -157,8 +157,7 @@ modrinth {
 	token = System.getenv("MODRINTH_TOKEN")
 	projectId = "mod-remapping-api"
 	changelog = """
-Now compile against Java 21 while retaining backward compatibility with Java 8.\
-Update TinyRemapper and ClassTweaker.
+Allow libraries to be merged into the remapper context mc jar for improved results.
 """
 	uploadFile = shadeDowngradedApi
 
